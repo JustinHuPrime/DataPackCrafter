@@ -1,5 +1,5 @@
 {
-  "includes": ["src/**.ts"],
+  "include": ["src/**.ts"],
   "compilerOptions": {
     "strict": true,
     "moduleResolution": "node",
@@ -12,8 +12,8 @@
     "noUnusedParameters": true,
     "forceConsistentCasingInFileNames": true,
     "preserveConstEnums": true,
-    "rootDir": "src",
     "esModuleInterop": true,
+    "rootDir": "src",
     "outDir": "dist",
     "module": "commonjs",
     "target": "es2020"
