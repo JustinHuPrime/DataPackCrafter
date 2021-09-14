@@ -6,7 +6,7 @@
   "type": "commonjs",
   "scripts": {
     "cover": "nyc --reporter text --reporter html npm run test",
-    "build": "tsc && npm run pretty",
+    "build": "npm run pretty && tsc",
     "test": "mocha --require ts-node/register --timeout 10000 ./test/*.spec.ts",
     "pretty": "prettier --write \"./**/*.ts\"",
     "start": "node dist/main.js"
