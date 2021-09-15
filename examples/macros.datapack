@@ -1,0 +1,12 @@
+datapack "macros";
+
+define make_and_grant_metal_advancement(metal) {
+  advancement "has_{metal}_ingot";
+  when "minecraft:tick" {
+    grant "has_{metal}_ingot";
+  }
+}
+
+for (metal in ["gold", "iron", "copper"]) {
+  make_and_grant_metal_advancement(metal);
+}

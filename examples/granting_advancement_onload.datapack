@@ -1,0 +1,5 @@
+datapack "granting_advancement_onload";
+
+advancement "has_gold_ingot";
+
+grant "has_gold_ingot";

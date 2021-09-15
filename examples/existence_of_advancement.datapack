@@ -1,0 +1,3 @@
+datapack "existence_of_advancement";
+
+advancement "some_advancement";
