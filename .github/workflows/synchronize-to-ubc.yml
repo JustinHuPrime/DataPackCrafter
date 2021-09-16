@@ -13,4 +13,6 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Push
-      run: git push https://$ACCESS_TOKEN@github.students.cs.ubc.ca/cpsc410-2021w-t1/Project1Group4.git main:master
+      env:
+        ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+      run: git push https://"$ACCESS_TOKEN"@github.students.cs.ubc.ca/cpsc410-2021w-t1/Project1Group4.git main:master
