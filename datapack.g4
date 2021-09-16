@@ -9,6 +9,7 @@ expression:
 	| 'define' ID? '(' (ID (',' ID)*)? ')' expression
 	| 'let' ID '=' expression (',' ID '=' expression)* expression
 	| 'if' expression 'then' expression 'else' expression
+	| 'for' ID 'in' expression expression
 	| 'print' expression
 	| logical_expression;
 
