@@ -90,4 +90,4 @@ NUMBER: '-'? [1-9][0-9]+;
 
 string: '"' (STRING_CHARACTER | '{' expression+ '}')* '"';
 
-STRING_CHARACTER: ["\\{}]| '\\\\' | '\\"' | '\\{' | '\\}';
+STRING_CHARACTER: ~["\\{}] | '\\\\' | '\\"' | '\\{' | '\\}';
