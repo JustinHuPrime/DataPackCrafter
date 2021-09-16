@@ -1,5 +1,7 @@
-Use this file to commit information clearly documenting your milestones'
-content. If you want to store more information/details besides what's required
-for the milestones that's fine too. Make sure that your TA has had a chance to
-sign off on your milestones each week (before the deadline); typically you
-should discuss your material with them before finalizing it here.
+# Milestone 1
+
+Our DSL is a Minecraft datapack creator. Minecraft is a sandbox videogame, and Minecraft datapacks are JSON files the game uses to define many of its game rules - for example, achievements, the conditions to get an achievement, and the reward for getting an achievement are all specified using datapacks. The JSON structure expected by Minecraft, however, is optimized for machine-interpretability, not human-friendliness. Our DSL enables easier human writing of Minecraft datapacks.
+
+Our DSL needs to make a strict distinction between actions and computation that happen within Minecraft and actions and computation that happen during datapack creation - while it is possible to perform arbitrary computation within Minecraft, this is far too difficult for us to accomplish in the limited time we have. The DSL is a functional-style language with special syntactic forms that interact with a global store to create Minecraft objects, like advancements or Minecraft functions (a Minecraft function is a straight-line sequence of in-game commands that is named and can be called, but that does not have user-defined arguments). At the end of evaluation, the contents of the global store are produced as JSON files for use in Minecraft.
+
+The DSL has a fairly limited type system - there exist numbers, strings, booleans, and heterogenous lists. Types are dynamically checked, and certain syntactic forms impose additional restrictions on the data they recieve - for example, you shouldn't try to invoke a (Minecraft) function that doesn't exist. These checks are enforced during DSL evaluation time. You can interoperate with existing datapacks through the use of the `import` declaration, which points the DSL at an external datapack that provides advancements, functions, and other Minecraft objects.

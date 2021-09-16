@@ -1,4 +1,4 @@
-datapack "granting_advancement_onload";
+datapack granting_advancement_onload;
 
 advancement "has_gold_ingot";
 

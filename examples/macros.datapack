@@ -1,4 +1,4 @@
-datapack "macros";
+datapack macros;
 
 define make_and_grant_metal_advancement(metal) {
   advancement "has_{metal}_ingot";
