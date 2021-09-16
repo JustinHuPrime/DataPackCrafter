@@ -1,7 +1,7 @@
-datapack granting_advancement;
+datapack granting_advancement
 
-advancement "has_gold_ingot";
+advancement "has_gold_ingot"
 
-when "minecraft:tick" {
-  grant "has_gold_ingot";
+on (tick) {
+  grant "has_gold_ingot"
 }

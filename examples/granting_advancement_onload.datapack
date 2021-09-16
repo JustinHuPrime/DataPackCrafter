@@ -1,5 +1,7 @@
-datapack granting_advancement_onload;
+datapack granting_advancement_onload
 
-advancement "has_gold_ingot";
+advancement "has_gold_ingot" {}
 
-grant "has_gold_ingot";
+on (load) {
+  grant "has_gold_ingot"
+}

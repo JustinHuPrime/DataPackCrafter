@@ -1,5 +1,7 @@
 grammar datapack;
 
+// Note that the lexer throws out whitespace
+
 file: datapack_decl (expression | command)*;
 
 datapack_decl: 'datapack' ID;

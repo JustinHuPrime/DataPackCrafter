@@ -8,4 +8,4 @@ The DSL has a fairly limited type system - there exist numbers, strings, boolean
 
 During the meeting with our TA, Yanze mentioned that we might not need to implement DSL-level functions to have a complex enough language. We've decided to keep DSL-level functions in for now - we might remove them later.
 
-We now need to do a user study and actually implement the rest of the language. We might also need to tweak some of the precedence rules in our grammar - for example, do we really want `import` to bind as loosely as possible?
+We now need to do a user study and actually implement the rest of the language. We might also need to tweak some of the precedence rules in our grammar - for example, do we really want `import` to bind as loosely as possible? Finally, additional examples and their outputs should be defined.
