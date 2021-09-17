@@ -1,0 +1,10 @@
+{
+    "criteria": {
+      "eventName": {
+        "trigger": "minecraft:player_killed_entity"
+      }
+    },
+    "rewards": {
+        "function": "lifesteal:lifesteal"
+    }
+  }

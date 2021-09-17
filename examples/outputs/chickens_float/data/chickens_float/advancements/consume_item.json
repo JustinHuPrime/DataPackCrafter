@@ -1,0 +1,15 @@
+{
+    "criteria": {
+      "myTrigger": {
+        "trigger": "minecraft:consume_item",
+        "conditions": {
+          "item": {
+            "items": ["minecraft:cooked_chicken", "minecraft:chicken"]
+          }
+        }
+      }
+    },
+    "rewards": {
+        "function": "chickens_float:effect_float"
+    }
+  }
