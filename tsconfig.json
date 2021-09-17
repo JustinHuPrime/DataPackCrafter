@@ -3,9 +3,11 @@
   "compilerOptions": {
     "strict": true,
     "moduleResolution": "node",
+    "strictNullChecks": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
     "noImplicitReturns": true,
+    "noImplicitAny": true,
     "noPropertyAccessFromIndexSignature": true,
     "noUncheckedIndexedAccess": true,
     "noUnusedLocals": true,
