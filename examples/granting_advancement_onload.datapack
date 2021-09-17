@@ -1,7 +1,7 @@
 datapack granting_advancement_onload
 
-advancement "has_gold_ingot" {}
+advancement "test_advancement" {}
 
 on (load) {
-  grant "has_gold_ingot"
+  grant "test_advancement"
 }
