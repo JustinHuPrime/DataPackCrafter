@@ -1,8 +1,8 @@
-import Ast from "../ast/ast";
+import { File } from "../ast/ast";
 import Options from "../options";
 
-export default function codeGenerate(ast: Ast, options: Options): void {
-  console.log(ast);
+export default function codeGenerate(file: File, options: Options): void {
+  console.log(file);
   console.log(options);
-  // TODO
+  throw new Error("Not yet implemented!"); // TODO
 }
