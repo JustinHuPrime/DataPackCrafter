@@ -4,6 +4,8 @@ A datapack consists of an input file. The file has a datapack declaration - this
 
 An expression evaluates to a value, and may, as a side effect, modify the global store. The global store is a mapping between the namespaced id of a advancement, function, or when block, and the contents of that advancement, function, or when block. Additionally, there exists a lexically-scoped environment used to look up identifiers, which may be modified by certain expressions.
 
+At the end of evaluation, the contents of the global store are produced as a Minecraft datapack in the namespace declared above.
+
 ## Import Expressions
 
 An import expression expects a string, and when evaluated, produces that string. As a side effect, the contents of the datapack zip or folder at the path specified by the string are added to the global store. The specified datapack may have any namespace.
