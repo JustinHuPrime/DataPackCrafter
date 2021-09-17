@@ -1,0 +1,1 @@
+advancement grant @s only granting_advancement:test_advancement

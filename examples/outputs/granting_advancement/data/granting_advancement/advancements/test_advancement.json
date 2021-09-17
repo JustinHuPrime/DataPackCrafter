@@ -1,0 +1,10 @@
+{
+  "criteria": {
+    "myTrigger": {
+      "trigger": "minecraft:tick"
+    }
+  },
+  "rewards": {
+    "function": "granting_advancement:test_advancement"
+  }
+}

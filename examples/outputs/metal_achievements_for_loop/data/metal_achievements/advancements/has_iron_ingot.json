@@ -1,0 +1,17 @@
+{
+  "criteria": {
+    "example": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": ["minecraft:iron_ingot"]
+          }
+        ]
+      }
+    }
+  },
+  "rewards": {
+    "function": "metal_achievements:has_iron_ingot"
+  }
+}

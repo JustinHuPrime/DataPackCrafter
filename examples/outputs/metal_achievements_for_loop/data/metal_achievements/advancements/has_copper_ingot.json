@@ -1,0 +1,17 @@
+{
+  "criteria": {
+    "example": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": ["minecraft:copper_ingot"]
+          }
+        ]
+      }
+    }
+  },
+  "rewards": {
+    "function": "metal_achievements:has_copper_ingot"
+  }
+}

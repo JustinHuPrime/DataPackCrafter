@@ -1,0 +1,17 @@
+{
+  "criteria": {
+    "example": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": ["minecraft:gold_ingot"]
+          }
+        ]
+      }
+    }
+  },
+  "rewards": {
+    "function": "metal_achievements:has_gold_ingot"
+  }
+}
