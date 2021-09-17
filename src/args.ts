@@ -11,8 +11,8 @@ export class ArgumentError extends Error {}
  * @param argv process.argv.splice(2)
  * @returns tuple containing array of filenames and options object
  */
-export default function parseArgs(argv: string[]): [string[], Options] {
-  const filenames: string[] = [];
+export default function parseArgs(argv: string[]): [string, Options] {
+  let filename: string | null = null;
   const options: Options = {
     outputFile: "./pack.zip",
   };
@@ -50,17 +50,23 @@ export default function parseArgs(argv: string[]): [string[], Options] {
             if (arg.startsWith("-"))
               throw new ArgumentError(`unrecognized option: '${arg}'`);
 
-            filenames.push(arg);
+            if (filename !== null)
+              throw new ArgumentError("multiple input files given");
+            else filename = arg;
           }
         }
         break;
       }
       case ParseState.ALL_ARGS: {
-        filenames.push(arg);
+        if (filename !== null)
+          throw new ArgumentError("multiple input files given");
+        else filename = arg;
         break;
       }
     }
   }
 
-  return [filenames, options];
+  if (filename === null) throw new ArgumentError("no input file given");
+
+  return [filename, options];
 }

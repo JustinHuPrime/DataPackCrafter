@@ -11,11 +11,7 @@ try {
 
   const [filenames, options] = parseArgs(process.argv.slice(2));
 
-  const asts = parse(filenames, options);
-
-  typecheck(asts, options);
-
-  codeGenerate(asts, options);
+  codeGenerate(typecheck(parse(filenames, options), options), options);
 
   process.exitCode = 0;
 } catch (e) {
