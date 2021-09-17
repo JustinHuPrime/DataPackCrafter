@@ -85,7 +85,7 @@ advancement_spec: // TODO: can add more display properties
 	| 'description' '=' expression
 	| 'parent' '=' expression;
 
-ID: [a-zA-Z][a-zA-Z0-9]*;
+ID: [a-zA-Z_][a-zA-Z_0-9]*;
 
 NUMBER: '-'? [1-9][0-9]+ ('.' [0-9]+)?;
 
