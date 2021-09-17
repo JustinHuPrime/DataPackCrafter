@@ -1,5 +1,4 @@
 import parse from "./parser/parser";
-import typecheck from "./typechecker/typechecker";
 import codeGenerate from "./codeGenerator/codeGenerator";
 import parseArgs, { ArgumentError } from "./args";
 
@@ -9,9 +8,9 @@ try {
       "DataPackCrafter: error: expected at least one input file to process",
     );
 
-  const [filenames, options] = parseArgs(process.argv.slice(2));
+  const [filename, options] = parseArgs(process.argv.slice(2));
 
-  codeGenerate(typecheck(parse(filenames, options), options), options);
+  codeGenerate(parse(filename, options), options);
 
   process.exitCode = 0;
 } catch (e) {
