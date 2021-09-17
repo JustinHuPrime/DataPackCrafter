@@ -1,8 +1,8 @@
 grammar datapack;
 
-// Note that the lexer throws out whitespace
+// Note that the lexer throws out whitespace and comments, so we don't need to worry about them.
 
-file: datapack_decl (expression | command)*;
+file: datapack_decl expression*;
 
 datapack_decl: 'datapack' ID;
 
@@ -42,8 +42,9 @@ prefix_expression:
 postfix_expression:
 	primary_expression (
 		(
-			'[' expression (':' expression)? ']'
-		) // sequence indexing/slicing
+			'[' (':' expression | expression (':' expression?)?) ']'
+		)
+		// sequence indexing/slicing
 		| (
 			'(' (expression (',' expression)*)? ')'
 		) // function call
@@ -51,7 +52,7 @@ postfix_expression:
 
 primary_expression:
 	'(' expression ')'
-	| '[' expression (',' expression)* ']' // list constructor
+	| '[' (expression (',' expression)*)? ']' // list constructor
 	| '{' expression+ '}' // begin
 	| 'on' '(' trigger ')' '{' command* '}'
 	| 'advancement' expression? '{' advancement_spec* '}'
@@ -86,7 +87,7 @@ advancement_spec: // TODO: can add more display properties
 
 ID: [a-zA-Z][a-zA-Z0-9]*;
 
-NUMBER: '-'? [1-9][0-9]+;
+NUMBER: '-'? [1-9][0-9]+ ('.' [0-9]+)?;
 
 string: '"' (STRING_CHARACTER | '{' expression+ '}')* '"';
 
