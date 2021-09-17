@@ -75,3 +75,19 @@ A function expression, as a side effect, creates a Minecraft-level function with
 String literals exist, and use curly braces for string interpolation. They may also include newlines ('cause it's easier to include them than to exclude them).
 
 Numbers, and the boolean constants true and false exist as normal. Numbers are represented internally as floating points.
+
+## Commands
+
+A grant command expects a string naming an advancement, and is translated into a command to grant that advancement.
+
+A revoke command expects a string naming an advancement, and is translated into a command to revoke that advancement.
+
+An execute command expects a string naming a function, and is translated into a command to run that (Minecraft) function.
+
+A literal command expects a string, and is inserted verbatim. No type checks happen.
+
+## Triggers
+
+The load trigger is special, as it can't be combined at all. The trigger will fire when the datapack is reloaded or the server is started. (This is implemented using function tags.)
+
+The tick trigger is also special, as it can't be combined at all. The trigger will fire every single tick. (This is implemented using function tags.)
