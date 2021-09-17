@@ -91,3 +91,7 @@ A literal command expects a string, and is inserted verbatim. No type checks hap
 The load trigger is special, as it can't be combined at all. The trigger will fire when the datapack is reloaded or the server is started. (This is implemented using function tags.)
 
 The tick trigger is also special, as it can't be combined at all. The trigger will fire every single tick. (This is implemented using function tags.)
+
+The typechecked triggers take item specifications - we'd like to typecheck that the item or tag are valid items, but we can't do that without listing all of the items and tags from Minecraft.
+
+The free-form trigger takes a Minecraft trigger name - we'd like to typecheck that it's a valid name, but we can't do that without listing all of the triggers from Minecraft. This also doesn't allow parameters on the trigger.

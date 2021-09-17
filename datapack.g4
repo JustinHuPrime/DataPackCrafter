@@ -73,7 +73,8 @@ combined_trigger:
 	primary_trigger (('&&' | '||') primary_trigger)*;
 primary_trigger: // TODO: can add more triggers
 	'consume_item' '{' item_specification '}'
-	| 'inventory_changed' '{' item_specification '}';
+	| 'inventory_changed' '{' item_specification '}'
+	| expression;
 
 item_specification: // TODO: can expand with more criteria
 	'item' '==' expression
