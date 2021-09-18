@@ -1,1 +1,1 @@
-advancement grant @s only granting_advancement_onload:test_advancement
+advancement grant @a only granting_advancement_onload:test_advancement
