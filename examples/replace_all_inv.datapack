@@ -1,0 +1,18 @@
+datapack replace_all_inv;
+
+define replaceSlot(slot) {
+    on(inventory_changed{}) {
+        "item replace @s inventory." + slot + " with apple 1"
+    }
+}
+
+define replaceSlots(slot) {
+    if(slot == 0)
+    then replaceSlot(slot)
+    else {
+        replaceSlot(slot)
+        replaceSlots(slot - 1)
+    }
+}
+
+replaceSlots(9)
