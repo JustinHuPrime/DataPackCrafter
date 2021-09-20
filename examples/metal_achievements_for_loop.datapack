@@ -1,4 +1,4 @@
-datapack metal_achievements;
+datapack metal_achievements
 
 define make_and_grant_metal_advancement(metal) {
   advancement "has_{metal}"
