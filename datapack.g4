@@ -71,8 +71,8 @@ command: // TODO: can make more commands available in type-checked form
 trigger: 'load' | 'tick' | combined_trigger;
 combined_trigger: primary_trigger ('||' primary_trigger)*;
 primary_trigger: // TODO: can add more triggers
-	'consume_item' '{' item_specification '}'
-	| 'inventory_changed' '{' item_specification '}'
+	'consume_item' '{' item_specification? '}'
+	| 'inventory_changed' '{' item_specification? '}'
 	| expression;
 
 item_specification: // TODO: can expand with more criteria
