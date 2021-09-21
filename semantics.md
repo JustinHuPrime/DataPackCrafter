@@ -64,7 +64,7 @@ Square brackets form a list constructor, which expects zero or more expressions 
 
 Braces form a begin-expression, which evaluates all but the last expression for side effects only and produces the last expression's value.
 
-An on-expression, as a side effect, creates an internal-use advancement that, when triggered (according to the expression's trigger), evalues the given commands. It produces the namespaced id of that internal-use advancement.
+An on-expression, as a side effect, creates an internal-use advancement that, when triggered (according to the expression's trigger), evaluates the command(s) defined inside of it. It produces the namespaced id of that internal-use advancement.
 
 An advancement expression, as a side effect, creates an advancement that has the given name and display properties. The name must be a valid Minecraft identifier, but may not begin with a dot. If a name is not given, then a unique identifier is assigned. The name is produced.
 
@@ -76,24 +76,26 @@ String literals exist, and use curly braces for string interpolation. They may a
 
 Numbers, and the boolean constants true and false exist as normal. Numbers are represented internally as floating points.
 
-## Commands
+## Minecraft Interface - Triggers and Commands
 
-A grant command expects a string naming an advancement, and is translated into a command to grant that advancement.
+### Triggers
 
-A revoke command expects a string naming an advancement, and is translated into a command to revoke that advancement.
+Triggers run actions when a certain event happens within Minecraft. Internally, these are implemented using [built-in function tags](https://minecraft.fandom.com/wiki/Function_(Java_Edition)#Tags) for `load` and `tick`, and hidden advancement triggers for all other triggers. For the latter, the hidden advancement is revoked from the player right after it triggers, so that the same event can be triggered multiple times.
 
-An execute command expects a string naming a function, and is translated into a command to run that (Minecraft) function.
+Of these, `load` and `tick` are special and cannot be combined together. `load` triggers whenever the datapack loads, and `tick` triggers on every Minecraft game tick. Other triggers are documented on the [Minecraft Wiki](https://minecraft.fandom.com/wiki/Advancement/JSON_format) and can be combined together using an or statement (`||`) - so the on-expression's commands will run when any specified trigger fires.
 
-A literal command expects a string, and is inserted verbatim. No type checks happen.
-
-## Triggers
-
-The load trigger is special, as it can't be combined at all. The trigger will fire when the datapack is reloaded or the server is started. (This is implemented using function tags.)
-
-The tick trigger is also special, as it can't be combined at all. The trigger will fire every single tick. (This is implemented using function tags.)
-
-Triggers can be combined together using an or - so the on-expression's commands will run when any trigger fires.
-
-The typechecked triggers take item specifications - we'd like to typecheck that the item or tag are valid items, but we can't do that without listing all of the items and tags from Minecraft.
+The typechecked triggers (currently `consume_item` and `inventory_changed`) take item specifications - we'd like to typecheck that the item or tag are valid items, but we can't do that without listing all the items and tags from Minecraft.
 
 The free-form trigger takes a Minecraft trigger name - we'd like to typecheck that it's a valid name, but we can't do that without listing all of the triggers from Minecraft. This also doesn't allow parameters on the trigger.
+
+### Commands
+
+Commands expressions translate to Minecraft commands, which allows for the following subcommands:
+
+- The `grant` command expects a string naming an advancement, and is translated into a command to grant that advancement from the player who fired the trigger event.
+
+- The `revoke` command expects a string naming an advancement, and is translated into a command to revoke that advancement from the player who fired the trigger event.
+
+- An `execute` command expects a string naming a function, and is translated into a command to run that (Minecraft) function.
+
+- The literal command expects a string or list of strings, and is inserted verbatim. No type checks happen.
