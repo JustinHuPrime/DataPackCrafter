@@ -54,19 +54,20 @@ primary_expression:
 	'(' expression ')'
 	| '[' (expression (',' expression)*)? ']' // list constructor
 	| '{' expression+ '}' // begin
-	| 'on' '(' trigger ')' '{' command* '}'
+	| 'on' '(' trigger ')' '{' expression* '}'
 	| 'advancement' expression? '{' advancement_spec* '}'
 	| 'function' expression? '{' command* '}'
 	| string // literals
 	| NUMBER
 	| 'true'
-	| 'false';
+	| 'false'
+	| 'run' command;
 
 command: // TODO: can make more commands available in type-checked form
 	'grant' expression // grant advancement
 	| 'revoke' expression // revoke advancement
-	| 'execute' expression // execute function
-	| expression; // literal command
+	| 'execute' expression // execute Minecraft function
+	| expression; // run a literal Minecraft command
 
 trigger: 'load' | 'tick' | combined_trigger;
 combined_trigger: primary_trigger ('||' primary_trigger)*;

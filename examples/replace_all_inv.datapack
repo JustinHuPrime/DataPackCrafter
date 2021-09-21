@@ -1,9 +1,7 @@
 datapack replace_all_inv
 
 define replaceSlot(slot) {
-    on(inventory_changed{}) {
-        "item replace @s inventory.{slot} with apple 1"
-    }
+    run "item replace @s inventory.{slot} with apple 1"
 }
 
 define replaceSlots(slot) {
@@ -15,4 +13,6 @@ define replaceSlots(slot) {
     }
 }
 
-replaceSlots(9)
+on(inventory_changed{}) {
+    replaceSlots(9)
+}
