@@ -1,4 +1,4 @@
-datapack chickens_float;
+datapack chickens_float
 
 on (consume_item{item == 'chicken'} || consume_item{item == 'cooked_chicken'}) {
   "effect give @s slow_falling 10"
