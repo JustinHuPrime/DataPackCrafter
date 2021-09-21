@@ -64,7 +64,7 @@ Square brackets form a list constructor, which expects zero or more expressions 
 
 Braces form a begin-expression, which evaluates all but the last expression for side effects only and produces the last expression's value.
 
-An on-expression, as a side effect, creates an internal-use advancement that, when triggered (according to the expression's trigger), evaluates the expressions defined inside of it. It produces the namespaced id of that internal-use advancement.
+An on-expression, as a side effect, creates an internal-use advancement that, when triggered (according to the expression's trigger), evaluates the command(s) defined inside of it. It produces the namespaced id of that internal-use advancement.
 
 An advancement expression, as a side effect, creates an advancement that has the given name and display properties. The name must be a valid Minecraft identifier, but may not begin with a dot. If a name is not given, then a unique identifier is assigned. The name is produced.
 
@@ -98,4 +98,4 @@ Commands expressions translate to Minecraft commands, which allows for the follo
 
 - An `execute` command expects a string naming a function, and is translated into a command to run that (Minecraft) function.
 
-- The literal command expects a string, and is inserted verbatim. No type checks happen.
+- The literal command expects a string or list of strings, and is inserted verbatim. No type checks happen.
