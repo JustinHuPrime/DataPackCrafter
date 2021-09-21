@@ -88,11 +88,9 @@ The typechecked triggers (currently `consume_item` and `inventory_changed`) take
 
 The free-form trigger takes a Minecraft trigger name - we'd like to typecheck that it's a valid name, but we can't do that without listing all of the triggers from Minecraft. This also doesn't allow parameters on the trigger.
 
-`on` blocks cannot be nested.
-
 ### Commands
 
-Commands are triggered in Minecraft through the `run` statement, which allows for the following subcommands:
+Commands expressions translate to Minecraft commands, which allows for the following subcommands:
 
 - The `grant` command expects a string naming an advancement, and is translated into a command to grant that advancement from the player who fired the trigger event.
 
@@ -101,5 +99,3 @@ Commands are triggered in Minecraft through the `run` statement, which allows fo
 - An `execute` command expects a string naming a function, and is translated into a command to run that (Minecraft) function.
 
 - The literal command expects a string, and is inserted verbatim. No type checks happen.
-
-`run` statements may only appear inside an `on` block.

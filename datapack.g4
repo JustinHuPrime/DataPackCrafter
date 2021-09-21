@@ -54,14 +54,13 @@ primary_expression:
 	'(' expression ')'
 	| '[' (expression (',' expression)*)? ']' // list constructor
 	| '{' expression+ '}' // begin
-	| 'on' '(' trigger ')' '{' expression* '}'
+	| 'on' '(' trigger ')' '{' command* '}'
 	| 'advancement' expression? '{' advancement_spec* '}'
 	| 'function' expression? '{' command* '}'
 	| string // literals
 	| NUMBER
 	| 'true'
-	| 'false'
-	| 'run' command;
+	| 'false';
 
 command: // TODO: can make more commands available in type-checked form
 	'grant' expression // grant advancement

@@ -1,15 +1,16 @@
 datapack replace_all_inv
 
+# Number -> String
 define replaceSlot(slot) {
-    run "item replace @s inventory.{slot} with apple 1"
+    "item replace @s inventory.{slot} with apple 1"
 }
 
+# Number -> (list String)
 define replaceSlots(slot) {
-    if slot == 0
-    then replaceSlot(slot)
-    else {
-        replaceSlot(slot)
-        replaceSlots(slot - 1)
+    if slot == 0 then {
+        [replaceSlot(0)]
+    } else {
+        [replaceSlot(slot)] + replaceSlots(slot - 1)
     }
 }
 
