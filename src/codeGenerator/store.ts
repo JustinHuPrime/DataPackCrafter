@@ -1,3 +1,6 @@
+const STORE: Map<string, FunctionValue | AdvancementValue> = new Map();
+export default STORE;
+
 export class FunctionValue {
   name: string;
   commands: string[];
