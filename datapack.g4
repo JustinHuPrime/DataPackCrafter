@@ -65,8 +65,8 @@ primary_expression:
 command: // TODO: can make more commands available in type-checked form
 	'grant' expression // grant advancement
 	| 'revoke' expression // revoke advancement
-	| 'execute' expression // execute function
-	| expression; // literal command
+	| 'execute' expression // execute Minecraft function
+	| expression; // run a literal Minecraft command
 
 trigger: 'load' | 'tick' | combined_trigger;
 combined_trigger: primary_trigger ('||' primary_trigger)*;
