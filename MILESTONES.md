@@ -9,3 +9,15 @@ The DSL has a fairly limited type system - there exist numbers, strings, boolean
 During the meeting with our TA, Yanze mentioned that we might not need to implement DSL-level functions to have a complex enough language. We've decided to keep DSL-level functions in for now - we might remove them later.
 
 We now need to do a user study and actually implement the rest of the language. We might also need to tweak some of the precedence rules in our grammar - for example, do we really want `import` to bind as loosely as possible? Finally, additional examples and their outputs should be defined.
+
+# Milestone 2
+
+Division of responsibilties - see issue assignments in Github Issues
+
+Do Milestone 3 Content This Week
+
+Roadmap - See github issues for list of tasks, tasks with assigned milestones to be done before that milestone is due - we want to finish a first draft of the DSL during Milestone 3
+
+Draft grammar and examples - done
+
+Summary of progress - see git history - we added a grammar, examples, and wrote the AST - we're planning on hand-rolling our lexer and parser
