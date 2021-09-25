@@ -1,4 +1,4 @@
-import { Import, Define, Let, If, For, Print, Binop, Unop, Index, Slice, Call, List, Begin, On, Advancement, True, False, ASTNumber, ASTString, MCFunction } from "../ast/ast";
+import { Import, Define, Let, If, For, Print, Binop, Unop, Index, Slice, Call, List, Begin, On, Advancement, True, False, ASTNumber, ASTString, MCFunction, Expression } from "../ast/ast";
 import { AstVisitor } from "../ast/visitor";
 //import STORE from "./store"
 
@@ -70,6 +70,10 @@ export class FunctionClosure {
 
 
 export class Evaluator implements AstVisitor {
+    evaluate(expression: Expression) {
+        return expression.accept(this, new EvaluatorEnv({}));
+    }
+
     visitImport(_astNode: Import, _env: EvaluatorEnv) : EvaluatorData {
         throw new Error("Method not implemented.");
     }
@@ -79,8 +83,12 @@ export class Evaluator implements AstVisitor {
     visitLet(_astNode: Let, _env: EvaluatorEnv) : EvaluatorData {
         throw new Error("Method not implemented.");
     }
-    visitIf(_astNode: If, _env: EvaluatorEnv) : EvaluatorData {
-        throw new Error("Method not implemented.");
+    visitIf(astNode: If, env: EvaluatorEnv) : EvaluatorData {
+        if (astNode.predicate.accept(this, env)) {
+            return astNode.consequent.accept(this, env);
+        } else {
+            return astNode.alternative.accept(this, env);
+        }
     }
     visitFor(_astNode: For, _env: EvaluatorEnv) : EvaluatorData {
         throw new Error("Method not implemented.");
@@ -89,6 +97,13 @@ export class Evaluator implements AstVisitor {
         throw new Error("Method not implemented.");
     }
     visitBinop(_astNode: Binop, _env: EvaluatorEnv) : EvaluatorData {
+        /*
+        switch (astNode.op) {
+            case BinaryOperator.AND {
+                astNode.lhs && astNode.rhs;
+            }
+        }
+        */
         throw new Error("Method not implemented.");
     }
     visitUnop(_astNode: Unop, _env: EvaluatorEnv) : EvaluatorData {
