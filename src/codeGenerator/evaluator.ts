@@ -1,4 +1,4 @@
-import { Import, Define, Let, If, For, Print, Binop, Unop, Index, Slice, Call, List, Begin, On, Advancement, True, False } from "../ast/ast";
+import { Import, Define, Let, If, For, Print, Binop, Unop, Index, Slice, Call, List, Begin, On, Advancement, True, False, ASTNumber, ASTString, MCFunction } from "../ast/ast";
 import { AstVisitor } from "../ast/visitor";
 //import STORE from "./store"
 
@@ -115,19 +115,19 @@ export class Evaluator implements AstVisitor {
     visitAdvancement(_astNode: Advancement, _env: EvaluatorEnv) : EvaluatorData {
         throw new Error("Method not implemented.");
     }
-    visitFunction(_astNode: Function, _env: EvaluatorEnv) : EvaluatorData {
+    visitFunction(_astNode: MCFunction, _env: EvaluatorEnv) : EvaluatorData {
         throw new Error("Method not implemented.");
     }
     visitTrue(_astNode: True, _env: EvaluatorEnv) : EvaluatorData {
-        throw new Error("Method not implemented.");
+        return true;
     }
     visitFalse(_astNode: False, _env: EvaluatorEnv) : EvaluatorData {
-        throw new Error("Method not implemented.");
+        return false;
     }
-    visitNumber(_astNode: Number, _env: EvaluatorEnv) : EvaluatorData {
-        throw new Error("Method not implemented.");
+    visitNumber(astNode: ASTNumber, _env: EvaluatorEnv) : EvaluatorData {
+        return astNode.value;
     }
-    visitString(_astNode: String, _env: EvaluatorEnv) : EvaluatorData {
+    visitString(_astNode: ASTString, _env: EvaluatorEnv) : EvaluatorData {
         throw new Error("Method not implemented.");
     }
 
