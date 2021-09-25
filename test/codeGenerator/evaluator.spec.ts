@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import { ASTNumber, BinaryOperator, Binop, Expression, False, If, True } from "../../src/ast/ast";
+import { ASTNumber, BinaryOperator, Binop, Expression, False, If, True, UnaryOperator, Unop } from "../../src/ast/ast";
 import Span, { Location } from "../../src/ast/span";
 import Token, { TokenType } from "../../src/ast/token";
 import { Evaluator } from "../../src/codeGenerator/evaluator";
@@ -146,5 +146,15 @@ describe("evaluator", () => {
                           new ASTNumber(dummyToken("1")),
                           new ASTNumber(dummyToken("2")));
         assert.equal(evaluator.evaluate(expr), 1);
+    });
+
+    it('visitUnop', function() {
+        let evaluator = new Evaluator();
+        let myNum = new ASTNumber(dummyToken("10"));
+        let myBool = new True(dummyToken());
+        assert.equal(evaluator.evaluate(
+            new Unop(dummyToken(), UnaryOperator.NEG, myNum)), -10);
+        assert.equal(evaluator.evaluate(
+            new Unop(dummyToken(), UnaryOperator.NOT, myBool)), false);
     });
 });

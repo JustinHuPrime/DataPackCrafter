@@ -1,4 +1,4 @@
-import { Import, Define, Let, If, For, Print, Binop, Unop, Index, Slice, Call, List, Begin, On, Advancement, True, False, ASTNumber, ASTString, MCFunction, Expression, BinaryOperator } from "../ast/ast";
+import { Import, Define, Let, If, For, Print, Binop, Unop, Index, Slice, Call, List, Begin, On, Advancement, True, False, ASTNumber, ASTString, MCFunction, Expression, BinaryOperator, UnaryOperator } from "../ast/ast";
 import { AstVisitor } from "../ast/visitor";
 //import STORE from "./store"
 
@@ -79,7 +79,7 @@ export class Evaluator implements AstVisitor {
             return num;
         } else {
             // We reject these to prevent confusing behaviour for the end user
-            throw new Error("Math overflow or divide by zero")
+            throw new Error("Math overflow or divide by zero");
         }
     }
 
@@ -151,8 +151,15 @@ export class Evaluator implements AstVisitor {
         }
         throw new Error(`Unknown operator ${astNode.op}`);
     }
-    visitUnop(_astNode: Unop, _env: EvaluatorEnv) : EvaluatorData {
-        throw new Error("Method not implemented.");
+
+    visitUnop(astNode: Unop, env: EvaluatorEnv) : EvaluatorData {
+        let value = astNode.target.accept(this, env);
+        switch (astNode.op) {
+            case UnaryOperator.NEG:
+                return -value;
+            case UnaryOperator.NOT:
+                return !value;
+       }
     }
     visitIndex(_astNode: Index, _env: EvaluatorEnv) : EvaluatorData {
         throw new Error("Method not implemented.");
