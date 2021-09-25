@@ -254,7 +254,7 @@ export class Advancement extends Expression {
   }
 }
 
-export class Function extends Expression {
+export class MCFunction extends Expression {
   name: Expression | null;
   commands: Command[];
 
@@ -439,7 +439,7 @@ export class Id extends Ast {
   }
 }
 
-export class Number extends Expression {
+export class ASTNumber extends Expression {
   value: number;
   constructor(token: Token) {
     // assert(!isNaN(parseFloat(token.content)), "couldn't parse number");
@@ -449,7 +449,7 @@ export class Number extends Expression {
   }
 }
 
-export class String extends Expression {
+export class ASTString extends Expression {
   components: (string | Expression)[];
 
   constructor(
