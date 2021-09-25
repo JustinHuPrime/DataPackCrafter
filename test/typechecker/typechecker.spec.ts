@@ -1,6 +1,6 @@
-import typecheck from "../../src/typechecker/typechecker";
+// import typecheck from "../../src/typechecker/typechecker";
 
-describe("typechcker", () => {
-  console.log(typecheck);
+describe("typechecker", () => {
+  // console.log(typecheck);
   // TODO
 });
