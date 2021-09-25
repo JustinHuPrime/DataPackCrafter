@@ -1,4 +1,4 @@
-import { Import, Define, Let, If, For, Print, Binop, Unop, Index, Slice, Call, List, Begin, On, Advancement, True, False, ASTNumber, ASTString, MCFunction, Expression } from "../ast/ast";
+import { Import, Define, Let, If, For, Print, Binop, Unop, Index, Slice, Call, List, Begin, On, Advancement, True, False, ASTNumber, ASTString, MCFunction, Expression, BinaryOperator } from "../ast/ast";
 import { AstVisitor } from "../ast/visitor";
 //import STORE from "./store"
 
@@ -74,6 +74,15 @@ export class Evaluator implements AstVisitor {
         return expression.accept(this, new EvaluatorEnv({}));
     }
 
+    protected _sanitizeNum(num: number) : number {
+        if (isFinite(num)) {
+            return num;
+        } else {
+            // We reject these to prevent confusing behaviour for the end user
+            throw new Error("Math overflow or divide by zero")
+        }
+    }
+
     visitImport(_astNode: Import, _env: EvaluatorEnv) : EvaluatorData {
         throw new Error("Method not implemented.");
     }
@@ -96,15 +105,51 @@ export class Evaluator implements AstVisitor {
     visitPrint(_astNode: Print, _env: EvaluatorEnv) : EvaluatorData {
         throw new Error("Method not implemented.");
     }
-    visitBinop(_astNode: Binop, _env: EvaluatorEnv) : EvaluatorData {
-        /*
+    visitBinop(astNode: Binop, env: EvaluatorEnv) : EvaluatorData {
+        let lhs = astNode.lhs.accept(this, env);
+        let rhs = astNode.rhs.accept(this, env);
         switch (astNode.op) {
-            case BinaryOperator.AND {
-                astNode.lhs && astNode.rhs;
+            case BinaryOperator.AND: {
+                return lhs && rhs;
+            }
+            case BinaryOperator.OR: {
+                return lhs || rhs;
+            }
+            case BinaryOperator.EQ: {
+                return lhs === rhs;
+            }
+            case BinaryOperator.NEQ: {
+                return lhs !== rhs;
+            }
+            case BinaryOperator.LT: {
+                return lhs < rhs;
+            }
+            case BinaryOperator.LTE: {
+                return lhs <= rhs;
+            }
+            case BinaryOperator.GT: {
+                return lhs > rhs;
+            }
+            case BinaryOperator.GTE: {
+                return lhs >= rhs;
+            }
+            case BinaryOperator.ADD: {
+                return this._sanitizeNum(lhs + rhs);
+            }
+            case BinaryOperator.SUB: {
+                return this._sanitizeNum(lhs - rhs);
+            }
+            case BinaryOperator.MUL: {
+                return this._sanitizeNum(lhs * rhs);
+            }
+            case BinaryOperator.DIV: {
+                return this._sanitizeNum(lhs / rhs);
+            }
+            case BinaryOperator.MOD: {
+                return this._sanitizeNum(lhs % rhs);
             }
         }
-        */
-        throw new Error("Method not implemented.");
+        throw new Error(`Unknown operator ${astNode.op}`);
     }
     visitUnop(_astNode: Unop, _env: EvaluatorEnv) : EvaluatorData {
         throw new Error("Method not implemented.");

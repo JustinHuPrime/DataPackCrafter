@@ -42,9 +42,13 @@ Relational expression perform standard numeric relations when given two numbers,
 
 Additive expressions perform standard numeric operations when given two numbers, or perform a string-concatenate when adding together two strings. Additionally, if two lists are given, a list-append operation is performed.
 
+Expressions that evaluate to a non-finite value (e.g. by overflowing JavaScript numbers) will throw an error.
+
 ## Multiplicative Expressions
 
 Multiplicative expressions perform the standard numeric operation with two numbers.
+
+Expressions that evaluate to a non-finite value (e.g. dividing by 0) will throw an error.
 
 ## Prefix Expressions
 
