@@ -430,7 +430,7 @@ export class Parent extends AdvancementSpec {
   }
 }
 
-export class Id extends Ast {
+export class Id extends Expression {
   id: string;
 
   constructor(token: Token) {
