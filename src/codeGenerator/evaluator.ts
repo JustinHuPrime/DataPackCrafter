@@ -86,11 +86,36 @@ export class Evaluator implements AstVisitor {
     visitImport(_astNode: Import, _env: EvaluatorEnv) : EvaluatorData {
         throw new Error("Method not implemented.");
     }
-    visitDefine(_astNode: Define, _env: EvaluatorEnv) : EvaluatorData {
-        throw new Error("Method not implemented.");
+    visitDefine(astNode: Define, env: EvaluatorEnv) : EvaluatorData {
+        let closure = new FunctionClosure(astNode, env);
+        if (astNode.id !== null) {
+            // IDs at binding time are treated as raw strings, and not evaluated further
+            env.extend(astNode.id.id, closure, true);
+        }
+        return closure;
     }
-    visitLet(_astNode: Let, _env: EvaluatorEnv) : EvaluatorData {
-        throw new Error("Method not implemented.");
+    visitLet(astNode: Let, env: EvaluatorEnv) : EvaluatorData {
+        if (astNode.ids.length !== astNode.values.length) {
+            throw new Error(`let: Lengths of IDs (${astNode.ids.length}) and ` +
+                            `expressions (${astNode.values.length}) do not match`)
+        }
+        let newEnv = env;
+        for (let idx in astNode.ids) {
+            let id = astNode.ids[idx];
+            if (id == null) {
+                throw new Error(`let: Expected string ID in index ${idx}, got ${id}`);
+            }
+
+            let expr = astNode.values[idx];
+            if (expr == null) {
+                throw new Error(`let: Expected expression in index ${idx}, got ${expr}`);
+            }
+
+            let result = expr.accept(this, env);
+            // IDs at binding time are treated as raw strings, and not evaluated further
+            newEnv = newEnv.extend(id.id, result);
+        }
+        return astNode.body.accept(this, newEnv);
     }
     visitIf(astNode: If, env: EvaluatorEnv) : EvaluatorData {
         if (astNode.predicate.accept(this, env)) {
@@ -191,8 +216,8 @@ export class Evaluator implements AstVisitor {
     visitFalse(_astNode: False, _env: EvaluatorEnv) : EvaluatorData {
         return false;
     }
-    visitId(_astNode: Id, _env: EvaluatorEnv) {
-        throw new Error("Method not implemented.");
+    visitId(astNode: Id, env: EvaluatorEnv) {
+        return env.fetch(astNode.id);
     }
     visitNumber(astNode: ASTNumber, _env: EvaluatorEnv) : EvaluatorData {
         return astNode.value;
