@@ -70,8 +70,17 @@ export class FunctionClosure {
 
 
 export class Evaluator implements AstVisitor {
-    evaluate(expression: Expression) {
-        return expression.accept(this, new EvaluatorEnv({}));
+    /**
+     * Evaluate a DSL expression.
+     * @param expression expression
+     * @param env        environment of variables (or empty env if not given)
+     * @returns          result of evaluation (a subtype of EvaluatorData)
+     */
+    evaluate(expression: Expression, env?: EvaluatorEnv) {
+        if (env == null) {
+            env = new EvaluatorEnv({});
+        }
+        return expression.accept(this, env);
     }
 
     protected _sanitizeNum(num: number) : number {

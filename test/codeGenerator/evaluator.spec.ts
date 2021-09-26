@@ -29,7 +29,7 @@ function numNode(value: string) : ASTNumber {
 
 let addXYFunc : Define;
 {
-    // This defines a function fancyFunc that adds x to y
+    // This defines an example function fancyFunc that adds x to y
     let x : Id = idNode("x");
     let y : Id = idNode("y");
     let body = new Binop(x, BinaryOperator.ADD, y);
