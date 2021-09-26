@@ -87,6 +87,14 @@ export class Evaluator implements AstVisitor {
         throw new Error("Method not implemented.");
     }
     visitDefine(astNode: Define, env: EvaluatorEnv) : EvaluatorData {
+        let fnArgNames = new Set();
+        for (let fnArgName of astNode.args) {
+            if (fnArgNames.has(fnArgName.id)) {
+                throw new Error(`define: Duplicate function argument name ${fnArgName}`);
+            }
+            fnArgNames.add(fnArgName.id);
+        }
+
         let closure = new FunctionClosure(astNode, env);
         if (astNode.id !== null) {
             // IDs at binding time are treated as raw strings, and not evaluated further

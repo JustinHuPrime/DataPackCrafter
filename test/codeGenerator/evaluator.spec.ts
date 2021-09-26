@@ -188,6 +188,15 @@ describe("evaluator", () => {
         assert.equal(fnClosure.env.fetch("fancyFunc"), fnClosure);
     });
 
+    it('visitDefine error: duplicate variable names', function() {
+        let evaluator = new Evaluator();
+        // fun fact: if you do this in JS it will just take the right-most "x" as x.
+        let define = new Define(dummyToken(),
+                                idNode("weird"), [idNode("x"), idNode("y"), idNode("x")],
+                                idNode("x"))
+        assert.throws(() => evaluator.evaluate(define));
+    });
+
     it('visitLet / visitId simple', function() {
         let evaluator = new Evaluator();
         let letNode;
