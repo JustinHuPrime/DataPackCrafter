@@ -265,8 +265,19 @@ export class Evaluator implements AstVisitor {
     visitNumber(astNode: ASTNumber, _env: EvaluatorEnv) : EvaluatorData {
         return astNode.value;
     }
-    visitString(_astNode: ASTString, _env: EvaluatorEnv) : EvaluatorData {
-        throw new Error("Method not implemented.");
+    visitString(astNode: ASTString, env: EvaluatorEnv) : EvaluatorData {
+        let resultPieces: string[] = [];
+        for (let component of astNode.components) {
+            let result: string;
+            // String components may contain either expressions or raw (JS) strings
+            if (component instanceof Expression) {
+                result = component.accept(this, env);
+            } else {
+                result = component;
+            }
+            resultPieces.push(result);
+        }
+        return String.prototype.concat(...resultPieces);
     }
 
 }

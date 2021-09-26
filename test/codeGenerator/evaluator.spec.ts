@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import { ASTNumber, Begin, BinaryOperator, Binop, Call, Define, Expression, False, Id, If, Let, True, UnaryOperator, Unop } from "../../src/ast/ast";
+import { ASTNumber, ASTString, Begin, BinaryOperator, Binop, Call, Define, Expression, False, Id, If, Let, True, UnaryOperator, Unop } from "../../src/ast/ast";
 import Span, { Location } from "../../src/ast/span";
 import Token, { TokenType } from "../../src/ast/token";
 import { Evaluator } from "../../src/codeGenerator/evaluator";
@@ -335,4 +335,31 @@ describe("evaluator", () => {
             assert.throws(() => evaluator.evaluate(callErrors[errorDesc]!));
         });
     }
+
+    it('visitString simple', function() {
+        let evaluator = new Evaluator();
+        let expr = new ASTString(dummyToken(), ["hello world"], dummyToken());
+        assert.equal(evaluator.evaluate(expr), "hello world");
+    });
+
+    it('visitString concat multiple strings', function() {
+        let evaluator = new Evaluator();
+        let expr = new ASTString(dummyToken(), ["Straw", "berry"], dummyToken());
+        assert.equal(evaluator.evaluate(expr), "Strawberry");
+    });
+
+    it('visitString nested string expr', function() {
+        let evaluator = new Evaluator();
+        let inner = new ASTString(dummyToken(), ["B"], dummyToken());
+        let expr = new ASTString(dummyToken(), ["A", inner, "C"], dummyToken());
+        assert.equal(evaluator.evaluate(expr), "ABC");
+    });
+
+    it('visitString nested non-string exprs', function() {
+        let evaluator = new Evaluator();
+        let bool = new False(dummyToken());
+        let num = numNode("12345");
+        let expr = new ASTString(dummyToken(), ["num is ", num, "; bool is ", bool], dummyToken());
+        assert.equal(evaluator.evaluate(expr), "num is 12345; bool is false");
+    });
 });
