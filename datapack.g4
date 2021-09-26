@@ -60,7 +60,8 @@ primary_expression:
 	| string // literals
 	| NUMBER
 	| 'true'
-	| 'false';
+	| 'false'
+	| ID;
 
 command: // TODO: can make more commands available in type-checked form
 	'grant' expression // grant advancement
