@@ -526,6 +526,10 @@ export class Id extends Expression {
     super(token.span);
     this.id = token.content;
   }
+
+  accept(visitor: AstVisitor, env: EvaluatorEnv) {
+    return visitor.visitId(this, env);
+  }
 }
 
 export class ASTNumber extends Expression {

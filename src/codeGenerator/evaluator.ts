@@ -1,4 +1,4 @@
-import { Import, Define, Let, If, For, Print, Binop, Unop, Index, Slice, Call, List, Begin, On, Advancement, True, False, ASTNumber, ASTString, MCFunction, Expression, BinaryOperator, UnaryOperator } from "../ast/ast";
+import { Import, Define, Let, If, For, Print, Binop, Unop, Index, Slice, Call, List, Begin, On, Advancement, True, False, ASTNumber, ASTString, MCFunction, Expression, BinaryOperator, UnaryOperator, Id } from "../ast/ast";
 import { AstVisitor } from "../ast/visitor";
 //import STORE from "./store"
 
@@ -190,6 +190,9 @@ export class Evaluator implements AstVisitor {
     }
     visitFalse(_astNode: False, _env: EvaluatorEnv) : EvaluatorData {
         return false;
+    }
+    visitId(_astNode: Id, _env: EvaluatorEnv) {
+        throw new Error("Method not implemented.");
     }
     visitNumber(astNode: ASTNumber, _env: EvaluatorEnv) : EvaluatorData {
         return astNode.value;

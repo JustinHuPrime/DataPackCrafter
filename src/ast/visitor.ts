@@ -1,5 +1,5 @@
 import { EvaluatorEnv } from "../codeGenerator/evaluator";
-import { Import, Define, Let, If, For, Print, Binop, Unop, Index, Slice, Call, List, Begin, On, Advancement, True, False, ASTNumber, ASTString, MCFunction } from "./ast";
+import { Import, Define, Let, If, For, Print, Binop, Unop, Index, Slice, Call, List, Begin, On, Advancement, True, False, ASTNumber, ASTString, MCFunction, Id } from "./ast";
 
 export interface AstVisitor {
   visitImport(astNode: Import, env: EvaluatorEnv) : any;
@@ -20,6 +20,7 @@ export interface AstVisitor {
   visitFunction(astNode: MCFunction, env: EvaluatorEnv) : any;
   visitTrue(astNode: True, env: EvaluatorEnv) : any;
   visitFalse(astNode: False, env: EvaluatorEnv) : any;
+  visitId(astNode: Id, env: EvaluatorEnv) : any;
   visitNumber(astNode: ASTNumber, env: EvaluatorEnv) : any;
   visitString(astNode: ASTString, env: EvaluatorEnv) : any;
 }
