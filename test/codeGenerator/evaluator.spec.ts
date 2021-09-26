@@ -27,6 +27,7 @@ function numNode(value: string) : ASTNumber {
     return new ASTNumber(dummyToken(value));
 }
 
+/* Example functions for reuse in testing */
 let addXYFunc : Define;
 {
     // This defines an example function fancyFunc that adds x to y
@@ -34,6 +35,21 @@ let addXYFunc : Define;
     let y : Id = idNode("y");
     let body = new Binop(x, BinaryOperator.ADD, y);
     addXYFunc = new Define(dummyToken(), idNode("fancyFunc"), [x, y], body);
+}
+let factorialFunc : Define;
+{
+    let fnId = idNode("fact");
+    let n    = idNode("n");
+
+    let pred = new Binop(n, BinaryOperator.LTE, numNode("0")); // lazily handling negatives
+    let baseCase = numNode("1");
+
+    // Building up the recursive case
+    let recurCall = new Call(fnId, [new Binop(n, BinaryOperator.SUB, numNode("1"))], dummyToken());
+    let recurCase = new Binop(n, BinaryOperator.MUL, recurCall);
+
+    let body = new If(dummyToken(), pred, baseCase, recurCase);
+    factorialFunc = new Define(dummyToken(), fnId, [n], body);
 }
 
 describe("evaluator", () => {
@@ -271,6 +287,23 @@ describe("evaluator", () => {
             new Call(idNode("fancyFunc"), [numNode("3"), numNode("7")], dummyToken()),
         ], dummyToken());
         assert.equal(evaluator.evaluate(prog), 10);
+    });
+
+    it('visitCall recursion (factorial)', function() {
+        let evaluator = new Evaluator();
+        let prog : Expression;
+
+        prog = new Begin(dummyToken(), [
+            factorialFunc,
+            new Call(factorialFunc.id!, [numNode("1")], dummyToken()),
+        ], dummyToken());
+        assert.equal(evaluator.evaluate(prog), 1);
+
+        prog = new Begin(dummyToken(), [
+            factorialFunc,
+            new Call(factorialFunc.id!, [numNode("5")], dummyToken()),
+        ], dummyToken());
+        assert.equal(evaluator.evaluate(prog), 120);
     });
 
     let callErrors : {[key: string]: Expression} = {
