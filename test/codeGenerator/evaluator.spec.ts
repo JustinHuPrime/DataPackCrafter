@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import { ASTNumber, Begin, BinaryOperator, Binop, Define, Expression, False, Id, If, Let, True, UnaryOperator, Unop } from "../../src/ast/ast";
+import { ASTNumber, Begin, BinaryOperator, Binop, Call, Define, Expression, False, Id, If, Let, True, UnaryOperator, Unop } from "../../src/ast/ast";
 import Span, { Location } from "../../src/ast/span";
 import Token, { TokenType } from "../../src/ast/token";
 import { Evaluator } from "../../src/codeGenerator/evaluator";
@@ -25,6 +25,15 @@ function numNode(value: string) : ASTNumber {
      * Create an number node with the given value.
      */
     return new ASTNumber(dummyToken(value));
+}
+
+let addXYFunc : Define;
+{
+    // This defines a function fancyFunc that adds x to y
+    let x : Id = idNode("x");
+    let y : Id = idNode("y");
+    let body = new Binop(x, BinaryOperator.ADD, y);
+    addXYFunc = new Define(dummyToken(), idNode("fancyFunc"), [x, y], body);
 }
 
 describe("evaluator", () => {
@@ -172,17 +181,10 @@ describe("evaluator", () => {
 
     it('visitDefine', function() {
         let evaluator = new Evaluator();
-
-        // This defines a function fancyFunc that adds x to y
-        let x : Id = idNode("x");
-        let y : Id = idNode("y");
-        let body = new Binop(x, BinaryOperator.ADD, y);
-        let defineNode = new Define(dummyToken(), idNode("fancyFunc"), [x, y], body);
-
-        let fnClosure = evaluator.evaluate(defineNode);
+        let fnClosure = evaluator.evaluate(addXYFunc);
 
         // This only checks the return type and env update, as there is no function call
-        assert.equal(fnClosure.fn, defineNode);
+        assert.equal(fnClosure.fn, addXYFunc);
         assert.equal(fnClosure.env.fetch("fancyFunc"), fnClosure);
     });
 
@@ -231,7 +233,7 @@ describe("evaluator", () => {
             new Let(dummyToken(), [idNode("a"), idNode("b")], [numNode("-1"), numNode("-2"), numNode("-3")], numNode("0")),
     }
     for (let letErrorDesc of Object.keys(letErrors)) {
-        it(`visitLet error case: ${letErrorDesc}`, function() {
+        it(`visitLet error: ${letErrorDesc}`, function() {
             let evaluator = new Evaluator();
             assert.throws(() => evaluator.evaluate(letErrors[letErrorDesc]!));
         });
@@ -245,4 +247,50 @@ describe("evaluator", () => {
         ], dummyToken("}"));
         assert.equal(evaluator.evaluate(beginNode), 6);
     });
+
+    it('visitCall anonymous function', function() {
+        let evaluator = new Evaluator();
+        let func = new Define(dummyToken(), null, [], numNode("4")); // totally not getRandomNumber()
+        let prog = new Call(func, [], dummyToken());
+        assert.equal(evaluator.evaluate(prog), 4);
+    });
+
+    it('visitCall named function', function() {
+        let evaluator = new Evaluator();
+        let prog = new Begin(dummyToken(), [
+            addXYFunc,
+            new Call(idNode("fancyFunc"), [numNode("3"), numNode("7")], dummyToken()),
+        ], dummyToken());
+        assert.equal(evaluator.evaluate(prog), 10);
+    });
+
+    let callErrors : {[key: string]: Expression} = {
+        "too many arguments": new Begin(dummyToken(), [
+            addXYFunc,
+            new Call(idNode("fancyFunc"), [numNode("3"), numNode("7"), numNode("-5")], dummyToken()),
+        ], dummyToken()),
+
+        "too few arguments": new Begin(dummyToken(), [
+            addXYFunc,
+            new Call(idNode("fancyFunc"), [numNode("3")], dummyToken()),
+        ], dummyToken()),
+
+        "unknown variable in function part":
+            new Call(idNode("qwerty"), [numNode("3")], dummyToken()),
+        "calling a non-function":
+            new Call(new True(dummyToken()), [], dummyToken()),
+
+        "unknown variable in function arg":
+            new Call(addXYFunc, [idNode("x"), idNode("y")], dummyToken()),
+
+        "unknown variable in function body":
+            new Call(new Define(dummyToken(), null, [idNode("x"), idNode("y")], idNode("z")),
+            [idNode("x"), idNode("y")], dummyToken()),
+    }
+    for (let errorDesc of Object.keys(callErrors)) {
+        it(`visitCall error: ${errorDesc}`, function() {
+            let evaluator = new Evaluator();
+            assert.throws(() => evaluator.evaluate(callErrors[errorDesc]!));
+        });
+    }
 });

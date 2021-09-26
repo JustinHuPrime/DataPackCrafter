@@ -192,8 +192,27 @@ export class Evaluator implements AstVisitor {
     visitSlice(_astNode: Slice, _env: EvaluatorEnv) : EvaluatorData {
         throw new Error("Method not implemented.");
     }
-    visitCall(_astNode: Call, _env: EvaluatorEnv) : EvaluatorData {
-        throw new Error("Method not implemented.");
+    visitCall(astNode: Call, env: EvaluatorEnv) : EvaluatorData {
+        let fnClosure = astNode.target.accept(this, env);
+        let fnName = fnClosure.fn.id || "<anonymous function>";
+        if (!(fnClosure instanceof FunctionClosure)) {
+            throw new Error(`call: attempted to call non-function ${JSON.stringify(fnClosure)}`)
+        }
+        if (astNode.args.length !== fnClosure.fn.args.length) {
+            throw new Error(`call: function ${fnName} expects ${fnClosure.fn.args.length} arguments, got ${astNode.args.length}`)
+        }
+        let newEnv = fnClosure.env; // need to use env from closure!!
+        for (let idx in astNode.args) {
+            let fnArgName = fnClosure.fn.args[idx]?.id;
+            let fnArgExpr = astNode.args[idx];
+            if (fnArgName == null || fnArgExpr == null ) {
+                throw new Error(`call: could not read arguments for ${fnName} (either ${JSON.stringify(fnArgName)} or ` +
+                                `${JSON.stringify(fnArgExpr)} are null`);
+            }
+            let fnArgValue = fnArgExpr.accept(this, env);
+            newEnv = newEnv.extend(fnArgName, fnArgValue);
+        }
+        return fnClosure.fn.body.accept(this, newEnv);
     }
     visitList(_astNode: List, _env: EvaluatorEnv) : EvaluatorData {
         throw new Error("Method not implemented.");
