@@ -198,8 +198,15 @@ export class Evaluator implements AstVisitor {
     visitList(_astNode: List, _env: EvaluatorEnv) : EvaluatorData {
         throw new Error("Method not implemented.");
     }
-    visitBegin(_astNode: Begin, _env: EvaluatorEnv) : EvaluatorData {
-        throw new Error("Method not implemented.");
+    visitBegin(astNode: Begin, env: EvaluatorEnv) : EvaluatorData {
+        let result;
+        if (astNode.elements.length === 0) {
+            throw new Error("begin: cannot have a begin expr with 0 elements")
+        }
+        for (let expr of astNode.elements) {
+            result = expr.accept(this, env);
+        }
+        return result;  // just return the last result
     }
     visitOn(_astNode: On, _env: EvaluatorEnv) : EvaluatorData {
         throw new Error("Method not implemented.");
