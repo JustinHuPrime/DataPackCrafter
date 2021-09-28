@@ -8,7 +8,7 @@ import { Expression } from "../ast/ast";
 export class DSLEvaluationError extends Error {
     expr: Expression | null;
 
-    constructor(expr: Expression, message: string) {
+    constructor(expr: Expression | null, message: string) {
         super(message);
         this.name = "DSLEvaluationError"
         this.expr = expr;
@@ -19,7 +19,7 @@ export class DSLEvaluationError extends Error {
  * Error thrown when using an unknown (unbound) variable
  */
 export class DSLReferenceError extends DSLEvaluationError {
-    constructor(expr: Expression, message: string) {
+    constructor(expr: Expression | null, message: string) {
         super(expr, message);
         this.name = "DSLReferenceError"
         this.expr = expr;
@@ -30,7 +30,7 @@ export class DSLReferenceError extends DSLEvaluationError {
  * Math error (overflow or divide by zero)
  */
 export class DSLMathError extends DSLEvaluationError {
-    constructor(expr: Expression, message: string) {
+    constructor(expr: Expression | null, message: string) {
         super(expr, message);
         this.name = "DSLMathError"
         this.expr = expr;
@@ -41,7 +41,7 @@ export class DSLMathError extends DSLEvaluationError {
  * Malformed expressions (e.g. let with mismatched argument lists)
  */
 export class DSLSyntaxError extends DSLEvaluationError {
-    constructor(expr: Expression, message: string) {
+    constructor(expr: Expression | null, message: string) {
         super(expr, message);
         this.name = "DSLSyntaxError"
         this.expr = expr;
@@ -52,7 +52,7 @@ export class DSLSyntaxError extends DSLEvaluationError {
  * Runtime type errors
  */
 export class DSLTypeError extends DSLEvaluationError {
-    constructor(expr: Expression, message: string) {
+    constructor(expr: Expression | null, message: string) {
         super(expr, message);
         this.name = "DSLTypeError"
         this.expr = expr;
@@ -63,7 +63,7 @@ export class DSLTypeError extends DSLEvaluationError {
  * Errors to represent array index out of range
  */
  export class DSLIndexError extends DSLEvaluationError {
-    constructor(expr: Expression, message: string) {
+    constructor(expr: Expression | null, message: string) {
         super(expr, message);
         this.name = "DSLIndexError"
         this.expr = expr;

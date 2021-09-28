@@ -2,6 +2,7 @@ import { Import, Define, Let, If, For, Print, Binop, Unop, Index, Slice, Call, L
 import { ExpressionVisitor } from "../ast/visitor";
 import { DSLIndexError, DSLMathError, DSLReferenceError, DSLSyntaxError, DSLTypeError } from "./exceptions"
 //import STORE from "./store"
+let deepEqual = require('deep-equal');
 
 /**
  * Represents internal data types known to the evaluator.
@@ -78,13 +79,11 @@ export class Evaluator implements ExpressionVisitor {
         return expression.accept(this, env);
     }
 
-    protected _sanitizeNum(expr: Expression, num: number) : number {
-        if (isFinite(num)) {
-            return num;
-        } else {
-            // We reject these to prevent confusing behaviour for the end user
+    protected sanitize(expr: Expression, data: EvaluatorData) : EvaluatorData {
+        if (typeof data === "number" && !isFinite(data)) {
             throw new DSLMathError(expr, "Math overflow or divide by zero");
         }
+        return data;
     }
 
     visitImport(_astNode: Import, _env: EvaluatorEnv) : EvaluatorData {
@@ -130,6 +129,7 @@ export class Evaluator implements ExpressionVisitor {
         return astNode.body.accept(this, newEnv);
     }
     visitIf(astNode: If, env: EvaluatorEnv) : EvaluatorData {
+        // TODO: typecheck the predicate value
         if (astNode.predicate.accept(this, env)) {
             return astNode.consequent.accept(this, env);
         } else {
@@ -155,9 +155,63 @@ export class Evaluator implements ExpressionVisitor {
         console.log(s);
         return s;
     }
+
+    typecheckBinOp(expr: Expression|null, lhs: EvaluatorData, rhs: EvaluatorData, op: BinaryOperator) {
+        let lhsType = typeof lhs;
+        let rhsType = typeof rhs;
+        switch (op) {
+            case BinaryOperator.AND:
+            case BinaryOperator.OR:
+                if (lhsType !== "boolean" || lhsType !== rhsType) {
+                    throw new DSLTypeError(expr, `incorrect type of operand for AND/OR (expected boolean; got ${lhsType})`);
+                }
+                if (lhsType !== rhsType) {
+                    throw new DSLTypeError(expr, `type mismatch for operands (got ${lhsType} and ${rhsType})`);
+                }
+                return;
+            case BinaryOperator.EQ:
+            case BinaryOperator.NEQ: {
+                return; // any types are ok
+            }
+            case BinaryOperator.LT:
+            case BinaryOperator.LTE:
+            case BinaryOperator.GT:
+            case BinaryOperator.GTE:
+                if (lhsType !== "string" && lhsType !== "number") {
+                    throw new DSLTypeError(expr, `incorrect type of operand for compare (expected string or number; got ${lhsType})`);
+                }
+                if (lhsType !== rhsType) {
+                    throw new DSLTypeError(expr, `type mismatch for operands (got ${lhsType} and ${rhsType})`);
+                }
+                return;
+            case BinaryOperator.ADD: {
+                if (lhsType !== "string" && lhsType !== "number" && !Array.isArray(lhs)) {
+                    throw new DSLTypeError(expr, `incorrect type of operand for add (expected string, number, or list; got ${lhsType})`);
+                }
+                if (lhsType !== rhsType) {
+                    throw new DSLTypeError(expr, `type mismatch for operands (got ${lhsType} and ${rhsType})`);
+                }
+                return;
+            }
+            case BinaryOperator.SUB:
+            case BinaryOperator.MUL:
+            case BinaryOperator.DIV:
+            case BinaryOperator.MOD: {
+                if (lhsType !== "number") {
+                    throw new DSLTypeError(expr, `incorrect type of operand for arithmetic (expected number, got ${lhsType})`);
+                }
+                if (lhsType !== rhsType) {
+                    throw new DSLTypeError(expr, `type mismatch for operands (got ${lhsType} and ${rhsType})`);
+                }
+            }
+        }
+
+    }
+
     visitBinop(astNode: Binop, env: EvaluatorEnv) : EvaluatorData {
         let lhs = astNode.lhs.accept(this, env);
         let rhs = astNode.rhs.accept(this, env);
+        this.typecheckBinOp(astNode, lhs, rhs, astNode.op);
         switch (astNode.op) {
             case BinaryOperator.AND: {
                 return lhs && rhs;
@@ -166,10 +220,10 @@ export class Evaluator implements ExpressionVisitor {
                 return lhs || rhs;
             }
             case BinaryOperator.EQ: {
-                return lhs === rhs;
+                return deepEqual(lhs, rhs);
             }
             case BinaryOperator.NEQ: {
-                return lhs !== rhs;
+                return !deepEqual(lhs, rhs);
             }
             case BinaryOperator.LT: {
                 return lhs < rhs;
@@ -184,24 +238,29 @@ export class Evaluator implements ExpressionVisitor {
                 return lhs >= rhs;
             }
             case BinaryOperator.ADD: {
-                return this._sanitizeNum(astNode, lhs + rhs);
+                if (Array.isArray(lhs)) {
+                    return lhs.concat(rhs);
+                } else {
+                    return this.sanitize(astNode, lhs + rhs);
+                }
             }
             case BinaryOperator.SUB: {
-                return this._sanitizeNum(astNode, lhs - rhs);
+                return this.sanitize(astNode, lhs - rhs);
             }
             case BinaryOperator.MUL: {
-                return this._sanitizeNum(astNode, lhs * rhs);
+                return this.sanitize(astNode, lhs * rhs);
             }
             case BinaryOperator.DIV: {
-                return this._sanitizeNum(astNode, lhs / rhs);
+                return this.sanitize(astNode, lhs / rhs);
             }
             case BinaryOperator.MOD: {
-                return this._sanitizeNum(astNode, lhs % rhs);
+                return this.sanitize(astNode, lhs % rhs);
             }
         }
         throw new DSLSyntaxError(astNode, `Unknown operator ${astNode.op}`);
     }
 
+    // TODO: typecheck
     visitUnop(astNode: Unop, env: EvaluatorEnv) : EvaluatorData {
         let value = astNode.target.accept(this, env);
         switch (astNode.op) {

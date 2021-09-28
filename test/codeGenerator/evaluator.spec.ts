@@ -96,6 +96,25 @@ describe("evaluator", () => {
         assert.equal(evaluator.evaluate(expr), 111/222);
     });
 
+    it('visitBinop add string', function() {
+        let evaluator = new Evaluator();
+        let lhs = stringNode("abc");
+        let rhs = stringNode("def");
+        let expr: Expression;
+
+        expr = new Binop(lhs, BinaryOperator.ADD, rhs);
+        assert.equal(evaluator.evaluate(expr), "abcdef");
+    });
+
+    it('visitBinop add lists', function() {
+        let evaluator = new Evaluator();
+        let lhs = new List(dummyToken(), [numNode("22"),numNode("3371.000001"),], dummyToken());
+        let rhs = new List(dummyToken(), [stringNode("hello"), stringNode("string")], dummyToken());
+        let expr: Expression;
+        expr = new Binop(lhs, BinaryOperator.ADD, rhs);
+        assert.deepEqual(evaluator.evaluate(expr), [22, 3371.000001, "hello", "string"]);
+    });
+
     it('visitBinop modulo', function() {
         let evaluator = new Evaluator();
         let lhs = new ASTNumber(dummyToken("15"));
@@ -104,7 +123,8 @@ describe("evaluator", () => {
         assert.equal(evaluator.evaluate(expr), 3);
     });
 
-    it('visitBinop comparisons', function() {
+    // TODO check strings too
+    it('visitBinop comparisons on numbers', function() {
         let evaluator = new Evaluator();
         let five = new ASTNumber(dummyToken("5"));
         let three = new ASTNumber(dummyToken("3"));
@@ -127,6 +147,53 @@ describe("evaluator", () => {
         assert.equal(evaluator.evaluate(expr), true);
         expr = new Binop(five, BinaryOperator.GTE, five);
         assert.equal(evaluator.evaluate(expr), true);
+    });
+
+    it('visitBinop equality simple types', function() {
+        let evaluator = new Evaluator();
+        let expr: Expression;
+
+        expr = new Binop(stringNode("foo"), BinaryOperator.EQ, stringNode("foo"));
+        assert.equal(evaluator.evaluate(expr), true);
+        expr = new Binop(stringNode("foo"), BinaryOperator.NEQ, stringNode("foo"));
+        assert.equal(evaluator.evaluate(expr), false);
+
+        expr = new Binop(stringNode("foo"), BinaryOperator.EQ, stringNode("asdf"));
+        assert.equal(evaluator.evaluate(expr), false);
+        expr = new Binop(stringNode("foo"), BinaryOperator.NEQ, stringNode("asdf"));
+        assert.equal(evaluator.evaluate(expr), true);
+        expr = new Binop(numNode("1"), BinaryOperator.EQ, numNode("1"));
+        assert.equal(evaluator.evaluate(expr), true);
+        expr = new Binop(numNode("1"), BinaryOperator.NEQ, numNode("1"));
+        assert.equal(evaluator.evaluate(expr), false);
+
+        // mismatched types
+        expr = new Binop(numNode("1"), BinaryOperator.EQ, stringNode("asdf"));
+        assert.equal(evaluator.evaluate(expr), false);
+        expr = new Binop(numNode("1"), BinaryOperator.NEQ, stringNode("asdf"));
+        assert.equal(evaluator.evaluate(expr), true);
+    });
+
+    it('visitBinop equality lists', function() {
+        let evaluator = new Evaluator();
+        let lst1 = new List(dummyToken(), [], dummyToken());
+        let lst2 = new List(dummyToken(), [stringNode("foo"), numNode("123")], dummyToken());
+        let expr: Expression;
+
+        expr = new Binop(lst1, BinaryOperator.EQ, lst1);
+        assert.equal(evaluator.evaluate(expr), true);
+        expr = new Binop(lst1, BinaryOperator.NEQ, lst1);
+        assert.equal(evaluator.evaluate(expr), false);
+
+        expr = new Binop(lst2, BinaryOperator.EQ, lst2);
+        assert.equal(evaluator.evaluate(expr), true);
+
+        expr = new Binop(lst1, BinaryOperator.NEQ, lst2);
+        assert.equal(evaluator.evaluate(expr), true);
+
+        // mismatched types
+        expr = new Binop(lst1, BinaryOperator.EQ, stringNode("asdf"));
+        assert.equal(evaluator.evaluate(expr), false);
     });
 
     it('visitBinop AND', function() {
@@ -161,16 +228,51 @@ describe("evaluator", () => {
         assert.equal(evaluator.evaluate(expr), false);
     });
 
-    it('visitBinop divide by 0', function() {
-        let evaluator = new Evaluator();
-        let lhs = new ASTNumber(dummyToken("1"));
-        let rhs = new ASTNumber(dummyToken("0"));
-        let expr = new Binop(lhs, BinaryOperator.DIV, rhs);
-        assert.throws(() => evaluator.evaluate(expr));
-    });
+    let binopErrors : {[key: string]: [BinaryOperator, Expression, Expression]} = {
+        "divide by 0": [BinaryOperator.DIV, numNode("1"), numNode("0")],
+        "type mismatch for +": [BinaryOperator.ADD, numNode("94"), factorialFunc],
+        "bad LHS for +": [BinaryOperator.ADD, factorialFunc, factorialFunc],
+        "type mismatch for -": [BinaryOperator.SUB, numNode("27.32"), stringNode("")],
+        "bad LHS for -": [BinaryOperator.SUB, stringNode(""), stringNode("")],
+        "type mismatch for *": [BinaryOperator.MUL, numNode("2"), stringNode("3")],
+        "bad LHS for *": [BinaryOperator.MUL, stringNode(""), stringNode("e")],
+        "type mismatch for /": [BinaryOperator.DIV, numNode("20"), new False(dummyToken())],
+        "bad LHS for /": [BinaryOperator.DIV, addXYFunc, factorialFunc],
+        "type mismatch for %": [BinaryOperator.MOD, numNode("2"), new True(dummyToken())],
+        "bad LHS for %": [BinaryOperator.MOD,
+                          new List(dummyToken(), [numNode("0")], dummyToken()),
+                          new List(dummyToken(), [numNode("0")], dummyToken())],
+        "type mismatch for &&": [BinaryOperator.AND, new True(dummyToken()), addXYFunc],
+        "bad LHS for &&": [BinaryOperator.AND, numNode("3"), numNode("5")],
+        "type mismatch for ||": [BinaryOperator.OR, new False(dummyToken()), new List(dummyToken(), [], dummyToken())],
+        "bad LHS for ||": [BinaryOperator.OR, stringNode(""), stringNode("|")],
+        "type mismatch for >": [BinaryOperator.GT, stringNode("a"), new List(dummyToken(), [], dummyToken())],
+        "bad LHS for >": [BinaryOperator.GT,addXYFunc, addXYFunc],
+        "type mismatch for >=": [BinaryOperator.GTE, numNode("30"), factorialFunc],
+        "bad LHS for >=": [BinaryOperator.GTE, addXYFunc, addXYFunc],
+        "type mismatch for <": [BinaryOperator.LT, stringNode("c"), numNode("2131")],
+        "bad LHS for <": [BinaryOperator.LT,
+                          new List(dummyToken(), [], dummyToken()),
+                          new List(dummyToken(), [numNode("0")], dummyToken())],
+        "type mismatch for <=": [BinaryOperator.LTE, numNode("0"), stringNode("QWERTY")],
+        "bad LHS for <=": [BinaryOperator.LTE,
+                           new List(dummyToken(), [numNode("3")], dummyToken()),
+                           new List(dummyToken(), [numNode("0")], dummyToken())],
+    }
+
+    for (let errorDesc of Object.keys(binopErrors)) {
+        it(`visitBinop error: ${errorDesc}`, function() {
+            let evaluator = new Evaluator();
+            let binOp = binopErrors[errorDesc]![0];
+            let lhs = binopErrors[errorDesc]![1];
+            let rhs = binopErrors[errorDesc]![2];
+            assert.throws(() => evaluator.evaluate(new Binop(lhs, binOp, rhs)));
+        });
+    }
 
     // TODO: check that only one branch gets evaluated at a time
     // TODO: one complex predicate
+    // TODO typecheck the predicate
     it('visitIf false', function() {
         let evaluator = new Evaluator();
         let pred = new False(dummyToken());
