@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import { ASTNumber, ASTString, Begin, BinaryOperator, Binop, Call, Define, Expression, False, Id, If, Index, Let, List, True, UnaryOperator, Unop } from "../../src/ast/ast";
+import { ASTNumber, ASTString, Begin, BinaryOperator, Binop, Call, Define, Expression, False, Id, If, Index, Let, List, Slice, True, UnaryOperator, Unop } from "../../src/ast/ast";
 import Span, { Location } from "../../src/ast/span";
 import Token, { TokenType } from "../../src/ast/token";
 import { Evaluator } from "../../src/codeGenerator/evaluator";
@@ -386,11 +386,11 @@ describe("evaluator", () => {
 
         let indexCall : Expression;
         indexCall = new Index(list, numNode("0"), dummyToken());
-        assert.deepEqual(evaluator.evaluate(indexCall), "a");
+        assert.equal(evaluator.evaluate(indexCall), "a");
         indexCall = new Index(list, numNode("1"), dummyToken());
-        assert.deepEqual(evaluator.evaluate(indexCall), "b");
+        assert.equal(evaluator.evaluate(indexCall), "b");
         indexCall = new Index(list, numNode("2"), dummyToken());
-        assert.deepEqual(evaluator.evaluate(indexCall), "c");
+        assert.equal(evaluator.evaluate(indexCall), "c");
     });
 
     it('visitIndex on string', function() {
@@ -398,9 +398,9 @@ describe("evaluator", () => {
         let list = stringNode("Abracadabra");
         let indexCall : Expression;
         indexCall = new Index(list, numNode("0"), dummyToken());
-        assert.deepEqual(evaluator.evaluate(indexCall), "A");
+        assert.equal(evaluator.evaluate(indexCall), "A");
         indexCall = new Index(list, numNode("4"), dummyToken());
-        assert.deepEqual(evaluator.evaluate(indexCall), "c");
+        assert.equal(evaluator.evaluate(indexCall), "c");
     });
 
     it('visitIndex error: bad target type', function() {
@@ -422,5 +422,99 @@ describe("evaluator", () => {
         let target = stringNode("Abracadabra");
         let indexCall = new Index(target, target, dummyToken());
         assert.throw(() => evaluator.evaluate(indexCall));
+    });
+
+    it('visitSlice on list', function() {
+        let evaluator = new Evaluator();
+        let list = new List(dummyToken(),
+            [1,2,3,4,5].map((x) => numNode(x.toString())),
+        dummyToken());
+
+        let slice : Expression;
+        slice = new Slice(list, numNode("4"), numNode("5"), dummyToken());
+        assert.deepEqual(evaluator.evaluate(slice), [5]);
+
+        slice = new Slice(list, numNode("1"), numNode("3"), dummyToken());
+        assert.deepEqual(evaluator.evaluate(slice), [2,3]);
+
+        slice = new Slice(list, numNode("1"), null, dummyToken());
+        assert.deepEqual(evaluator.evaluate(slice), [2,3,4,5]);
+
+        slice = new Slice(list, null, numNode("3"), dummyToken());
+        assert.deepEqual(evaluator.evaluate(slice), [1,2,3]);
+
+        slice = new Slice(list, null, null, dummyToken());
+        assert.deepEqual(evaluator.evaluate(slice), [1,2,3,4,5]);
+
+        // out of range but OK
+        slice = new Slice(list, numNode("1"), numNode("8"), dummyToken());
+        assert.deepEqual(evaluator.evaluate(slice), [2,3,4,5]);
+
+        // negatives = counting from end of list
+        slice = new Slice(list, numNode("0"), numNode("-2"), dummyToken());
+        assert.deepEqual(evaluator.evaluate(slice), [1,2,3]);
+    });
+
+    it('visitSlice on string', function() {
+        let evaluator = new Evaluator();
+        let str = stringNode("foo bar baz");
+
+        let slice : Expression;
+        slice = new Slice(str, numNode("1"), numNode("2"), dummyToken());
+        assert.deepEqual(evaluator.evaluate(slice), "o");
+
+        slice = new Slice(str, numNode("0"), numNode("3"), dummyToken());
+        assert.deepEqual(evaluator.evaluate(slice), "foo");
+
+        slice = new Slice(str, numNode("4"), null, dummyToken());
+        assert.deepEqual(evaluator.evaluate(slice), "bar baz");
+
+        slice = new Slice(str, numNode("0"), numNode("0"), dummyToken());
+        assert.deepEqual(evaluator.evaluate(slice), "");
+    });
+
+    it('visitSlice valid but empty', function() {
+        let evaluator = new Evaluator();
+        let list = new List(dummyToken(),
+            [1,2,3,4,5].map((x) => numNode(x.toString())),
+        dummyToken());
+
+        let slice : Expression;
+        slice = new Slice(list, numNode("0"), numNode("0"), dummyToken());
+        assert.deepEqual(evaluator.evaluate(slice), []);
+        slice = new Slice(list, numNode("2"), numNode("2"), dummyToken());
+        assert.deepEqual(evaluator.evaluate(slice), []);
+        slice = new Slice(list, numNode("10"), numNode("100"), dummyToken());
+        assert.deepEqual(evaluator.evaluate(slice), []);
+        slice = new Slice(list, numNode("3"), numNode("1"), dummyToken());
+        assert.deepEqual(evaluator.evaluate(slice), []);
+        slice = new Slice(list, numNode("4"), numNode("-5"), dummyToken());
+        assert.deepEqual(evaluator.evaluate(slice), []);
+    });
+
+    it('visitSlice error: wrong start type', function() {
+        let evaluator = new Evaluator();
+        let list = new List(dummyToken(),
+            [1,2,3,4,5].map((x) => numNode(x.toString())),
+        dummyToken());
+
+        let slice = new Slice(list, stringNode("foo"), numNode("5"), dummyToken());
+        assert.throw(() => evaluator.evaluate(slice));
+    });
+
+    it('visitSlice error: wrong end type', function() {
+        let evaluator = new Evaluator();
+        let list = new List(dummyToken(),
+            [1,2,3,4,5].map((x) => numNode(x.toString())),
+        dummyToken());
+
+        let slice = new Slice(list, numNode("1"), list, dummyToken());
+        assert.throw(() => evaluator.evaluate(slice));
+    });
+
+    it('visitSlice error: wrong target type', function() {
+        let evaluator = new Evaluator();
+        let slice = new Slice(new True(dummyToken()), numNode("1"), numNode("2"), dummyToken());
+        assert.throw(() => evaluator.evaluate(slice));
     });
 });

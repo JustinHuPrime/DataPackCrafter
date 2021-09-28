@@ -215,8 +215,29 @@ export class Evaluator implements AstVisitor {
         }
         return result;
     }
-    visitSlice(_astNode: Slice, _env: EvaluatorEnv) : EvaluatorData {
-        throw new Error("Method not implemented.");
+    visitSlice(astNode: Slice, env: EvaluatorEnv) : EvaluatorData {
+        let targetValue = astNode.target.accept(this, env);
+
+        // from is 0 (start) if not given
+        let fromValue = 0;
+        // to is undefined (end of iterable) if not given
+        let toValue = undefined;
+
+        if (astNode.from != null) {
+            fromValue = astNode.from.accept(this, env);
+        }
+        if (astNode.to != null) {
+            toValue = astNode.to.accept(this, env);
+        }
+
+        if (typeof fromValue !== "number") {
+            throw new Error(`slice: bad type for start argument (got ${typeof fromValue})`);
+        }
+        if (typeof toValue !== "number" && toValue !== undefined) {
+            throw new Error(`slice: bad type for end argument (got ${typeof toValue})`);
+        }
+        let result = targetValue.slice(fromValue, toValue);
+        return result;
     }
     visitCall(astNode: Call, env: EvaluatorEnv) : EvaluatorData {
         let fnClosure = astNode.target.accept(this, env);
