@@ -57,7 +57,7 @@ describe("lexer", () => {
 
 
     it('should lex numbers correctly', () => {
-      const tokens = ["5.2551", "-2131.321", "5", "30.213", "0.232", "0", "37712", "1337"];
+      const tokens = ["5.2551", "-2131.321", "5", "30.213", "0.232", "0", "37712", "1337", "-0", "-0.00"];
 
       for (const token of tokens) {
         stubReadFileSync(token);

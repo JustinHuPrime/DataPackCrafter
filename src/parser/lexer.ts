@@ -51,13 +51,18 @@ export default class Lexer {
     return new Token(type, new Span(start, end), tokenString);
   }
 
+  private eof(): Token {
+    const start: Location = new Location(this.line, this.character);
+    const end: Location = new Location(this.line, this.character);
+    return new Token(TokenType.EOF, new Span(start, end), "");
+  }
+
+
   lexRegular(): Token {
     this.removeWhiteSpace();
 
     if (this.file === "") {
-      const start: Location = new Location(this.line, this.character);
-      const end: Location = new Location(this.line, this.character);
-      return new Token(TokenType.EOF, new Span(start, end), "");
+      return this.eof();
     }
 
     const matchIdToken = this.file.match(/^[a-zA-Z_][a-zA-Z_0-9]*/);
@@ -74,7 +79,7 @@ export default class Lexer {
       return this.lexToken(matchNumberToken, TokenType.NUMBER);
     }
 
-    const matchPunctuationToken = this.file.match(/^==$|^&&$|^!=$|^<=$|^>=$|^\|\|$|&|\(|\)|=|,|{|}|%|\+|-|\/|:|\[|]/);
+    const matchPunctuationToken = this.file.match(/^==|^&&|^!=|^<=|^>=|^\|\|$|&|\(|\)|=|,|{|}|%|\+|-|\/|:|\[|]|"/);
 
     if (matchPunctuationToken && matchPunctuationToken[0] && matchPunctuationToken.index === 0) {
       return this.lexToken(matchPunctuationToken, TokenType.LITERAL);
@@ -82,8 +87,29 @@ export default class Lexer {
     throw new LexerError(`${this.filename}: ${this.line}:${this.character}: error: invalid character '${this.file[0]}`);
   }
 
+  unlex(t: Token): void {
+    this.file = t.content + this.file;
+    this.character -= t.content.length;
+  }
+
   lexString(): Token {
-    throw new Error("Not yet implemented!"); // TODO
+    if (this.file === "") {
+      return this.eof();
+    }
+
+    const matchStringToken = this.file.match(/[^"\\{}]|\\\\|\\"|\\{|\\}/);
+
+    if (matchStringToken && matchStringToken[0]) {
+      return this.lexToken(matchStringToken, TokenType.STRING_CHAR);
+    }
+
+    const matchPunctuation = this.file.match(/[^"\\{}]/);
+
+    if (matchPunctuation && matchPunctuation[0]) {
+      return this.lexToken(matchPunctuation, TokenType.LITERAL);
+    }
+
+    throw new LexerError(`${this.filename}: ${this.line}:${this.character}: error: invalid character '${this.file[0]}`);
   }
 }
 
