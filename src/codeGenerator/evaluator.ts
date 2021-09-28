@@ -1,5 +1,6 @@
 import { Import, Define, Let, If, For, Print, Binop, Unop, Index, Slice, Call, List, Begin, On, Advancement, True, False, ASTNumber, ASTString, MCFunction, Expression, BinaryOperator, UnaryOperator, Id } from "../ast/ast";
 import { AstVisitor } from "../ast/visitor";
+import { DSLReferenceError } from "./exceptions"
 //import STORE from "./store"
 
 /**
@@ -22,13 +23,7 @@ export class EvaluatorEnv {
      * Fetch the given ID from the environment, or raise an error if it is not found.
      */
     fetch(id: string) {
-        let data = this.envMap[id];
-        if (data !== undefined) {
-            return data;
-        } else {
-            // TODO: use a more specific error type
-            throw new Error(`Unknown variable ${id}`);
-        }
+        return this.envMap[id];
     }
 
     /**
@@ -307,7 +302,11 @@ export class Evaluator implements AstVisitor {
         return false;
     }
     visitId(astNode: Id, env: EvaluatorEnv) {
-        return env.fetch(astNode.id);
+        let result = env.fetch(astNode.id);
+        if (result == null) {
+            throw new DSLReferenceError(astNode, `Unknown variable ${astNode.id}`);
+        }
+        return result;
     }
     visitNumber(astNode: ASTNumber, _env: EvaluatorEnv) : EvaluatorData {
         return astNode.value;

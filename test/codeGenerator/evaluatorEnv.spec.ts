@@ -8,7 +8,8 @@ describe("evaluatorEnv", () => {
 
         assert.equal(env.fetch("foo"), "bar");
         assert.equal(env.fetch("Five"), 5);
-        assert.throws(() => env.fetch("missing"));
+        // Missing vars are undefined; these are handled by the evaluator
+        assert.equal(env.fetch("missing"), undefined);
     });
 
     it('extend', function() {
@@ -16,8 +17,8 @@ describe("evaluatorEnv", () => {
         let oldEnv = new EvaluatorEnv(envMap);
         let newEnv = oldEnv.extend("x", 123);
         assert.equal(newEnv.fetch("x"), 123);
-        assert.throws(() => oldEnv.fetch("x"));
-        assert.throws(() => newEnv.fetch("stillmissing"));
+        assert.equal(oldEnv.fetch("x"), undefined);
+        assert.equal(newEnv.fetch("stillmissing"), undefined);
     });
 
     it('extend inPlace', function() {
