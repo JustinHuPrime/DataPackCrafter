@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import { ASTNumber, ASTString, Begin, BinaryOperator, Binop, Call, Define, Expression, False, Id, If, Let, List, True, UnaryOperator, Unop } from "../../src/ast/ast";
+import { ASTNumber, ASTString, Begin, BinaryOperator, Binop, Call, Define, Expression, False, Id, If, Index, Let, List, True, UnaryOperator, Unop } from "../../src/ast/ast";
 import Span, { Location } from "../../src/ast/span";
 import Token, { TokenType } from "../../src/ast/token";
 import { Evaluator } from "../../src/codeGenerator/evaluator";
@@ -378,5 +378,49 @@ describe("evaluator", () => {
 
         expr = new List(dummyToken(), [stringNode("hello"), numNode("123"), stringNode("goodbye")], dummyToken());
         assert.deepEqual(evaluator.evaluate(expr), ["hello", 123, "goodbye"]);
+    });
+
+    it('visitIndex on list', function() {
+        let evaluator = new Evaluator();
+        let list = new List(dummyToken(), [stringNode("a"), stringNode("b"), stringNode("c")], dummyToken());
+
+        let indexCall : Expression;
+        indexCall = new Index(list, numNode("0"), dummyToken());
+        assert.deepEqual(evaluator.evaluate(indexCall), "a");
+        indexCall = new Index(list, numNode("1"), dummyToken());
+        assert.deepEqual(evaluator.evaluate(indexCall), "b");
+        indexCall = new Index(list, numNode("2"), dummyToken());
+        assert.deepEqual(evaluator.evaluate(indexCall), "c");
+    });
+
+    it('visitIndex on string', function() {
+        let evaluator = new Evaluator();
+        let list = stringNode("Abracadabra");
+        let indexCall : Expression;
+        indexCall = new Index(list, numNode("0"), dummyToken());
+        assert.deepEqual(evaluator.evaluate(indexCall), "A");
+        indexCall = new Index(list, numNode("4"), dummyToken());
+        assert.deepEqual(evaluator.evaluate(indexCall), "c");
+    });
+
+    it('visitIndex error: bad target type', function() {
+        let evaluator = new Evaluator();
+        let target = numNode("5678");
+        let indexCall = new Index(target, numNode("0"), dummyToken());
+        assert.throw(() => evaluator.evaluate(indexCall));
+    });
+
+    it('visitIndex error: index out of range', function() {
+        let evaluator = new Evaluator();
+        let target = stringNode("Abracadabra");
+        let indexCall = new Index(target, numNode("25"), dummyToken());
+        assert.throw(() => evaluator.evaluate(indexCall));
+    });
+
+    it('visitIndex error: index is wrong type', function() {
+        let evaluator = new Evaluator();
+        let target = stringNode("Abracadabra");
+        let indexCall = new Index(target, target, dummyToken());
+        assert.throw(() => evaluator.evaluate(indexCall));
     });
 });

@@ -203,8 +203,17 @@ export class Evaluator implements AstVisitor {
                 return !value;
        }
     }
-    visitIndex(_astNode: Index, _env: EvaluatorEnv) : EvaluatorData {
-        throw new Error("Method not implemented.");
+    visitIndex(astNode: Index, env: EvaluatorEnv) : EvaluatorData {
+        let targetValue = astNode.target.accept(this, env);
+        if (typeof targetValue !== "string" && !Array.isArray(targetValue)) {
+            throw new Error(`index: cannot index value of type ${typeof targetValue}`)
+        }
+        let indexValue = astNode.index.accept(this, env);
+        let result = targetValue[indexValue];
+        if (result == null) {
+            throw new Error(`index ${indexValue} invalid or out of range`);
+        }
+        return result;
     }
     visitSlice(_astNode: Slice, _env: EvaluatorEnv) : EvaluatorData {
         throw new Error("Method not implemented.");
