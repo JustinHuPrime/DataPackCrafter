@@ -274,17 +274,10 @@ export class Evaluator implements ExpressionVisitor {
         return fnClosure.fn.body.accept(this, newEnv);
     }
     visitList(astNode: List, env: EvaluatorEnv) : EvaluatorData {
-        let results: EvaluatorData[] = [];
-        for (let expr of astNode.elements) {
-            results.push(expr.accept(this, env));
-        }
-        return results;
+        return astNode.elements.map((expr) => { return expr.accept(this, env) });
     }
     visitBegin(astNode: Begin, env: EvaluatorEnv) : EvaluatorData {
         let result;
-        if (astNode.elements.length === 0) {
-            throw new DSLSyntaxError(astNode, "begin: cannot have a begin expr with 0 elements")
-        }
         for (let expr of astNode.elements) {
             result = expr.accept(this, env);
         }
