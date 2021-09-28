@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import { ASTNumber, ASTString, Begin, BinaryOperator, Binop, Call, Define, Expression, False, Id, If, Let, True, UnaryOperator, Unop } from "../../src/ast/ast";
+import { ASTNumber, ASTString, Begin, BinaryOperator, Binop, Call, Define, Expression, False, Id, If, Let, List, True, UnaryOperator, Unop } from "../../src/ast/ast";
 import Span, { Location } from "../../src/ast/span";
 import Token, { TokenType } from "../../src/ast/token";
 import { Evaluator } from "../../src/codeGenerator/evaluator";
@@ -25,6 +25,12 @@ function numNode(value: string) : ASTNumber {
      * Create an number node with the given value.
      */
     return new ASTNumber(dummyToken(value));
+}
+function stringNode(content: string) : ASTString {
+    /**
+     * Create an pure string node with the given content.
+     */
+    return new ASTString(dummyToken(), [content], dummyToken());
 }
 
 /* Example functions for reuse in testing */
@@ -361,5 +367,16 @@ describe("evaluator", () => {
         let num = numNode("12345");
         let expr = new ASTString(dummyToken(), ["num is ", num, "; bool is ", bool], dummyToken());
         assert.equal(evaluator.evaluate(expr), "num is 12345; bool is false");
+    });
+
+    it('visitList', function() {
+        let evaluator = new Evaluator();
+        let expr;
+
+        expr = new List(dummyToken(), [], dummyToken());
+        assert.deepEqual(evaluator.evaluate(expr), []);
+
+        expr = new List(dummyToken(), [stringNode("hello"), numNode("123"), stringNode("goodbye")], dummyToken());
+        assert.deepEqual(evaluator.evaluate(expr), ["hello", 123, "goodbye"]);
     });
 });

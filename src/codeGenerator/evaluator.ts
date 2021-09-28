@@ -5,7 +5,7 @@ import { AstVisitor } from "../ast/visitor";
 /**
  * Represents internal data types known to the evaluator.
  */
-export type EvaluatorData = string | boolean | number | [EvaluatorData] | FunctionClosure;
+export type EvaluatorData = string | boolean | number | EvaluatorData[] | FunctionClosure;
 
 /**
  * Represents an evaluator environment, mapping variable names to their value
@@ -231,8 +231,12 @@ export class Evaluator implements AstVisitor {
         }
         return fnClosure.fn.body.accept(this, newEnv);
     }
-    visitList(_astNode: List, _env: EvaluatorEnv) : EvaluatorData {
-        throw new Error("Method not implemented.");
+    visitList(astNode: List, env: EvaluatorEnv) : EvaluatorData {
+        let results: EvaluatorData[] = [];
+        for (let expr of astNode.elements) {
+            results.push(expr.accept(this, env));
+        }
+        return results;
     }
     visitBegin(astNode: Begin, env: EvaluatorEnv) : EvaluatorData {
         let result;
