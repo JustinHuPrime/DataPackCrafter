@@ -1,5 +1,5 @@
 import { Import, Define, Let, If, For, Print, Binop, Unop, Index, Slice, Call, List, Begin, On, Advancement, True, False, ASTNumber, ASTString, MCFunction, Expression, BinaryOperator, UnaryOperator, Id } from "../ast/ast";
-import { AstVisitor } from "../ast/visitor";
+import { ExpressionVisitor } from "../ast/visitor";
 import { DSLIndexError, DSLMathError, DSLReferenceError, DSLSyntaxError, DSLTypeError } from "./exceptions"
 //import STORE from "./store"
 
@@ -64,7 +64,7 @@ export class FunctionClosure {
 }
 
 
-export class Evaluator implements AstVisitor {
+export class Evaluator implements ExpressionVisitor {
     /**
      * Evaluate a DSL expression.
      * @param expression expression

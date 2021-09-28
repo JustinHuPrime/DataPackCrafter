@@ -1,7 +1,7 @@
 import { EvaluatorEnv } from "../codeGenerator/evaluator";
 import Span, { merge } from "./span";
 import Token from "./token";
-import { AstVisitor } from "./visitor"
+import { ExpressionVisitor } from "./visitor"
 
 export abstract class Ast {
   span: Span;
@@ -35,7 +35,7 @@ export class DatapackDecl extends Ast {
 }
 
 export abstract class Expression extends Ast {
-  abstract accept(visitor: AstVisitor, env: EvaluatorEnv) : any;
+  abstract accept(visitor: ExpressionVisitor, env: EvaluatorEnv) : any;
 }
 
 export class Import extends Expression {
@@ -46,7 +46,7 @@ export class Import extends Expression {
     this.target = target;
   }
 
-  accept(visitor: AstVisitor, env: EvaluatorEnv) {
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
     return visitor.visitImport(this, env);
   }
 }
@@ -63,7 +63,7 @@ export class Define extends Expression {
     this.body = body;
   }
 
-  accept(visitor: AstVisitor, env: EvaluatorEnv) {
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
     return visitor.visitDefine(this, env);
   }
 }
@@ -88,7 +88,7 @@ export class Let extends Expression {
     this.body = body;
   }
 
-  accept(visitor: AstVisitor, env: EvaluatorEnv) {
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
     return visitor.visitLet(this, env);
   }
 }
@@ -110,7 +110,7 @@ export class If extends Expression {
     this.alternative = alternative;
   }
 
-  accept(visitor: AstVisitor, env: EvaluatorEnv) {
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
     return visitor.visitIf(this, env);
   }
 }
@@ -127,7 +127,7 @@ export class For extends Expression {
     this.body = body;
   }
 
-  accept(visitor: AstVisitor, env: EvaluatorEnv) {
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
     return visitor.visitFor(this, env);
   }
 }
@@ -141,7 +141,7 @@ export class Print extends Expression {
     this.expression = expression;
   }
 
-  accept(visitor: AstVisitor, env: EvaluatorEnv) {
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
     return visitor.visitPrint(this, env);
   }
 }
@@ -175,7 +175,7 @@ export class Binop extends Expression {
     this.rhs = rhs;
   }
 
-  accept(visitor: AstVisitor, env: EvaluatorEnv) {
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
     return visitor.visitBinop(this, env);
   }
 }
@@ -196,7 +196,7 @@ export class Unop extends Expression {
     this.target = target;
   }
 
-  accept(visitor: AstVisitor, env: EvaluatorEnv) {
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
     return visitor.visitUnop(this, env);
   }
 }
@@ -212,7 +212,7 @@ export class Index extends Expression {
     this.index = index;
   }
 
-  accept(visitor: AstVisitor, env: EvaluatorEnv) {
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
     return visitor.visitIndex(this, env);
   }
 }
@@ -237,7 +237,7 @@ export class Slice extends Expression {
     this.to = to;
   }
 
-  accept(visitor: AstVisitor, env: EvaluatorEnv) {
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
     return visitor.visitSlice(this, env);
   }
 }
@@ -253,7 +253,7 @@ export class Call extends Expression {
     this.args = args;
   }
 
-  accept(visitor: AstVisitor, env: EvaluatorEnv) {
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
     return visitor.visitCall(this, env);
   }
 }
@@ -267,7 +267,7 @@ export class List extends Expression {
     this.elements = elements;
   }
 
-  accept(visitor: AstVisitor, env: EvaluatorEnv) {
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
     return visitor.visitList(this, env);
   }
 }
@@ -281,7 +281,7 @@ export class Begin extends Expression {
     this.elements = elements;
   }
 
-  accept(visitor: AstVisitor, env: EvaluatorEnv) {
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
     return visitor.visitBegin(this, env);
   }
 }
@@ -302,7 +302,7 @@ export class On extends Expression {
     this.commands = commands;
   }
 
-  accept(visitor: AstVisitor, env: EvaluatorEnv) {
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
     return visitor.visitOn(this, env);
   }
 }
@@ -323,7 +323,7 @@ export class Advancement extends Expression {
     this.details = details;
   }
 
-  accept(visitor: AstVisitor, env: EvaluatorEnv) {
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
     return visitor.visitAdvancement(this, env);
   }
 }
@@ -344,7 +344,7 @@ export class MCFunction extends Expression {
     this.commands = commands;
   }
 
-  accept(visitor: AstVisitor, env: EvaluatorEnv) {
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
     return visitor.visitFunction(this, env);
   }
 }
@@ -355,7 +355,7 @@ export class True extends Expression {
     super(token.span);
   }
 
-  accept(visitor: AstVisitor, env: EvaluatorEnv) {
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
     return visitor.visitTrue(this, env);
   }
 }
@@ -366,7 +366,7 @@ export class False extends Expression {
     super(token.span);
   }
 
-  accept(visitor: AstVisitor, env: EvaluatorEnv) {
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
     return visitor.visitFalse(this, env);
   }
 }
@@ -527,7 +527,7 @@ export class Id extends Expression {
     this.id = token.content;
   }
 
-  accept(visitor: AstVisitor, env: EvaluatorEnv) {
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
     return visitor.visitId(this, env);
   }
 }
@@ -541,7 +541,7 @@ export class ASTNumber extends Expression {
     this.value = parseFloat(token.content);
   }
 
-  accept(visitor: AstVisitor, env: EvaluatorEnv) {
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
     return visitor.visitNumber(this, env);
   }
 }
@@ -559,7 +559,7 @@ export class ASTString extends Expression {
     this.components = components;
   }
 
-  accept(visitor: AstVisitor, env: EvaluatorEnv) {
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
     return visitor.visitString(this, env);
   }
 }

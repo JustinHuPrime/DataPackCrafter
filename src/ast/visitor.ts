@@ -1,7 +1,7 @@
 import { EvaluatorEnv } from "../codeGenerator/evaluator";
 import { Import, Define, Let, If, For, Print, Binop, Unop, Index, Slice, Call, List, Begin, On, Advancement, True, False, ASTNumber, ASTString, MCFunction, Id } from "./ast";
 
-export interface AstVisitor {
+export interface ExpressionVisitor {
   visitImport(astNode: Import, env: EvaluatorEnv) : any;
   visitDefine(astNode: Define, env: EvaluatorEnv) : any;
   visitLet(astNode: Let, env: EvaluatorEnv) : any;
