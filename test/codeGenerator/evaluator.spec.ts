@@ -342,6 +342,12 @@ describe("evaluator", () => {
         });
     }
 
+    it('visitString empty', function() {
+        let evaluator = new Evaluator();
+        let expr = new ASTString(dummyToken(), [], dummyToken());
+        assert.equal(evaluator.evaluate(expr), "");
+    });
+
     it('visitString simple', function() {
         let evaluator = new Evaluator();
         let expr = new ASTString(dummyToken(), ["hello world"], dummyToken());
