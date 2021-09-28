@@ -68,7 +68,7 @@ export default class Lexer {
       const tokenType = (this.literals.has(tokenString)) ? TokenType.LITERAL : TokenType.ID;
       return this.lexToken(matchIdToken, tokenType)
     }
-    const matchNumberToken = this.file.match(/^'-'? [1-9][0-9]+ ('.' [0-9]+)?/);
+    const matchNumberToken = this.file.match(/^-?[0-9]+(\.[0-9]+)?/);
 
     if (matchNumberToken && matchNumberToken[0] && matchNumberToken.index === 0) {
       return this.lexToken(matchNumberToken, TokenType.NUMBER);
@@ -77,7 +77,7 @@ export default class Lexer {
     const matchPunctuationToken = this.file.match(/^==$|^&&$|^!=$|^<=$|^>=$|^\|\|$|&|\(|\)|=|,|{|}|%|\+|-|\/|:|\[|]/);
 
     if (matchPunctuationToken && matchPunctuationToken[0] && matchPunctuationToken.index === 0) {
-      return this.lexToken(matchPunctuationToken, TokenType.NUMBER);
+      return this.lexToken(matchPunctuationToken, TokenType.LITERAL);
     }
     throw new LexerError(`${this.filename}: ${this.line}:${this.character}: error: invalid character '${this.file[0]}`);
   }
