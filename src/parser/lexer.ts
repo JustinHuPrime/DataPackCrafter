@@ -1,4 +1,4 @@
-import Token, { TokenType } from "../ast/token";
+import Token, { keywordArr, TokenType } from "../ast/token";
 import * as fs from "fs";
 import Span, { Location } from "../ast/span";
 
@@ -14,37 +14,7 @@ export default class Lexer {
     this.file = fs.readFileSync(filename, "utf8");
     this.line = 1;
     this.character = 1;
-
-    const literalArr = ['datapack',
-    'import',
-    'define',
-    'let',
-    'if',
-    'then',
-    'else',
-    'for',
-    'in',
-    'print',
-    'on',
-    'advancement',
-    'function',
-    'true',
-    'false',
-    'grant',
-    'revoke',
-      'load',
-      'tick',
-      'consume_item',
-      'inventory_changed',
-      'item',
-      'tag',
-      'title',
-      'icon',
-      'description',
-      'parent'
-    ]
-
-    this.literals = new Set(literalArr);
+    this.literals = new Set(keywordArr);
   }
 
   removeWhiteSpace(): void {
@@ -91,16 +61,24 @@ export default class Lexer {
     }
 
     const matchIdToken = this.file.match(/^[a-zA-Z_][a-zA-Z_0-9]*/);
-    const matchNumberToken = this.file.match(/^'-'? [1-9][0-9]+ ('.' [0-9]+)?/);
+
 
     if (matchIdToken && matchIdToken[0] && matchIdToken.index === 0) {
       const tokenString = matchIdToken[0];
       const tokenType = (this.literals.has(tokenString)) ? TokenType.LITERAL : TokenType.ID;
       return this.lexToken(matchIdToken, tokenType)
-    } else if (matchNumberToken && matchNumberToken[0] && matchNumberToken.index === 0) {
+    }
+    const matchNumberToken = this.file.match(/^'-'? [1-9][0-9]+ ('.' [0-9]+)?/);
+
+    if (matchNumberToken && matchNumberToken[0] && matchNumberToken.index === 0) {
       return this.lexToken(matchNumberToken, TokenType.NUMBER);
     }
 
+    const matchPunctuationToken = this.file.match(/^==$|^&&$|^!=$|^<=$|^>=$|^\|\|$|&|\(|\)|=|,|{|}|%|\+|-|\/|:|\[|]/);
+
+    if (matchPunctuationToken && matchPunctuationToken[0] && matchPunctuationToken.index === 0) {
+      return this.lexToken(matchPunctuationToken, TokenType.NUMBER);
+    }
     throw new LexerError(`${this.filename}: ${this.line}:${this.character}: error: invalid character '${this.file[0]}`);
   }
 
