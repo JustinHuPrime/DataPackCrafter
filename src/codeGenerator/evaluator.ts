@@ -1,6 +1,6 @@
 import { Import, Define, Let, If, For, Print, Binop, Unop, Index, Slice, Call, List, Begin, On, Advancement, True, False, ASTNumber, ASTString, MCFunction, Expression, BinaryOperator, UnaryOperator, Id } from "../ast/ast";
 import { AstVisitor } from "../ast/visitor";
-import { DSLReferenceError } from "./exceptions"
+import { DSLIndexError, DSLMathError, DSLReferenceError, DSLSyntaxError, DSLTypeError } from "./exceptions"
 //import STORE from "./store"
 
 /**
@@ -78,12 +78,12 @@ export class Evaluator implements AstVisitor {
         return expression.accept(this, env);
     }
 
-    protected _sanitizeNum(num: number) : number {
+    protected _sanitizeNum(expr: Expression, num: number) : number {
         if (isFinite(num)) {
             return num;
         } else {
             // We reject these to prevent confusing behaviour for the end user
-            throw new Error("Math overflow or divide by zero");
+            throw new DSLMathError(expr, "Math overflow or divide by zero");
         }
     }
 
@@ -94,7 +94,7 @@ export class Evaluator implements AstVisitor {
         let fnArgNames = new Set();
         for (let fnArgName of astNode.args) {
             if (fnArgNames.has(fnArgName.id)) {
-                throw new Error(`define: Duplicate function argument name ${fnArgName}`);
+                throw new DSLSyntaxError(astNode, `define: Duplicate function argument name ${fnArgName}`);
             }
             fnArgNames.add(fnArgName.id);
         }
@@ -108,19 +108,19 @@ export class Evaluator implements AstVisitor {
     }
     visitLet(astNode: Let, env: EvaluatorEnv) : EvaluatorData {
         if (astNode.ids.length !== astNode.values.length) {
-            throw new Error(`let: Lengths of IDs (${astNode.ids.length}) and ` +
-                            `expressions (${astNode.values.length}) do not match`)
+            throw new DSLSyntaxError(astNode,
+                `let: Lengths of IDs (${astNode.ids.length}) and expressions (${astNode.values.length}) do not match`);
         }
         let newEnv = env;
         for (let idx in astNode.ids) {
             let id = astNode.ids[idx];
             if (id == null) {
-                throw new Error(`let: Expected string ID in index ${idx}, got ${id}`);
+                throw new DSLSyntaxError(astNode, `let: Expected string ID in index ${idx}, got ${id}`);
             }
 
             let expr = astNode.values[idx];
             if (expr == null) {
-                throw new Error(`let: Expected expression in index ${idx}, got ${expr}`);
+                throw new DSLSyntaxError(astNode, `let: Expected expression in index ${idx}, got ${expr}`);
             }
 
             let result = expr.accept(this, env);
@@ -141,7 +141,7 @@ export class Evaluator implements AstVisitor {
         let variableName = astNode.id.id;
         let iterableValue = astNode.iterable.accept(this, env);
         if (!Array.isArray(iterableValue)) {
-            throw new Error(`for: expected list as target, got type ${typeof iterableValue}`)
+            throw new DSLTypeError(astNode, `for: expected list as target, got type ${typeof iterableValue}`)
         }
         for (let elem of iterableValue) {
             let newEnv = env.extend(variableName, elem);
@@ -184,22 +184,22 @@ export class Evaluator implements AstVisitor {
                 return lhs >= rhs;
             }
             case BinaryOperator.ADD: {
-                return this._sanitizeNum(lhs + rhs);
+                return this._sanitizeNum(astNode, lhs + rhs);
             }
             case BinaryOperator.SUB: {
-                return this._sanitizeNum(lhs - rhs);
+                return this._sanitizeNum(astNode, lhs - rhs);
             }
             case BinaryOperator.MUL: {
-                return this._sanitizeNum(lhs * rhs);
+                return this._sanitizeNum(astNode, lhs * rhs);
             }
             case BinaryOperator.DIV: {
-                return this._sanitizeNum(lhs / rhs);
+                return this._sanitizeNum(astNode, lhs / rhs);
             }
             case BinaryOperator.MOD: {
-                return this._sanitizeNum(lhs % rhs);
+                return this._sanitizeNum(astNode, lhs % rhs);
             }
         }
-        throw new Error(`Unknown operator ${astNode.op}`);
+        throw new DSLSyntaxError(astNode, `Unknown operator ${astNode.op}`);
     }
 
     visitUnop(astNode: Unop, env: EvaluatorEnv) : EvaluatorData {
@@ -214,12 +214,15 @@ export class Evaluator implements AstVisitor {
     visitIndex(astNode: Index, env: EvaluatorEnv) : EvaluatorData {
         let targetValue = astNode.target.accept(this, env);
         if (typeof targetValue !== "string" && !Array.isArray(targetValue)) {
-            throw new Error(`index: cannot index value of type ${typeof targetValue}`)
+            throw new DSLTypeError(astNode, `index: cannot index value of type ${typeof targetValue}`)
         }
         let indexValue = astNode.index.accept(this, env);
+        if (typeof indexValue !== "number") {
+            throw new DSLTypeError(astNode, `index: expected number as index, got ${typeof indexValue}`);
+        }
         let result = targetValue[indexValue];
         if (result == null) {
-            throw new Error(`index ${indexValue} invalid or out of range`);
+            throw new DSLIndexError(astNode, `index: index ${indexValue} invalid or out of range`);
         }
         return result;
     }
@@ -239,10 +242,10 @@ export class Evaluator implements AstVisitor {
         }
 
         if (typeof fromValue !== "number") {
-            throw new Error(`slice: bad type for start argument (got ${typeof fromValue})`);
+            throw new DSLTypeError(astNode, `slice: bad type for start argument (got ${typeof fromValue})`);
         }
         if (typeof toValue !== "number" && toValue !== undefined) {
-            throw new Error(`slice: bad type for end argument (got ${typeof toValue})`);
+            throw new DSLTypeError(astNode, `slice: bad type for end argument (got ${typeof toValue})`);
         }
         let result = targetValue.slice(fromValue, toValue);
         return result;
@@ -251,18 +254,19 @@ export class Evaluator implements AstVisitor {
         let fnClosure = astNode.target.accept(this, env);
         let fnName = fnClosure.fn.id || "<anonymous function>";
         if (!(fnClosure instanceof FunctionClosure)) {
-            throw new Error(`call: attempted to call non-function ${JSON.stringify(fnClosure)}`)
+            throw new DSLTypeError(astNode, `call: attempted to call non-function ${JSON.stringify(fnClosure)}`)
         }
         if (astNode.args.length !== fnClosure.fn.args.length) {
-            throw new Error(`call: function ${fnName} expects ${fnClosure.fn.args.length} arguments, got ${astNode.args.length}`)
+            throw new DSLSyntaxError(astNode, `call: function ${fnName} expects ` +
+                                     `${fnClosure.fn.args.length} arguments, got ${astNode.args.length}`)
         }
         let newEnv = fnClosure.env; // need to use env from closure!!
         for (let idx in astNode.args) {
             let fnArgName = fnClosure.fn.args[idx]?.id;
             let fnArgExpr = astNode.args[idx];
             if (fnArgName == null || fnArgExpr == null ) {
-                throw new Error(`call: could not read arguments for ${fnName} (either ${JSON.stringify(fnArgName)} or ` +
-                                `${JSON.stringify(fnArgExpr)} are null`);
+                throw new DSLSyntaxError(astNode, `call: could not read arguments for ${fnName} (either name ` +
+                                         `${JSON.stringify(fnArgName)} or arg ${JSON.stringify(fnArgExpr)} are null`);
             }
             let fnArgValue = fnArgExpr.accept(this, env);
             newEnv = newEnv.extend(fnArgName, fnArgValue);
@@ -279,7 +283,7 @@ export class Evaluator implements AstVisitor {
     visitBegin(astNode: Begin, env: EvaluatorEnv) : EvaluatorData {
         let result;
         if (astNode.elements.length === 0) {
-            throw new Error("begin: cannot have a begin expr with 0 elements")
+            throw new DSLSyntaxError(astNode, "begin: cannot have a begin expr with 0 elements")
         }
         for (let expr of astNode.elements) {
             result = expr.accept(this, env);

@@ -49,12 +49,23 @@ export class DSLSyntaxError extends DSLEvaluationError {
 }
 
 /**
- * Type errors
+ * Runtime type errors
  */
 export class DSLTypeError extends DSLEvaluationError {
     constructor(expr: Expression, message: string) {
         super(expr, message);
         this.name = "DSLTypeError"
+        this.expr = expr;
+    }
+}
+
+/**
+ * Errors to represent array index out of range
+ */
+ export class DSLIndexError extends DSLEvaluationError {
+    constructor(expr: Expression, message: string) {
+        super(expr, message);
+        this.name = "DSLIndexError"
         this.expr = expr;
     }
 }
