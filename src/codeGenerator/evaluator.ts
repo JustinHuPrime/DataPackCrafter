@@ -141,8 +141,19 @@ export class Evaluator implements AstVisitor {
             return astNode.alternative.accept(this, env);
         }
     }
-    visitFor(_astNode: For, _env: EvaluatorEnv) : EvaluatorData {
-        throw new Error("Method not implemented.");
+    visitFor(astNode: For, env: EvaluatorEnv) : EvaluatorData {
+        let forResult: EvaluatorData[] = [];
+        let variableName = astNode.id.id;
+        let iterableValue = astNode.iterable.accept(this, env);
+        if (!Array.isArray(iterableValue)) {
+            throw new Error(`for: expected list as target, got type ${typeof iterableValue}`)
+        }
+        for (let elem of iterableValue) {
+            let newEnv = env.extend(variableName, elem);
+            let result = astNode.body.accept(this, newEnv);
+            forResult.push(result);
+        }
+        return forResult;
     }
     visitPrint(_astNode: Print, _env: EvaluatorEnv) : EvaluatorData {
         throw new Error("Method not implemented.");

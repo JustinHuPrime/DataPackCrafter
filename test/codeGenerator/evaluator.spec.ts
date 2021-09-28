@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import { ASTNumber, ASTString, Begin, BinaryOperator, Binop, Call, Define, Expression, False, Id, If, Index, Let, List, Slice, True, UnaryOperator, Unop } from "../../src/ast/ast";
+import { ASTNumber, ASTString, Begin, BinaryOperator, Binop, Call, Define, Expression, False, For, Id, If, Index, Let, List, Slice, True, UnaryOperator, Unop } from "../../src/ast/ast";
 import Span, { Location } from "../../src/ast/span";
 import Token, { TokenType } from "../../src/ast/token";
 import { Evaluator } from "../../src/codeGenerator/evaluator";
@@ -516,5 +516,51 @@ describe("evaluator", () => {
         let evaluator = new Evaluator();
         let slice = new Slice(new True(dummyToken()), numNode("1"), numNode("2"), dummyToken());
         assert.throw(() => evaluator.evaluate(slice));
+    });
+
+    it('visitFor empty list', function() {
+        let evaluator = new Evaluator();
+        let list = new List(dummyToken(), [], dummyToken());
+        let forExpr = new For(dummyToken(), idNode("x"), list, idNode("x"));
+        assert.deepEqual(evaluator.evaluate(forExpr), []);
+    });
+
+    it('visitFor return elements as is', function() {
+        let evaluator = new Evaluator();
+        let list = new List(dummyToken(), [numNode("3"), numNode("5")], dummyToken());
+        let forExpr = new For(dummyToken(), idNode("x"), list, idNode("x"));
+        assert.deepEqual(evaluator.evaluate(forExpr), [3, 5]);
+    });
+
+    it('visitFor add 1 to elements', function() {
+        let evaluator = new Evaluator();
+        let list = new List(dummyToken(), [numNode("3"), numNode("5")], dummyToken());
+        let forExpr = new For(dummyToken(), idNode("x"), list,
+                              new Binop(numNode("1"), BinaryOperator.ADD, idNode("x")));
+        assert.deepEqual(evaluator.evaluate(forExpr), [4, 6]);
+    });
+
+    it('visitFor nested for expressions', function() {
+        let evaluator = new Evaluator();
+        let list1 = new List(dummyToken(), [numNode("10"), numNode("100")], dummyToken());
+        let list2 = new List(dummyToken(), [numNode("1"), numNode("2"), numNode("3")], dummyToken());
+        let forExpr = new For(dummyToken(), idNode("x"), list1,
+                              new For(dummyToken(), idNode("y"), list2,
+                              new Binop(idNode("x"), BinaryOperator.ADD, idNode("y"))));
+        assert.deepEqual(evaluator.evaluate(forExpr), [[10+1, 10+2, 10+3], [100+1, 100+2, 100+3]]);
+    });
+
+    it('visitFor error: unbound variable', function() {
+        let evaluator = new Evaluator();
+        let list = new List(dummyToken(), [numNode("3"), numNode("5")], dummyToken());
+        let forExpr = new For(dummyToken(), idNode("x"), list,
+                              new Binop(idNode("x"), BinaryOperator.ADD, idNode("y")));
+        assert.throw(() => evaluator.evaluate(forExpr));
+    });
+
+    it('visitFor error: wrong type of target', function() {
+        let evaluator = new Evaluator();
+        let forExpr = new For(dummyToken(), idNode("x"), numNode("0"), idNode("x"));
+        assert.throw(() => evaluator.evaluate(forExpr));
     });
 });
