@@ -155,8 +155,10 @@ export class Evaluator implements AstVisitor {
         }
         return forResult;
     }
-    visitPrint(_astNode: Print, _env: EvaluatorEnv) : EvaluatorData {
-        throw new Error("Method not implemented.");
+    visitPrint(astNode: Print, env: EvaluatorEnv) : EvaluatorData {
+        let s = astNode.expression.accept(this, env);
+        console.log(s);
+        return s;
     }
     visitBinop(astNode: Binop, env: EvaluatorEnv) : EvaluatorData {
         let lhs = astNode.lhs.accept(this, env);

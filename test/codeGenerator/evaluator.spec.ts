@@ -569,4 +569,10 @@ describe("evaluator", () => {
         let forExpr = new For(dummyToken(), idNode("x"), numNode("0"), idNode("x"));
         assert.throw(() => evaluator.evaluate(forExpr));
     });
+
+    it('visitPrint', function() {
+        let evaluator = new Evaluator();
+        // FIXME: check the stdout
+        assert.equal(evaluator.evaluate(stringNode("visitPrint test")), "visitPrint test");
+    });
 });
