@@ -20,7 +20,7 @@ export class EvaluatorEnv {
     }
 
     /**
-     * Fetch the given ID from the environment, or raise an error if it is not found.
+     * Fetch the given ID from the environment, or return undefined if not found.
      */
     fetch(id: string) {
         return this.envMap[id];
@@ -38,7 +38,7 @@ export class EvaluatorEnv {
         if (inPlace) {
             newEnv = this.envMap;
         } else {
-            newEnv = Object.assign({}, this.envMap);
+            newEnv = Object.assign({}, this.envMap);  // copy the whole mapping
         }
         newEnv[id] = data;
 
