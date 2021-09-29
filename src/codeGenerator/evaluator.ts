@@ -143,8 +143,8 @@ export class Evaluator implements ExpressionVisitor {
         let forResult: EvaluatorData[] = [];
         let variableName = astNode.id.id;
         let iterableValue = astNode.iterable.accept(this, env);
-        if (!Array.isArray(iterableValue)) {
-            throw new DSLTypeError(astNode, `for: expected list as target, got type ${typeof iterableValue}`)
+        if (typeof iterableValue !== "string" && !Array.isArray(iterableValue)) {
+            throw new DSLTypeError(astNode, `for: expected list or string as target, got ${typeof iterableValue}`)
         }
         for (let elem of iterableValue) {
             let newEnv = env.extend(variableName, elem);

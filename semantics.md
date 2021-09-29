@@ -20,7 +20,7 @@ A let expression defines one or more variable bindings that apply to the enclose
 
 ## For Expressions
 
-A for expression acts as a map over a list, with the variable being bound to the current element in the list. This produces a list formed from the results of evaluating its enclosed expression for each value in the input list.
+A for expression acts as a map over a list or string, with the variable being bound to the current element in the list or the current character in the string. This produces a list formed from the results of evaluating its enclosed expression for each value in the input list.
 
 ## Print Expressions
 

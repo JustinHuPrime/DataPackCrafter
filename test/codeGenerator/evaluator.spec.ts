@@ -683,6 +683,15 @@ describe("evaluator", () => {
         assert.deepEqual(evaluator.evaluate(forExpr), [3, 5]);
     });
 
+    it('visitFor iterate over string', function() {
+        let evaluator = new Evaluator();
+        let forExpr = new For(dummyToken(), idNode("x"), stringNode("Minecraft"), idNode("x"));
+        assert.deepEqual(evaluator.evaluate(forExpr), Array.from("Minecraft"));
+        forExpr = new For(dummyToken(), idNode("x"), stringNode("abc"),
+                          new Binop(idNode("x"), BinaryOperator.ADD, idNode("x")));
+        assert.deepEqual(evaluator.evaluate(forExpr), ["aa", "bb", "cc"]);
+    });
+
     it('visitFor add 1 to elements', function() {
         let evaluator = new Evaluator();
         let list = new List(dummyToken(), [numNode("3"), numNode("5")], dummyToken());
