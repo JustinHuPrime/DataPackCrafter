@@ -129,8 +129,11 @@ export class Evaluator implements ExpressionVisitor {
         return astNode.body.accept(this, newEnv);
     }
     visitIf(astNode: If, env: EvaluatorEnv) : EvaluatorData {
-        // TODO: typecheck the predicate value
-        if (astNode.predicate.accept(this, env)) {
+        let value = astNode.predicate.accept(this, env);
+        if (typeof value !== "boolean") {
+            throw new DSLTypeError(astNode, `incorrect type of operand for if (expected boolean, got ${typeof value})`);
+        }
+        if (value) {
             return astNode.consequent.accept(this, env);
         } else {
             return astNode.alternative.accept(this, env);
@@ -260,13 +263,18 @@ export class Evaluator implements ExpressionVisitor {
         throw new DSLSyntaxError(astNode, `Unknown operator ${astNode.op}`);
     }
 
-    // TODO: typecheck
     visitUnop(astNode: Unop, env: EvaluatorEnv) : EvaluatorData {
         let value = astNode.target.accept(this, env);
         switch (astNode.op) {
             case UnaryOperator.NEG:
+                if (typeof value !== "number") {
+                    throw new DSLTypeError(astNode, `incorrect type of operand for negation (expected number, got ${typeof value})`);
+                }
                 return -value;
             case UnaryOperator.NOT:
+                if (typeof value !== "boolean") {
+                    throw new DSLTypeError(astNode, `incorrect type of operand for NOT (expected boolean, got ${typeof value})`);
+                }
                 return !value;
        }
     }

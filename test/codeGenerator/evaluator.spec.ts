@@ -123,7 +123,6 @@ describe("evaluator", () => {
         assert.equal(evaluator.evaluate(expr), 3);
     });
 
-    // TODO check strings too
     it('visitBinop comparisons on numbers', function() {
         let evaluator = new Evaluator();
         let five = new ASTNumber(dummyToken("5"));
@@ -146,6 +145,18 @@ describe("evaluator", () => {
         expr = new Binop(five, BinaryOperator.EQ, five);
         assert.equal(evaluator.evaluate(expr), true);
         expr = new Binop(five, BinaryOperator.GTE, five);
+        assert.equal(evaluator.evaluate(expr), true);
+    });
+
+    it('visitBinop comparisons on strings', function() {
+        let evaluator = new Evaluator();
+        let expr: Expression;
+
+        expr = new Binop(stringNode("a"), BinaryOperator.GT, stringNode("b"));
+        assert.equal(evaluator.evaluate(expr), false);
+        expr = new Binop(stringNode("a"), BinaryOperator.GTE, stringNode("a"));
+        assert.equal(evaluator.evaluate(expr), true);
+        expr = new Binop(stringNode("[["), BinaryOperator.LT, stringNode("]]"));
         assert.equal(evaluator.evaluate(expr), true);
     });
 
@@ -270,9 +281,6 @@ describe("evaluator", () => {
         });
     }
 
-    // TODO: check that only one branch gets evaluated at a time
-    // TODO: one complex predicate
-    // TODO typecheck the predicate
     it('visitIf false', function() {
         let evaluator = new Evaluator();
         let pred = new False(dummyToken());
@@ -293,6 +301,35 @@ describe("evaluator", () => {
         assert.equal(evaluator.evaluate(expr), 1);
     });
 
+    it('visitIf predicate is evaluated', function() {
+        let evaluator = new Evaluator();
+        let pred = new Binop(numNode("3"), BinaryOperator.GT, numNode("-3"));
+        let expr = new If(dummyToken("if"),
+                          pred,
+                          new ASTNumber(dummyToken("1")),
+                          new ASTNumber(dummyToken("2")));
+        assert.equal(evaluator.evaluate(expr), 1);
+    });
+
+    it('visitIf only one branch is evaluated', function() {
+        let evaluator = new Evaluator();
+        let pred = new True(dummyToken());
+        let expr = new If(dummyToken("if"),
+                          pred,
+                          new ASTNumber(dummyToken("1")),
+                          new Binop(numNode("0"), BinaryOperator.DIV, numNode("0")));
+        assert.equal(evaluator.evaluate(expr), 1);
+    });
+
+    it('visitIf error: wrong type of predicate', function() {
+        let evaluator = new Evaluator();
+        let expr = new If(dummyToken("if"),
+                          numNode("123456789"),
+                          numNode("123456789"),
+                          numNode("123456789"));
+        assert.throws(() => evaluator.evaluate(expr));
+    });
+
     it('visitUnop', function() {
         let evaluator = new Evaluator();
         let myNum = new ASTNumber(dummyToken("10"));
@@ -301,6 +338,12 @@ describe("evaluator", () => {
             new Unop(dummyToken(), UnaryOperator.NEG, myNum)), -10);
         assert.equal(evaluator.evaluate(
             new Unop(dummyToken(), UnaryOperator.NOT, myBool)), false);
+        assert.throws(() => evaluator.evaluate(
+            new Unop(dummyToken(), UnaryOperator.NOT, myNum)
+        ));
+        assert.throws(() => evaluator.evaluate(
+            new Unop(dummyToken(), UnaryOperator.NEG, stringNode("AAAAAAAAA"))
+        ));
     });
 
     it('visitDefine', function() {
