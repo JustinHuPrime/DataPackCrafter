@@ -1,6 +1,6 @@
-import parse from "./parser/parser";
 import codeGenerate from "./codeGenerator/codeGenerator";
 import parseArgs, { ArgumentError } from "./args";
+import Parser from "./parser/parser";
 
 try {
   if (process.argv.length <= 2)
@@ -10,7 +10,8 @@ try {
 
   const [filename, options] = parseArgs(process.argv.slice(2));
 
-  codeGenerate(parse(filename, options), options);
+  const parser = new Parser(filename, options);
+  codeGenerate(parser.parse(), options);
 
   process.exitCode = 0;
 } catch (e) {
