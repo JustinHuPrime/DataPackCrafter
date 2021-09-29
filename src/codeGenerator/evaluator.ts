@@ -308,6 +308,9 @@ export class Evaluator implements ExpressionVisitor {
             toValue = astNode.to.accept(this, env);
         }
 
+        if (typeof targetValue !== "string" && !Array.isArray(targetValue)) {
+            throw new DSLTypeError(astNode, `slice: bad type for target (expected string or list, got ${typeof toValue})`);
+        }
         if (typeof fromValue !== "number") {
             throw new DSLTypeError(astNode, `slice: bad type for start argument (got ${typeof fromValue})`);
         }
