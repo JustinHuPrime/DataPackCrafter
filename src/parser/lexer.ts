@@ -67,7 +67,6 @@ export default class Lexer {
 
     const matchIdToken = this.file.match(/^[a-zA-Z_][a-zA-Z_0-9]*/);
 
-
     if (matchIdToken && matchIdToken[0] && matchIdToken.index === 0) {
       const tokenString = matchIdToken[0];
       const tokenType = (this.literals.has(tokenString)) ? TokenType.LITERAL : TokenType.ID;
@@ -103,7 +102,7 @@ export default class Lexer {
       return this.lexToken(matchStringToken, TokenType.STRING_CHAR);
     }
 
-    const matchPunctuation = this.file.match(/[^"\\{}]/);
+    const matchPunctuation = this.file.match(/["\\{}]/);
 
     if (matchPunctuation && matchPunctuation[0]) {
       return this.lexToken(matchPunctuation, TokenType.LITERAL);
