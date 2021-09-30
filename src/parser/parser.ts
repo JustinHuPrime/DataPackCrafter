@@ -869,10 +869,11 @@ export default class Parser {
     const expressions: Expression[] = [];
     const datapackDecl: DatapackDecl = this.parseDatapackDeclaration();
 
-    const currentToken: Token = this.lexer.lexRegular();
+    let currentToken: Token = this.lexer.lexRegular();
     while (currentToken.type !== TokenType.EOF) {
       this.lexer.unlex(currentToken);
       expressions.push(this.parseExpression());
+      currentToken = this.lexer.lexRegular();
     }
 
     return new File(datapackDecl, expressions);

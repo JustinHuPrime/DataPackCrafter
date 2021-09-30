@@ -1,5 +1,6 @@
 import Parser, { ParserError } from "../../src/parser/parser";
 import Options from "../../src/options";
+import { ASTString, Print } from "../../src/ast/ast";
 
 const assert = require("assert");
 const sinon = require("sinon");
@@ -26,7 +27,20 @@ describe("parse", () => {
 
       const file = parser.parse();
 
-      console.log(file);
+      const { expressions } = file;
+
+      assert.equal(expressions.length, 1);
+      assert.equal(expressions[0] instanceof Print, true);
+
+      const print: Print = expressions[0] as Print;
+      const { expression } = print;
+
+      assert.equal(expression instanceof ASTString, true);
+
+      const { components } = expression as ASTString;
+
+      assert.equal(components.length, 1);
+      assert.deepEqual(components[0], "test");
     })
   })
 
