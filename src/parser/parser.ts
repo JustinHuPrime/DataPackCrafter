@@ -1,11 +1,11 @@
-import { DatapackDecl, Define, Expression, File, For, Id, If, Import, Print } from "../ast/ast";
+import { DatapackDecl, Define, Expression, File, For, Id, If, Import, Let, Print } from "../ast/ast";
 import Options from "../options";
 import Token, { TokenType } from "../ast/token";
 import Lexer from "./lexer";
 
 export default class Parser {
-  filename: string;
-  lexer: Lexer;
+  private filename: string;
+  private lexer: Lexer;
   options: Options;
 
   constructor(filename: string, options: Options) {
@@ -94,7 +94,47 @@ export default class Parser {
   }
 
   private parseLet(): Expression {
-    throw new Error("not implemented yet");
+    const keyword = this.lexer.lexRegular();
+    this.expect(keyword, TokenType.LITERAL, "let");
+
+    const ids: Id[] = [];
+    const values: Expression[] = [];
+
+    const id0 = this.lexer.lexRegular();
+    this.expect(keyword, TokenType.ID);
+
+    const eq1 = this.lexer.lexRegular();
+    this.expect(eq1, TokenType.LITERAL, "=");
+
+    const v1 = this.parseExpression();
+
+    ids.push(new Id(id0));
+    values.push(v1);
+
+    let current = this.lexer.lexRegular();
+
+    while (current.content === ',') {
+      current = this.lexer.lexRegular();
+      this.expect(current, TokenType.ID);
+
+      const id = new Id(current);
+
+      current = this.lexer.lexRegular();
+      this.expect(current, TokenType.LITERAL, "=");
+
+      const value = this.parseExpression();
+
+      ids.push(id);
+      values.push(value);
+
+      this.lexer.lexRegular();
+    }
+
+    this.lexer.unlex(current);
+
+    const body = this.parseExpression();
+
+    return new Let(keyword, ids, values, body);
   }
 
   private parseIf(): Expression {

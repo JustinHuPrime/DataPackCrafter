@@ -14,7 +14,7 @@ export class File extends Ast {
   expressions: Expression[];
 
   constructor(datapackDecl: DatapackDecl, expressions: Expression[]) {
-    const last = expressions.at(-1);
+    const last = (expressions.length > 0) ? expressions[expressions.length - 1] : undefined;
     if (last === undefined) super(datapackDecl.span);
     else super(merge(datapackDecl.span, last.span));
 
