@@ -1,7 +1,7 @@
-import { Import, Define, Let, If, For, Print, Binop, Unop, Index, Slice, Call, List, Begin, On, Advancement, True, False, ASTNumber, ASTString, MCFunction, Expression, BinaryOperator, UnaryOperator, Id, Title, Icon, Description, Parent } from "../ast/ast";
+import { Import, Define, Let, If, For, Print, Binop, Unop, Index, Slice, Call, List, Begin, On, Advancement, True, False, ASTNumber, ASTString, MCFunction, Expression, BinaryOperator, UnaryOperator, Id, Title, Icon, Description, Parent, Trigger, Load, Execute, Grant, Revoke, RawCommand, Tick, ConsumeItem, ItemSpec, TagMatcher, ItemMatcher, InventoryChanged, CombinedTrigger, Command } from "../ast/ast";
 import { ExpressionVisitor } from "../ast/visitor";
-import { DSLIndexError, DSLMathError, DSLNameConflictError, DSLReferenceError, DSLSyntaxError, DSLTypeError } from "./exceptions"
-import STORE, {AdvancementValue, FunctionValue} from "./store"
+import { DSLEvaluationError, DSLIndexError, DSLMathError, DSLNameConflictError, DSLReferenceError, DSLSyntaxError, DSLTypeError } from "./exceptions"
+import STORE, * as Store from "./store";
 let deepEqual = require('deep-equal');
 
 // Used to validate user defined advancement / function names
@@ -117,14 +117,22 @@ export class Evaluator implements ExpressionVisitor {
      */
     genAdvancementName(prefix?: string) {
         let counter = this.advCounter++;
-        return `.${prefix || "advancement"}${counter}`;
+        return `.${prefix || "advancement"}${counter}`.toLowerCase();
+    }
+
+    /**
+     * Generates a Minecraft function with an optional prefix.
+     */
+    genFunctionName(prefix?: string) {
+        let counter = this.fnCounter++;
+        return `.${prefix || "function"}${counter}`.toLowerCase();
     }
 
     /**
      * Update the store with the given value, throwing a DSLNameConflictError
      * if an identifier of that name already exists
      */
-    updateStore(name: string, value: FunctionValue | AdvancementValue, sourceExpression: Expression) {
+    updateStore(name: string, value: Store.FunctionValue | Store.AdvancementValue, sourceExpression: Expression) {
         if (STORE.has(name)) {
             throw new DSLNameConflictError(sourceExpression, `function / advancement name collision on ${name}`);
         }
@@ -398,9 +406,96 @@ export class Evaluator implements ExpressionVisitor {
         }
         return result;  // just return the last result
     }
-    visitOn(_astNode: On, _env: EvaluatorEnv) : EvaluatorData {
-        throw new Error("Method not implemented.");
+
+    // FIXME: lots of switch on type nonsense
+    translateItemSpec(itemSpec: ItemSpec, env: EvaluatorEnv, sourceExpression: Expression): Store.ItemSpec {
+        if (itemSpec instanceof ItemMatcher) {
+            let str = this.evaluateExpectType(itemSpec.name, env, "string", "advancement trigger item specification");
+            return new Store.ItemMatcher(str);
+        } else if (itemSpec instanceof TagMatcher) {
+            let str = this.evaluateExpectType(itemSpec.name, env, "string", "advancement trigger item specification");
+            return new Store.TagMatcher(str);
+        } else {
+            throw new DSLEvaluationError(sourceExpression, `Unknown ItemSpec class ${itemSpec.constructor.name}`);
+        }
     }
+
+    parseTrigger(trigger: Trigger, env: EvaluatorEnv, sourceExpression: Expression) : Store.Trigger[] {
+        let results: Store.Trigger[] = [];
+        if (trigger instanceof Load || trigger instanceof Tick) {
+            throw new DSLSyntaxError(sourceExpression, "load and tick triggers cannot be combined");
+        } else if (trigger instanceof ConsumeItem) {
+            let itemSpec = this.translateItemSpec(trigger.details, env, sourceExpression);
+            results.push(new Store.ConsumeItem(itemSpec));
+        } else if (trigger instanceof InventoryChanged) {
+            let itemSpec = this.translateItemSpec(trigger.details, env, sourceExpression);
+            results.push(new Store.InventoryChanged(itemSpec));
+        } else if (trigger instanceof CombinedTrigger) {
+            results = results.concat(this.parseTrigger(trigger.lhs, env, sourceExpression));
+            results = results.concat(this.parseTrigger(trigger.rhs, env, sourceExpression));
+        }
+        return results;
+    }
+
+    // FIXME: lots of switch on type nonsense
+    parseCommands(astCommands: Command[], env: EvaluatorEnv, sourceExpression: Expression) : string[] {
+        let commands: string[] = [];
+        for (let astCommand of astCommands) {
+            if (astCommand instanceof Grant) {
+                commands.push(`advancement grant @p only ${this.evaluateExpectType(astCommand.name, env, "string", "grant command parameter")}`);
+            } else if (astCommand instanceof Revoke) {
+                commands.push(`advancement revoke @p only ${this.evaluateExpectType(astCommand.name, env, "string", "revoke command parameter")}`);
+            } else if (astCommand instanceof Execute) {
+                commands.push( `function ${this.evaluateExpectType(astCommand.name, env, "string", "execute command parameter")}`);
+            } else if (astCommand instanceof RawCommand) {
+                let result = astCommand.command.accept(this, env);
+                if (typeof result === "string") {
+                    commands.push(result)
+                } else if (Array.isArray(result)) {
+                    for (let command of result) {
+                        if (typeof command === "string") {
+                            commands.push(command);
+                        } else {
+                            throw new DSLTypeError(sourceExpression, `expected string array in raw command list, got item of type ${typeof command}`);
+                        }
+                    }
+                } else {
+                    throw new DSLTypeError(sourceExpression, `expected string in raw command list, got item of type ${typeof result}`)
+                }
+            } else {
+                throw new DSLEvaluationError(sourceExpression, `on: Unknown command type ${astCommand.constructor.name}`);
+            }
+        }
+        return commands;
+    }
+
+    visitOn(astNode: On, env: EvaluatorEnv) : EvaluatorData {
+        let commands = this.parseCommands(astNode.commands, env, astNode);
+
+        // Read the advancement trigger and prepare a Minecraft function
+        let fnValue: Store.FunctionValue;
+        let fnName = this.genFunctionName(astNode.trigger.constructor.name);
+        let advName = ""; // FIXME: no advancement name to return for load and tick
+        if (astNode.trigger instanceof Load) {
+            fnValue = Store.FunctionValue.onLoad(fnName, commands);
+        } else if (astNode.trigger instanceof Tick) {
+            fnValue = Store.FunctionValue.onTick(fnName, commands);
+        } else {
+            fnValue = Store.FunctionValue.regular(fnName, commands);
+
+            // For things that aren't load or tick, generate an advancement too
+            advName = `.adv${fnName}`;
+            let triggers = this.parseTrigger(astNode.trigger, env, astNode);
+            let advValue = new Store.AdvancementValue(
+                // everything is undefined, what has the world come to?? -JL
+                advName, undefined, undefined, undefined, undefined, undefined, fnName, triggers
+            )
+            this.updateStore(advName, advValue, astNode);
+        }
+        this.updateStore(fnName, fnValue, astNode);
+        return advName;
+    }
+
     visitAdvancement(astNode: Advancement, env: EvaluatorEnv) : EvaluatorData {
         let name: string;
         if (astNode.name != null) {
@@ -427,7 +522,7 @@ export class Evaluator implements ExpressionVisitor {
                 parent = this.evaluateExpectType(element.parent, env, "string", "advancement parent");
             }
         }
-        let advancementValue = new AdvancementValue(name, title, iconItem, undefined, description, parent, undefined, []);
+        let advancementValue = new Store.AdvancementValue(name, title, iconItem, undefined, description, parent, undefined, []);
         this.updateStore(name, advancementValue, astNode);
         return name;
     }
