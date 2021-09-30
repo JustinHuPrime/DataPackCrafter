@@ -435,18 +435,18 @@ export class CombinedTrigger extends Trigger {
 }
 
 export class ConsumeItem extends Trigger {
-  details: ItemSpec[];
+  details: ItemSpec;
 
-  constructor(keyword: Token, details: ItemSpec[], closeBrace: Token) {
+  constructor(keyword: Token, details: ItemSpec, closeBrace: Token) {
     super(merge(keyword.span, closeBrace.span));
     this.details = details;
   }
 }
 
 export class InventoryChanged extends Trigger {
-  details: ItemSpec[];
+  details: ItemSpec;
 
-  constructor(keyword: Token, details: ItemSpec[], closeBrace: Token) {
+  constructor(keyword: Token, details: ItemSpec, closeBrace: Token) {
     super(merge(keyword.span, closeBrace.span));
     this.details = details;
   }
