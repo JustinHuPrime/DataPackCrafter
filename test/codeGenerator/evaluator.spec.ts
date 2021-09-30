@@ -983,7 +983,39 @@ describe("evaluator - store integration", () => {
         }
     });
 
-    // FIXME: add one for InventoryChanged - I don't really understand the semantics -JL
+    it('visitOn InventoryChanged', function() {
+        let evaluator = new Evaluator();
+        let expr = new On(dummyToken(),
+                          new InventoryChanged(dummyToken(),
+                                          new ItemMatcher(dummyToken(), stringNode("golden_apple")), dummyToken()),
+                         [new RawCommand(stringNode("say someone got a golden apple"))], dummyToken());
+
+        let advName = evaluator.evaluate(expr);
+        assert.isTrue(STORE.has(advName));
+        assert.equal(STORE.size, 2);
+        assert.equal(advName, ".adv.inventorychanged0");
+
+        let advancement = STORE.get(advName)!;
+        assert.equal(advancement.name, advName);
+        assert.isTrue(advancement instanceof Store.AdvancementValue);
+
+        if (advancement instanceof Store.AdvancementValue) {
+            // Grab the generated function name attached to the advancement
+            let fnName = advancement.rewardFunction || "";
+            assert.equal(fnName, ".inventorychanged0");
+            assert.isTrue(STORE.has(fnName));
+            let fn = STORE.get(fnName)!;
+            assert.isTrue(fn instanceof Store.FunctionValue);
+
+            if (fn instanceof Store.FunctionValue) {
+                assert.deepEqual(fn.commands, ["say someone got a golden apple"]);
+                assert.equal(fn.name, fnName);
+                assert.isUndefined(fn.tag);
+            }
+        }
+    });
+
+    // FIXME: add one for TagMatcher - I don't really understand the semantics -JL
 
     it('visitOn load', function() {
         let evaluator = new Evaluator();
