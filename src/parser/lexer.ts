@@ -32,7 +32,7 @@ export default class Lexer {
       this.character = 1;
 
       const newLineIndex = this.file.indexOf("\n");
-      this.file = newLineIndex !== -1 ? this.file.substr(newLineIndex +  1) : "";
+      this.file = newLineIndex !== -1 ? this.file.substr(newLineIndex + 1) : "";
       this.removeWhiteSpace();
     } else {
       return;
@@ -40,10 +40,13 @@ export default class Lexer {
   }
 
   private lexToken(matcher: RegExpMatchArray, type: TokenType): Token {
-    const tokenString = matcher[0] || ''; // TS likes to break things
+    const tokenString = matcher[0] || ""; // TS likes to break things
 
     const start: Location = new Location(this.line, this.character);
-    const end : Location = new Location(this.line, this.character + tokenString.length);
+    const end: Location = new Location(
+      this.line,
+      this.character + tokenString.length,
+    );
 
     this.character += tokenString.length;
     this.file = this.file.substr(tokenString.length);
@@ -57,7 +60,6 @@ export default class Lexer {
     return new Token(TokenType.EOF, new Span(start, end), "");
   }
 
-
   lexRegular(): Token {
     this.removeWhiteSpace();
 
@@ -69,21 +71,35 @@ export default class Lexer {
 
     if (matchIdToken && matchIdToken[0] && matchIdToken.index === 0) {
       const tokenString = matchIdToken[0];
-      const tokenType = (this.literals.has(tokenString)) ? TokenType.LITERAL : TokenType.ID;
-      return this.lexToken(matchIdToken, tokenType)
+      const tokenType = this.literals.has(tokenString)
+        ? TokenType.LITERAL
+        : TokenType.ID;
+      return this.lexToken(matchIdToken, tokenType);
     }
     const matchNumberToken = this.file.match(/^-?[0-9]+(\.[0-9]+)?/);
 
-    if (matchNumberToken && matchNumberToken[0] && matchNumberToken.index === 0) {
+    if (
+      matchNumberToken &&
+      matchNumberToken[0] &&
+      matchNumberToken.index === 0
+    ) {
       return this.lexToken(matchNumberToken, TokenType.NUMBER);
     }
 
-    const matchPunctuationToken = this.file.match(/^==|^&&|^!=|^<=|^>=|^\|\|$|&|\(|\)|=|,|{|}|%|\+|-|\/|:|\[|]|"/);
+    const matchPunctuationToken = this.file.match(
+      /^==|^&&|^!=|^<=|^>=|^\|\|$|&|\(|\)|=|,|{|}|%|\+|-|\/|:|\[|]|"/,
+    );
 
-    if (matchPunctuationToken && matchPunctuationToken[0] && matchPunctuationToken.index === 0) {
+    if (
+      matchPunctuationToken &&
+      matchPunctuationToken[0] &&
+      matchPunctuationToken.index === 0
+    ) {
       return this.lexToken(matchPunctuationToken, TokenType.LITERAL);
     }
-    throw new LexerError(`${this.filename}: ${this.line}:${this.character}: error: invalid character '${this.file[0]}`);
+    throw new LexerError(
+      `${this.filename}: ${this.line}:${this.character}: error: invalid character '${this.file[0]}`,
+    );
   }
 
   unlex(t: Token): void {
@@ -108,7 +124,9 @@ export default class Lexer {
       return this.lexToken(matchPunctuation, TokenType.LITERAL);
     }
 
-    throw new LexerError(`${this.filename}: ${this.line}:${this.character}: error: invalid character '${this.file[0]}`);
+    throw new LexerError(
+      `${this.filename}: ${this.line}:${this.character}: error: invalid character '${this.file[0]}`,
+    );
   }
 }
 

@@ -1,7 +1,7 @@
 import { EvaluatorEnv } from "../codeGenerator/evaluator";
 import Span, { merge } from "./span";
 import Token from "./token";
-import { ExpressionVisitor } from "./visitor"
+import { ExpressionVisitor } from "./visitor";
 
 export abstract class Ast {
   span: Span;
@@ -16,7 +16,8 @@ export class File extends Ast {
   expressions: Expression[];
 
   constructor(datapackDecl: DatapackDecl, expressions: Expression[]) {
-    const last = (expressions.length > 0) ? expressions[expressions.length - 1] : undefined;
+    const last =
+      expressions.length > 0 ? expressions[expressions.length - 1] : undefined;
     if (last === undefined) super(datapackDecl.span);
     else super(merge(datapackDecl.span, last.span));
 
@@ -35,7 +36,7 @@ export class DatapackDecl extends Ast {
 }
 
 export abstract class Expression extends Ast {
-  abstract accept(visitor: ExpressionVisitor, env: EvaluatorEnv) : any;
+  abstract accept(visitor: ExpressionVisitor, env: EvaluatorEnv): any;
 }
 
 export class Import extends Expression {
@@ -133,7 +134,6 @@ export class For extends Expression {
 }
 
 export class Print extends Expression {
-
   expression: Expression;
 
   constructor(keyword: Token, expression: Expression) {
@@ -163,7 +163,6 @@ export enum BinaryOperator {
 }
 
 export class Binop extends Expression {
-
   lhs: Expression;
   op: BinaryOperator;
   rhs: Expression;
@@ -186,7 +185,6 @@ export enum UnaryOperator {
 }
 
 export class Unop extends Expression {
-
   op: UnaryOperator;
   target: Expression;
 
@@ -202,7 +200,6 @@ export class Unop extends Expression {
 }
 
 export class Index extends Expression {
-
   target: Expression;
   index: Expression;
 
@@ -218,7 +215,6 @@ export class Index extends Expression {
 }
 
 export class Slice extends Expression {
-
   target: Expression;
   from: Expression | null;
   to: Expression | null;
@@ -243,7 +239,6 @@ export class Slice extends Expression {
 }
 
 export class Call extends Expression {
-
   target: Expression;
   args: Expression[];
 
@@ -259,7 +254,6 @@ export class Call extends Expression {
 }
 
 export class List extends Expression {
-
   elements: Expression[];
 
   constructor(leftSquare: Token, elements: Expression[], rightSquare: Token) {
@@ -273,7 +267,6 @@ export class List extends Expression {
 }
 
 export class Begin extends Expression {
-
   elements: Expression[];
 
   constructor(leftSquare: Token, elements: Expression[], rightSquare: Token) {
@@ -287,7 +280,6 @@ export class Begin extends Expression {
 }
 
 export class On extends Expression {
-
   trigger: Trigger;
   commands: Command[];
 
@@ -308,7 +300,6 @@ export class On extends Expression {
 }
 
 export class Advancement extends Expression {
-
   name: Expression | null;
   details: AdvancementSpec[];
 
@@ -329,7 +320,6 @@ export class Advancement extends Expression {
 }
 
 export class MCFunction extends Expression {
-
   name: Expression | null;
   commands: Command[];
 
@@ -350,7 +340,6 @@ export class MCFunction extends Expression {
 }
 
 export class True extends Expression {
-
   constructor(token: Token) {
     super(token.span);
   }
@@ -361,7 +350,6 @@ export class True extends Expression {
 }
 
 export class False extends Expression {
-
   constructor(token: Token) {
     super(token.span);
   }
@@ -547,7 +535,6 @@ export class ASTNumber extends Expression {
 }
 
 export class ASTString extends Expression {
-
   components: (string | Expression)[];
 
   constructor(

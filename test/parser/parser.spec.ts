@@ -7,7 +7,6 @@ const sinon = require("sinon");
 const fs = require("fs");
 
 describe("parse", () => {
-
   let parser: Parser;
   const dummyOptions: Options = { outputFile: "test.out" };
 
@@ -37,8 +36,8 @@ describe("parse", () => {
 
       assert.equal(components.length, 1);
       assert.deepEqual(components[0], "test");
-    })
-  })
+    });
+  });
 
   describe("parseDatapack", () => {
     it("should parse datapack declaration - happy path", () => {
@@ -56,19 +55,25 @@ describe("parse", () => {
     it("should throw if datapack declaration is invalid - EOF", () => {
       setup("datapack   ");
 
-      assert.throws(() => { parser.parse() }, ParserError);
-    })
+      assert.throws(() => {
+        parser.parse();
+      }, ParserError);
+    });
 
     it("should throw if datapack declaration is invalid - number", () => {
       setup("datapack 5.012");
 
-      assert.throws(() => { parser.parse() }, ParserError);
-    })
+      assert.throws(() => {
+        parser.parse();
+      }, ParserError);
+    });
 
     it("should throw if datapack declaration is invalid - literal", () => {
       setup("datapack datapack");
 
-      assert.throws(() => { parser.parse() }, ParserError);
-    })
+      assert.throws(() => {
+        parser.parse();
+      }, ParserError);
+    });
   });
 });
