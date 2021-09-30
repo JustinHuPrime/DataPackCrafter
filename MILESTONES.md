@@ -13,3 +13,7 @@ We now need to do a user study and actually implement the rest of the language. 
 # Milestone 2
 
 For division of responsibilities, we're using Github Issues (see <https://github.com/JustinHuPrime/DataPackCrafter/issues>). See the assignment of people to issues. We also plan to try to finish off Milestone 3's content this week in order to have some slack time in case we fall behind later. We have assigned milestones to deadlines and assigned issues to be finished before those deadlines. We'd like to finish a first draft at the DSL implementation by milestone 3's deadline. See `datapack.g4` for the draft grammar and the `examples` folder for examples. Finally, this past week we created a draft grammar, examples, and the AST for the language.
+
+# Milestone 3
+
+We are currently working on the user study - part of our group is working on that in parallel with the other group. We are also implementing the DSL before changes from the user study in order to reduce workload during milestone 4. After the user study is complete, we will note down the changes to be made and make them during milestone 4.
