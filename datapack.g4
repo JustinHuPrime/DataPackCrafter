@@ -55,8 +55,8 @@ primary_expression:
 	| '[' (expression (',' expression)*)? ']' // list constructor
 	| '{' expression+ '}' // begin
 	| 'on' '(' trigger ')' '{' command* '}'
-	| 'advancement' expression? '{' advancement_spec* '}'
-	| 'function' expression? '{' command* '}'
+	| 'advancement' ('(' expression ')')? '{' advancement_spec* '}'
+	| 'function' ('(' expression ')')? '{' command* '}'
 	| string // literals
 	| NUMBER
 	| 'true'
@@ -88,8 +88,8 @@ advancement_spec: // TODO: can add more display properties
 
 ID: [a-zA-Z_][a-zA-Z_0-9]*;
 
-NUMBER: '-'? [1-9][0-9]+ ('.' [0-9]+)?;
+NUMBER: '-'? [0-9]+ ('.' [0-9]+)?;
 
 string: '"' (STRING_CHARACTER | '{' expression+ '}')* '"';
 
-STRING_CHARACTER: ~["\\{}] | '\\\\' | '\\"' | '\\{' | '\\}';
+STRING_CHARACTER: ~["\\{}]| '\\\\' | '\\"' | '\\{' | '\\}';
