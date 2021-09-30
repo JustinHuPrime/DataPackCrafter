@@ -7,7 +7,7 @@
   "scripts": {
     "cover": "nyc --reporter text --reporter html npm run test",
     "build": "npm run pretty && tsc",
-    "test": "mocha --require ts-node/register --timeout 10000 ./test/*.spec.ts",
+    "test": "mocha --require ts-node/register --timeout 10000 ./test/**/*.spec.ts",
     "pretty": "prettier --write \"./**/*.ts\"",
     "start": "node dist/main.js"
   },
@@ -28,18 +28,23 @@
     "@types/chai": "^4.2.22",
     "@types/chai-as-promised": "^7.1.4",
     "@types/mocha": "^9.0.0",
-    "@types/node": "^16.9.4",
+    "@types/node": "^16.10.2",
+    "@types/sinon": "^10.0.4",
     "@typescript-eslint/eslint-plugin": "^4.31.2",
-    "@typescript-eslint/parser": "^4.31.2",
+    "@typescript-eslint/parser": "^4.32.0",
     "chai": "^4.3.4",
     "chai-as-promised": "^7.1.1",
     "eslint-config-google": "^0.14.0",
     "eslint-plugin-import": "^2.24.2",
     "jszip": "^3.7.1",
-    "mocha": "^9.1.1",
+    "mocha": "^9.1.2",
     "nyc": "^15.1.0",
     "prettier": "^2.4.1",
+    "sinon": "^11.1.2",
     "ts-node": "^10.2.1",
     "typescript": "^4.4.3"
+  },
+  "dependencies": {
+    "deep-equal": "^2.0.5"
   }
 }

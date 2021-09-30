@@ -9,3 +9,11 @@ The DSL has a fairly limited type system - there exist numbers, strings, boolean
 During the meeting with our TA, Yanze mentioned that we might not need to implement DSL-level functions to have a complex enough language. We've decided to keep DSL-level functions in for now - we might remove them later.
 
 We now need to do a user study and actually implement the rest of the language. We might also need to tweak some of the precedence rules in our grammar - for example, do we really want `import` to bind as loosely as possible? Finally, additional examples and their outputs should be defined.
+
+# Milestone 2
+
+For division of responsibilities, we're using Github Issues (see <https://github.com/JustinHuPrime/DataPackCrafter/issues>). See the assignment of people to issues. We also plan to try to finish off Milestone 3's content this week in order to have some slack time in case we fall behind later. We have assigned milestones to deadlines and assigned issues to be finished before those deadlines. We'd like to finish a first draft at the DSL implementation by milestone 3's deadline. See `datapack.g4` for the draft grammar and the `examples` folder for examples. Finally, this past week we created a draft grammar, examples, and the AST for the language.
+
+# Milestone 3
+
+We are currently working on the user study - part of our group is working on that in parallel with the other group. We are also implementing the DSL before changes from the user study in order to reduce workload during milestone 4. After the user study is complete, we will note down the changes to be made and make them during milestone 4.

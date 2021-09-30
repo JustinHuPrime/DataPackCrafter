@@ -1,5 +1,7 @@
+import { EvaluatorEnv } from "../codeGenerator/evaluator";
 import Span, { merge } from "./span";
 import Token from "./token";
+import { ExpressionVisitor } from "./visitor"
 
 export abstract class Ast {
   span: Span;
@@ -32,7 +34,9 @@ export class DatapackDecl extends Ast {
   }
 }
 
-export abstract class Expression extends Ast {}
+export abstract class Expression extends Ast {
+  abstract accept(visitor: ExpressionVisitor, env: EvaluatorEnv) : any;
+}
 
 export class Import extends Expression {
   target: Expression;
@@ -40,6 +44,10 @@ export class Import extends Expression {
   constructor(keyword: Token, target: Expression) {
     super(merge(keyword.span, target.span));
     this.target = target;
+  }
+
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
+    return visitor.visitImport(this, env);
   }
 }
 
@@ -53,6 +61,10 @@ export class Define extends Expression {
     this.id = id;
     this.args = args;
     this.body = body;
+  }
+
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
+    return visitor.visitDefine(this, env);
   }
 }
 
@@ -75,6 +87,10 @@ export class Let extends Expression {
     this.values = values;
     this.body = body;
   }
+
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
+    return visitor.visitLet(this, env);
+  }
 }
 
 export class If extends Expression {
@@ -93,6 +109,10 @@ export class If extends Expression {
     this.consequent = consequent;
     this.alternative = alternative;
   }
+
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
+    return visitor.visitIf(this, env);
+  }
 }
 
 export class For extends Expression {
@@ -106,14 +126,23 @@ export class For extends Expression {
     this.iterable = iterable;
     this.body = body;
   }
+
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
+    return visitor.visitFor(this, env);
+  }
 }
 
 export class Print extends Expression {
+
   expression: Expression;
 
   constructor(keyword: Token, expression: Expression) {
     super(merge(keyword.span, expression.span));
     this.expression = expression;
+  }
+
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
+    return visitor.visitPrint(this, env);
   }
 }
 
@@ -134,6 +163,7 @@ export enum BinaryOperator {
 }
 
 export class Binop extends Expression {
+
   lhs: Expression;
   op: BinaryOperator;
   rhs: Expression;
@@ -144,6 +174,10 @@ export class Binop extends Expression {
     this.op = op;
     this.rhs = rhs;
   }
+
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
+    return visitor.visitBinop(this, env);
+  }
 }
 
 export enum UnaryOperator {
@@ -152,6 +186,7 @@ export enum UnaryOperator {
 }
 
 export class Unop extends Expression {
+
   op: UnaryOperator;
   target: Expression;
 
@@ -160,9 +195,14 @@ export class Unop extends Expression {
     this.op = op;
     this.target = target;
   }
+
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
+    return visitor.visitUnop(this, env);
+  }
 }
 
 export class Index extends Expression {
+
   target: Expression;
   index: Expression;
 
@@ -171,9 +211,14 @@ export class Index extends Expression {
     this.target = target;
     this.index = index;
   }
+
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
+    return visitor.visitIndex(this, env);
+  }
 }
 
 export class Slice extends Expression {
+
   target: Expression;
   from: Expression | null;
   to: Expression | null;
@@ -191,9 +236,14 @@ export class Slice extends Expression {
     this.from = from;
     this.to = to;
   }
+
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
+    return visitor.visitSlice(this, env);
+  }
 }
 
 export class Call extends Expression {
+
   target: Expression;
   args: Expression[];
 
@@ -202,27 +252,42 @@ export class Call extends Expression {
     this.target = target;
     this.args = args;
   }
+
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
+    return visitor.visitCall(this, env);
+  }
 }
 
 export class List extends Expression {
+
   elements: Expression[];
 
   constructor(leftSquare: Token, elements: Expression[], rightSquare: Token) {
     super(merge(leftSquare.span, rightSquare.span));
     this.elements = elements;
+  }
+
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
+    return visitor.visitList(this, env);
   }
 }
 
 export class Begin extends Expression {
+
   elements: Expression[];
 
   constructor(leftSquare: Token, elements: Expression[], rightSquare: Token) {
     super(merge(leftSquare.span, rightSquare.span));
     this.elements = elements;
   }
+
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
+    return visitor.visitBegin(this, env);
+  }
 }
 
 export class On extends Expression {
+
   trigger: Trigger;
   commands: Command[];
 
@@ -236,9 +301,14 @@ export class On extends Expression {
     this.trigger = trigger;
     this.commands = commands;
   }
+
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
+    return visitor.visitOn(this, env);
+  }
 }
 
 export class Advancement extends Expression {
+
   name: Expression | null;
   details: AdvancementSpec[];
 
@@ -252,9 +322,14 @@ export class Advancement extends Expression {
     this.name = name;
     this.details = details;
   }
+
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
+    return visitor.visitAdvancement(this, env);
+  }
 }
 
-export class Function extends Expression {
+export class MCFunction extends Expression {
+
   name: Expression | null;
   commands: Command[];
 
@@ -268,17 +343,31 @@ export class Function extends Expression {
     this.name = name;
     this.commands = commands;
   }
+
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
+    return visitor.visitFunction(this, env);
+  }
 }
 
 export class True extends Expression {
+
   constructor(token: Token) {
     super(token.span);
+  }
+
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
+    return visitor.visitTrue(this, env);
   }
 }
 
 export class False extends Expression {
+
   constructor(token: Token) {
     super(token.span);
+  }
+
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
+    return visitor.visitFalse(this, env);
   }
 }
 
@@ -346,18 +435,18 @@ export class CombinedTrigger extends Trigger {
 }
 
 export class ConsumeItem extends Trigger {
-  details: ItemSpec[];
+  details: ItemSpec | null;
 
-  constructor(keyword: Token, details: ItemSpec[], closeBrace: Token) {
+  constructor(keyword: Token, details: ItemSpec | null, closeBrace: Token) {
     super(merge(keyword.span, closeBrace.span));
     this.details = details;
   }
 }
 
 export class InventoryChanged extends Trigger {
-  details: ItemSpec[];
+  details: ItemSpec | null;
 
-  constructor(keyword: Token, details: ItemSpec[], closeBrace: Token) {
+  constructor(keyword: Token, details: ItemSpec | null, closeBrace: Token) {
     super(merge(keyword.span, closeBrace.span));
     this.details = details;
   }
@@ -430,16 +519,20 @@ export class Parent extends AdvancementSpec {
   }
 }
 
-export class Id extends Ast {
+export class Id extends Expression {
   id: string;
 
   constructor(token: Token) {
     super(token.span);
     this.id = token.content;
   }
+
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
+    return visitor.visitId(this, env);
+  }
 }
 
-export class Number extends Expression {
+export class ASTNumber extends Expression {
   value: number;
   constructor(token: Token) {
     // assert(!isNaN(parseFloat(token.content)), "couldn't parse number");
@@ -447,9 +540,14 @@ export class Number extends Expression {
     super(token.span);
     this.value = parseFloat(token.content);
   }
+
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
+    return visitor.visitNumber(this, env);
+  }
 }
 
-export class String extends Expression {
+export class ASTString extends Expression {
+
   components: (string | Expression)[];
 
   constructor(
@@ -459,5 +557,9 @@ export class String extends Expression {
   ) {
     super(merge(leftQuote.span, rightQuote.span));
     this.components = components;
+  }
+
+  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
+    return visitor.visitString(this, env);
   }
 }
