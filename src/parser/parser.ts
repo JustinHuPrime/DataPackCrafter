@@ -61,16 +61,12 @@ export default class Parser {
     this.lexer = new Lexer(filename);
   }
 
-  private throwUnexpectedCharacterError(token: Token): void {
-    throw this.buildUnexpectedCharacterError(token);
-  }
-
-  private buildUnexpectedCharacterError(token: Token): ParserError {
+  private throwUnexpectedCharacterError(token: Token): never {
     const { content, span } = token;
     const { start } = span;
     const { line, character } = start;
 
-    return new ParserError(
+    throw new ParserError(
       `${this.filename}: ${line}:${character}: unexpected token '${content}`,
     );
   }
@@ -93,7 +89,6 @@ export default class Parser {
 
   private parseImport(): Import {
     const keyword = this.lexer.lexRegular();
-    // has to be an import
     this.expect(keyword, TokenType.LITERAL, "import");
 
     const target = this.parseExpression();
@@ -121,29 +116,22 @@ export default class Parser {
 
     const components: (string | Expression)[] = [];
 
-    let stringBuilder = "";
-
     let current = this.lexer.lexString();
 
-    while (current.content !== '"') {
+    while (!(current.type === TokenType.LITERAL && current.content === '"')) {
       if (current.type === TokenType.STRING_CHAR) {
-        stringBuilder += current.content;
+        components.push(current.content);
       } else if (
         current.type === TokenType.LITERAL &&
         current.content === "{"
       ) {
-        components.push(stringBuilder);
-        stringBuilder = "";
         components.push(this.parseExpression());
-      } else if (current.type === TokenType.EOF) {
+        this.expect(this.lexer.lexRegular(), TokenType.LITERAL, "}");
+      } else {
         this.throwUnexpectedCharacterError(current);
       }
 
       current = this.lexer.lexString();
-    }
-
-    if (stringBuilder.length > 0) {
-      components.push(stringBuilder);
     }
 
     return new ASTString(leftQuote, components, current);
@@ -162,7 +150,7 @@ export default class Parser {
 
     let peek = this.lexer.lexRegular();
     let name = null;
-    if (peek.type === TokenType.LITERAL && peek.content === "(") {
+    if (peek.content === "(") {
       name = this.parseExpression();
       this.expect(this.lexer.lexRegular(), TokenType.LITERAL, ")");
     } else {
@@ -171,9 +159,10 @@ export default class Parser {
 
     this.expect(this.lexer.lexRegular(), TokenType.LITERAL, "{");
 
-    peek = this.lexer.lexRegular();
     const commands = [];
-    while (peek.type !== TokenType.LITERAL || peek.content !== "}") {
+
+    peek = this.lexer.lexRegular();
+    while (peek.content !== "}") {
       this.lexer.unlex(peek);
       commands.push(this.parseCommand());
       peek = this.lexer.lexRegular();
@@ -188,7 +177,7 @@ export default class Parser {
 
     let peek = this.lexer.lexRegular();
     let name = null;
-    if (peek.type === TokenType.LITERAL && peek.content === "(") {
+    if (peek.content === "(") {
       name = this.parseExpression();
       this.expect(this.lexer.lexRegular(), TokenType.LITERAL, ")");
     } else {
@@ -197,9 +186,9 @@ export default class Parser {
 
     this.expect(this.lexer.lexRegular(), TokenType.LITERAL, "{");
 
-    peek = this.lexer.lexRegular();
     const commands = [];
-    while (peek.type !== TokenType.LITERAL || peek.content !== "}") {
+    peek = this.lexer.lexRegular();
+    while (peek.content !== "}") {
       this.lexer.unlex(peek);
       commands.push(this.parseAdvancementSpec());
       peek = this.lexer.lexRegular();
@@ -210,22 +199,14 @@ export default class Parser {
 
   private parseItemSpec(): ItemSpec {
     const start = this.lexer.lexRegular();
-
     this.expect(start, TokenType.LITERAL, ["item", "tag"]);
 
-    const { content } = start;
-
-    this.expect(this.lexer.lexRegular(), TokenType.LITERAL, "{");
+    this.expect(this.lexer.lexRegular(), TokenType.LITERAL, "==");
 
     const name: Expression = this.parseExpression();
 
-    this.expect(this.lexer.lexRegular(), TokenType.LITERAL, "}");
-
-    if (content === "item") {
-      return new ItemMatcher(start, name);
-    } else {
-      return new TagMatcher(start, name);
-    }
+    if (start.content === "item") return new ItemMatcher(start, name);
+    else return new TagMatcher(start, name);
   }
 
   private parseAdvancementSpec(): AdvancementSpec {
@@ -241,17 +222,22 @@ export default class Parser {
 
     const expression = this.parseExpression();
 
-    const { content } = keyword;
-
-    switch (content) {
-      case "title":
+    switch (keyword.content) {
+      case "title": {
         return new Title(keyword, expression);
-      case "icon":
+      }
+      case "icon": {
         return new Icon(keyword, expression);
-      case "description":
+      }
+      case "description": {
         return new Description(keyword, expression);
-      default:
+      }
+      case "parent": {
         return new Parent(keyword, expression);
+      }
+      default: {
+        return undefined as never;
+      }
     }
   }
 
@@ -307,8 +293,9 @@ export default class Parser {
       currentToken = this.lexer.lexRegular();
     }
 
-    const { content } = start;
+    this.expect(currentToken, TokenType.LITERAL, "}");
 
+    const { content } = start;
     if (content === "inventory_changed") {
       return new InventoryChanged(start, itemSpec, currentToken);
     } else {
@@ -318,47 +305,40 @@ export default class Parser {
 
   private parsePrimaryTrigger(): Trigger {
     const start = this.lexer.lexRegular();
+    this.lexer.unlex(start);
 
     const { content } = start;
-
     if (content === "consume_item" || content === "inventory_changed") {
-      this.lexer.unlex(start);
-
-      this.parseBasePrimaryTrigger();
+      return this.parseBasePrimaryTrigger();
+    } else {
+      return new RawTrigger(this.parseExpression());
     }
-
-    return new RawTrigger(this.parseExpression());
   }
 
   private parseCombinedTrigger(): Trigger {
-    const lhs = this.parsePrimaryTrigger();
+    let lhs = this.parsePrimaryTrigger();
 
-    const next = this.lexer.lexRegular();
-    const { content } = next;
-
-    if (content !== "||") {
-      this.lexer.unlex(next);
-      return lhs;
+    let peek = this.lexer.lexRegular();
+    while (peek.content === "||") {
+      this.lexer.unlex(peek);
+      lhs = new CombinedTrigger(lhs, this.parsePrimaryTrigger());
+      peek = this.lexer.lexRegular();
     }
+    this.lexer.unlex(peek);
 
-    const rhs = this.parseCombinedTrigger();
-
-    return new CombinedTrigger(lhs, rhs);
+    return lhs;
   }
 
   private parseTrigger(): Trigger {
     const start = this.lexer.lexRegular();
-    this.expect(start, TokenType.LITERAL, ["load", "tick"]);
-
-    const { content } = start;
-
-    if (content === "load") {
+    if (start.content === "load") {
       return new Load(start);
-    } else if (content === "tick") {
+    } else if (start.content === "tick") {
       return new Tick(start);
+    } else {
+      this.lexer.unlex(start);
+      return this.parseCombinedTrigger();
     }
-
-    return this.parseCombinedTrigger();
   }
 
   private parseOn(): On {
@@ -375,9 +355,10 @@ export default class Parser {
     const commands: Command[] = [];
 
     let current = this.lexer.lexRegular();
-
     while (current.content !== "}") {
+      this.lexer.unlex(current);
       commands.push(this.parseCommand());
+      current = this.lexer.lexRegular();
     }
 
     return new On(start, trigger, commands, current);
@@ -387,50 +368,47 @@ export default class Parser {
     const start = this.lexer.lexRegular();
     this.expect(start, TokenType.LITERAL, "{");
 
-    const elements: Expression[] = [];
+    const elements: Expression[] = [this.parseExpression()];
 
-    let current = this.lexer.lexRegular();
-
-    while (current.content !== "]") {
-      if (current.type === TokenType.EOF) {
-        this.throwUnexpectedCharacterError(current);
-      }
-
+    let peek = this.lexer.lexRegular();
+    while (peek.content !== "}") {
+      this.lexer.unlex(peek);
       elements.push(this.parseExpression());
+      peek = this.lexer.lexRegular();
     }
 
-    if (elements.length === 0) {
-      this.throwUnexpectedCharacterError(current);
-    }
-
-    return new Begin(start, elements, current);
+    return new Begin(start, elements, peek);
   }
 
   private parseList(): List {
     const start = this.lexer.lexRegular();
     this.expect(start, TokenType.LITERAL, "[");
+
     const list: Expression[] = [];
+    let peek = this.lexer.lexRegular();
+    if (peek.content === "]") {
+      return new List(start, list, peek);
+    }
 
-    const first = this.parseExpression();
-    list.push(first);
-
-    let current = this.lexer.lexRegular();
-    let itemFlag = true;
-
-    while (current.content !== "]") {
-      if (current.type === TokenType.LITERAL && itemFlag) {
-        this.expect(current, TokenType.LITERAL, ",");
-        itemFlag = false;
-      } else if (current.type === TokenType.EOF) {
-        this.throwUnexpectedCharacterError(current);
-      } else {
-        const expression = this.parseExpression();
-        list.push(expression);
-        itemFlag = true;
+    let done = false;
+    while (!done) {
+      list.push(this.parseExpression());
+      peek = this.lexer.lexRegular();
+      switch (peek.content) {
+        case ",": {
+          break;
+        }
+        case "]": {
+          done = true;
+          break;
+        }
+        default: {
+          this.throwUnexpectedCharacterError(peek);
+        }
       }
     }
 
-    return new List(start, list, current);
+    return new List(start, list, peek);
   }
 
   private parseBracketExpression(): Expression {
@@ -445,133 +423,120 @@ export default class Parser {
     return expression;
   }
 
-  private parseLogicalExpression(exp?: Expression): Expression {
-    const lhs = exp || this.parseEqualityExpression();
+  private parseLogicalExpression(): Expression {
+    let lhs = this.parseEqualityExpression();
 
-    const token = this.lexer.lexRegular();
-    let operation: BinaryOperator = BinaryOperator.AND;
-
-    switch (token.content) {
-      case "&&":
-        operation = BinaryOperator.AND;
-        break;
-      case "||":
-        operation = BinaryOperator.OR;
-        break;
-      default:
-        this.lexer.unlex(token);
-        return lhs;
+    let peek = this.lexer.lexRegular();
+    while (peek.content === "&&" || peek.content === "||") {
+      const rhs = this.parseEqualityExpression();
+      lhs = new Binop(
+        lhs,
+        peek.content === "&&" ? BinaryOperator.AND : BinaryOperator.OR,
+        rhs,
+      );
     }
+    this.lexer.unlex(peek);
 
-    const rhs = this.parseEqualityExpression();
-    const binOp = new Binop(lhs, operation, rhs);
-
-    return this.parseLogicalExpression(binOp);
+    return lhs;
   }
 
-  private parseEqualityExpression(exp?: Expression): Expression {
-    const lhs = exp || this.parseRelationalExpression();
+  private parseEqualityExpression(): Expression {
+    let lhs = this.parseRelationalExpression();
 
-    const token = this.lexer.lexRegular();
-    let operation: BinaryOperator = BinaryOperator.EQ;
-
-    switch (token.content) {
-      case "==":
-        operation = BinaryOperator.EQ;
-        break;
-      case ">":
-        operation = BinaryOperator.NEQ;
-        break;
-      default:
-        this.lexer.unlex(token);
-        return lhs;
+    let peek = this.lexer.lexRegular();
+    while (peek.content === "==" || peek.content === "!=") {
+      const rhs = this.parseRelationalExpression();
+      lhs = new Binop(
+        lhs,
+        peek.content === "==" ? BinaryOperator.EQ : BinaryOperator.NEQ,
+        rhs,
+      );
     }
+    this.lexer.unlex(peek);
 
-    const rhs = this.parseRelationalExpression();
-    const binOp = new Binop(lhs, operation, rhs);
-
-    return this.parseEqualityExpression(binOp);
+    return lhs;
   }
 
-  private parseRelationalExpression(exp?: Expression): Expression {
-    const lhs = exp || this.parseAdditiveExpression();
+  private parseRelationalExpression(): Expression {
+    let lhs = this.parseAdditiveExpression();
 
-    const token = this.lexer.lexRegular();
-    let operation: BinaryOperator = BinaryOperator.LT;
-
-    switch (token.content) {
-      case "<":
-        operation = BinaryOperator.LT;
-        break;
-      case ">":
-        operation = BinaryOperator.GT;
-        break;
-      case "<=":
-        operation = BinaryOperator.LTE;
-        break;
-      case ">=":
-        operation = BinaryOperator.GTE;
-        break;
-      default:
-        this.lexer.unlex(token);
-        return lhs;
+    let peek = this.lexer.lexRegular();
+    while (
+      peek.content === "<" ||
+      peek.content === ">" ||
+      peek.content === "<=" ||
+      peek.content === ">="
+    ) {
+      const rhs = this.parseAdditiveExpression();
+      switch (peek.content) {
+        case "<": {
+          lhs = new Binop(lhs, BinaryOperator.LT, rhs);
+          break;
+        }
+        case ">": {
+          lhs = new Binop(lhs, BinaryOperator.GT, rhs);
+          break;
+        }
+        case "<=": {
+          lhs = new Binop(lhs, BinaryOperator.LTE, rhs);
+          break;
+        }
+        case ">=": {
+          lhs = new Binop(lhs, BinaryOperator.GTE, rhs);
+          break;
+        }
+      }
     }
+    this.lexer.unlex(peek);
 
-    const rhs = this.parseAdditiveExpression();
-    const binOp = new Binop(lhs, operation, rhs);
-
-    return this.parseRelationalExpression(binOp);
+    return lhs;
   }
 
-  private parseAdditiveExpression(exp?: Expression): Expression {
-    const lhs = exp || this.parseMultiplicativeExpression();
+  private parseAdditiveExpression(): Expression {
+    let lhs = this.parseMultiplicativeExpression();
 
-    const token = this.lexer.lexRegular();
-    let operation: BinaryOperator = BinaryOperator.ADD;
-
-    switch (token.content) {
-      case "+":
-        operation = BinaryOperator.ADD;
-        break;
-      case "-":
-        operation = BinaryOperator.SUB;
-        break;
-      default:
-        this.lexer.unlex(token);
-        return lhs;
+    let peek = this.lexer.lexRegular();
+    while (peek.content === "+" || peek.content === "-") {
+      const rhs = this.parseMultiplicativeExpression();
+      lhs = new Binop(
+        lhs,
+        peek.content === "+" ? BinaryOperator.ADD : BinaryOperator.SUB,
+        rhs,
+      );
     }
+    this.lexer.unlex(peek);
 
-    const rhs = this.parseMultiplicativeExpression();
-    const binOp = new Binop(lhs, operation, rhs);
-
-    return this.parseAdditiveExpression(binOp);
+    return lhs;
   }
 
-  private parseMultiplicativeExpression(exp?: Expression): Expression {
-    const lhs = exp || this.parsePrefixExpression();
+  private parseMultiplicativeExpression(): Expression {
+    let lhs = this.parsePrefixExpression();
 
-    const token = this.lexer.lexRegular();
-    let operation: BinaryOperator = BinaryOperator.MUL;
-
-    switch (token.content) {
-      case "*":
-        operation = BinaryOperator.MUL;
-        break;
-      case "/":
-        operation = BinaryOperator.DIV;
-        break;
-      case "%":
-        operation = BinaryOperator.MOD;
-        break;
-      default:
-        this.lexer.unlex(token);
-        return lhs;
+    let peek = this.lexer.lexRegular();
+    while (
+      peek.content === "*" ||
+      peek.content === "/" ||
+      peek.content === "%"
+    ) {
+      const rhs = this.parsePrefixExpression();
+      switch (peek.content) {
+        case "*": {
+          lhs = new Binop(lhs, BinaryOperator.MUL, rhs);
+          break;
+        }
+        case "/": {
+          lhs = new Binop(lhs, BinaryOperator.DIV, rhs);
+          break;
+        }
+        case "%": {
+          lhs = new Binop(lhs, BinaryOperator.MOD, rhs);
+          break;
+        }
+      }
     }
+    this.lexer.unlex(peek);
 
-    const rhs = this.parsePrefixExpression();
-    const binOp = new Binop(lhs, operation, rhs);
-
-    return this.parseMultiplicativeExpression(binOp);
+    return lhs;
   }
 
   private parsePrefixExpression(): Expression {
@@ -595,183 +560,188 @@ export default class Parser {
 
     const args: Expression[] = [];
 
-    let current = this.lexer.lexRegular();
-    let expFlag = false;
+    let peek = this.lexer.lexRegular();
+    if (peek.content === ")") return new Call(target, args, peek);
+    this.lexer.unlex(peek);
 
-    while (current.content !== ")") {
-      if (current.content === ",") {
-        if (!expFlag) {
-          this.throwUnexpectedCharacterError(current);
+    let done = false;
+    while (!done) {
+      args.push(this.parseExpression());
+      peek = this.lexer.lexRegular();
+      switch (peek.content) {
+        case ",": {
+          break;
         }
-        expFlag = false;
-      } else {
-        this.lexer.unlex(current);
-        args.push(this.parseExpression());
-        expFlag = true;
+        case ")": {
+          done = true;
+          break;
+        }
+        default: {
+          this.throwUnexpectedCharacterError(peek);
+        }
       }
-
-      current = this.lexer.lexRegular();
     }
 
-    this.expect(current, TokenType.LITERAL, ")");
-
-    return this.parsePostfixExpression(new Call(target, args, current));
+    return new Call(target, args, peek);
   }
 
   private parseSlice(target: Expression): Expression {
     const begin = this.lexer.lexRegular();
     this.expect(begin, TokenType.LITERAL, "[");
 
-    let current = this.lexer.lexRegular();
-    let from: Expression | null = null;
-    let to: Expression | null = null;
+    let peek = this.lexer.lexRegular();
+    if (peek.content === ":") {
+      const to = this.parseExpression();
 
-    let sliceFlag = false;
-
-    while (current.content !== "]") {
-      if (current.type === TokenType.EOF) {
-        this.throwUnexpectedCharacterError(current);
-      }
-
-      if (current.content === ":") {
-        if (sliceFlag) {
-          this.throwUnexpectedCharacterError(current);
-        }
-
-        sliceFlag = true;
-      } else {
-        if (!from && !sliceFlag) {
-          this.lexer.unlex(current);
-          from = this.parseExpression();
-        } else if (!to && sliceFlag) {
-          this.lexer.unlex(current);
-          to = this.parseExpression();
-        } else {
-          this.throwUnexpectedCharacterError(current);
-        }
-      }
-
-      current = this.lexer.lexRegular();
-    }
-
-    this.expect(current, TokenType.LITERAL, "]");
-
-    if (!from && !to) {
-      const { span } = begin;
-      const { start } = span;
-      const { line, character } = start;
-      throw new ParserError(
-        `${this.filename}: ${line}:${character}: invalid index/slice`,
-      );
-    }
-
-    if (!sliceFlag && from) {
-      return this.parsePostfixExpression(new Index(target, from, current));
+      const closeSquare = this.lexer.lexRegular();
+      this.expect(closeSquare, TokenType.LITERAL, "]");
+      return new Slice(target, null, to, closeSquare);
     } else {
-      return this.parsePostfixExpression(new Slice(target, from, to, current));
+      this.lexer.unlex(peek);
+
+      const from = this.parseExpression();
+
+      peek = this.lexer.lexRegular();
+      if (peek.content === ":") {
+        peek = this.lexer.lexRegular();
+        if (peek.content === "]") {
+          return new Slice(target, from, null, peek);
+        }
+        this.lexer.unlex(peek);
+
+        const to = this.parseExpression();
+
+        const closeSquare = this.lexer.lexRegular();
+        this.expect(closeSquare, TokenType.LITERAL, "]");
+        return new Slice(target, from, to, closeSquare);
+      } else {
+        this.lexer.unlex(peek);
+
+        const closeSquare = this.lexer.lexRegular();
+        this.expect(closeSquare, TokenType.LITERAL, "]");
+        return new Index(target, from, closeSquare);
+      }
     }
   }
 
-  private parsePostfixExpression(exp?: Expression): Expression {
-    const target = exp || this.parsePrimaryExpression();
+  private parsePostfixExpression(): Expression {
+    let target = this.parsePrimaryExpression();
 
-    const begin = this.lexer.lexRegular();
-    const { content } = begin;
-
-    this.lexer.unlex(begin);
-
-    switch (content) {
-      case "[":
-        return this.parseSlice(target);
-      case "(":
-        return this.parseCall(target);
-      default:
-        return target;
+    let peek = this.lexer.lexRegular();
+    while (peek.content === "[" || peek.content === "(") {
+      this.lexer.unlex(peek);
+      if (peek.content === "[") {
+        target = this.parseSlice(target);
+      } else {
+        target = this.parseCall(target);
+      }
+      peek = this.lexer.lexRegular();
     }
+    this.lexer.unlex(peek);
+
+    return target;
   }
 
   private parsePrimaryExpression(): Expression {
     const token = this.lexer.lexRegular();
     this.lexer.unlex(token);
     switch (token.type) {
-      case TokenType.LITERAL:
+      case TokenType.LITERAL: {
         switch (token.content) {
-          case "(":
+          case "(": {
             return this.parseBracketExpression();
-          case "[":
+          }
+          case "[": {
             return this.parseList();
-          case "{":
+          }
+          case "{": {
             return this.parseBegin();
-          case "on":
+          }
+          case "on": {
             return this.parseOn();
-          case "advancement":
+          }
+          case "advancement": {
             return this.parseAdvancement();
-          case "function":
+          }
+          case "function": {
             return this.parseFunction();
-          case '"':
+          }
+          case '"': {
             return this.parseString();
-          case "true":
+          }
+          case "true": {
             return this.parseTrue();
-          case "false":
+          }
+          case "false": {
             return this.parseFalse();
-          default:
+          }
+          default: {
             this.throwUnexpectedCharacterError(token);
-            break;
+          }
         }
-        break;
-      case TokenType.ID:
+      }
+      case TokenType.ID: {
         return this.parseId();
-      case TokenType.NUMBER:
+      }
+      case TokenType.NUMBER: {
         return this.parseNumber();
-      default:
-        break;
+      }
+      default: {
+        this.throwUnexpectedCharacterError(token);
+      }
     }
-
-    throw this.buildUnexpectedCharacterError(token);
   }
 
   private parseDefine(): Expression {
     const keyword = this.lexer.lexRegular();
-    let id: Id | null = null;
-    const args: Id[] = [];
 
-    this.expect(keyword, TokenType.LITERAL, "import");
+    this.expect(keyword, TokenType.LITERAL, "define");
 
     const identifierToken = this.lexer.lexRegular();
     this.lexer.unlex(identifierToken);
 
+    let id: Id | null = null;
     if (identifierToken.type === TokenType.ID) {
       id = this.parseId();
     }
 
     const openParan = this.lexer.lexRegular();
-
     this.expect(openParan, TokenType.LITERAL, "(");
 
-    let current = this.lexer.lexRegular();
-    let idFlag = false;
-    while (current.content !== ")") {
-      const { type } = current;
-      switch (type) {
-        case TokenType.ID:
-          this.lexer.unlex(current);
-          const id = this.parseId();
-          args.push(id);
-          idFlag = true;
-          break;
-        case TokenType.LITERAL:
-          if (idFlag) {
-            this.expect(current, TokenType.LITERAL, ",");
-            idFlag = false;
-          } else {
-            this.throwUnexpectedCharacterError(current);
+    let peek = this.lexer.lexRegular();
+    let args: Id[] = [];
+    let doneArgs = false;
+    if (peek.content !== ")") {
+      this.lexer.unlex(peek);
+    } else {
+      doneArgs = true;
+    }
+    while (!doneArgs) {
+      peek = this.lexer.lexRegular();
+      switch (peek.type) {
+        case TokenType.ID: {
+          this.lexer.unlex(peek);
+          args.push(this.parseId());
+
+          peek = this.lexer.lexRegular();
+          switch (peek.content) {
+            case ",": {
+              break;
+            }
+            case ")": {
+              doneArgs = true;
+              break;
+            }
+            default: {
+              this.throwUnexpectedCharacterError(peek);
+            }
           }
           break;
-        default:
-          this.throwUnexpectedCharacterError(current);
-          break;
+        }
+        default: {
+          this.throwUnexpectedCharacterError(peek);
+        }
       }
-      current = this.lexer.lexRegular();
     }
 
     const body = this.parseExpression();
@@ -789,16 +759,15 @@ export default class Parser {
     const id0 = this.lexer.lexRegular();
     this.expect(keyword, TokenType.ID);
 
-    const eq1 = this.lexer.lexRegular();
-    this.expect(eq1, TokenType.LITERAL, "=");
+    const eq0 = this.lexer.lexRegular();
+    this.expect(eq0, TokenType.LITERAL, "=");
 
-    const v1 = this.parseExpression();
+    const v0 = this.parseExpression();
 
     ids.push(new Id(id0));
-    values.push(v1);
+    values.push(v0);
 
     let current = this.lexer.lexRegular();
-
     while (current.content === ",") {
       current = this.lexer.lexRegular();
       this.expect(current, TokenType.ID);
@@ -815,7 +784,6 @@ export default class Parser {
 
       this.lexer.lexRegular();
     }
-
     this.lexer.unlex(current);
 
     const body = this.parseExpression();
@@ -890,18 +858,15 @@ export default class Parser {
           case "print": {
             return this.parsePrint();
           }
+          default: {
+            return this.parseLogicalExpression();
+          }
         }
-        break;
       }
-      case TokenType.EOF:
-        this.throwUnexpectedCharacterError(next);
-        break;
       default: {
-        break;
+        return this.parseLogicalExpression();
       }
     }
-
-    return this.parseLogicalExpression();
   }
 
   private expect(

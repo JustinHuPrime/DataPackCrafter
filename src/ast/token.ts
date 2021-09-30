@@ -1,6 +1,6 @@
 import Span from "./span";
 
-export const keywordArr = [
+export const KEYWORDS = new Set([
   "datapack",
   "import",
   "define",
@@ -28,7 +28,7 @@ export const keywordArr = [
   "icon",
   "description",
   "parent",
-];
+]);
 
 export enum TokenType {
   EOF,

@@ -1,5 +1,5 @@
 import Lexer, { LexerError } from "../../src/parser/lexer";
-import Token, { keywordArr, TokenType } from "../../src/ast/token";
+import Token, { KEYWORDS, TokenType } from "../../src/ast/token";
 import Span, { Location } from "../../src/ast/span";
 
 const assert = require("assert");
@@ -40,15 +40,15 @@ describe("lexer", () => {
           lexer.lexString(),
           new Token(
             TokenType.STRING_CHAR,
-            new Span(new Location(1, 1), new Location(1, s.length + 1)),
-            s,
+            new Span(new Location(1, 1), new Location(1, s.length)),
+            s[1] as string,
           ),
         );
       }
     });
 
     it("should lex reserved characters as literals", () => {
-      const characters = ['"', "\\", "{", "}"];
+      const characters = ['"', "{", "}"];
 
       for (const character of characters) {
         setup(character);
@@ -222,7 +222,7 @@ describe("lexer", () => {
     });
 
     it("should lex keywords correctly", () => {
-      for (const keyword of keywordArr) {
+      for (const keyword of KEYWORDS) {
         setup(keyword);
 
         assert.deepEqual(
@@ -244,7 +244,6 @@ describe("lexer", () => {
         "<=",
         ">=",
         "||",
-        "&",
         "(",
         ")",
         "=",

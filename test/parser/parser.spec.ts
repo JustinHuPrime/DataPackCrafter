@@ -34,8 +34,9 @@ describe("parse", () => {
 
       const { components } = expression as ASTString;
 
-      assert.equal(components.length, 1);
-      assert.deepEqual(components[0], "test");
+      assert.equal(components.length, "test".length);
+      for (let i = 0; i < "test".length; ++i)
+        assert.equal(components[i], "test".charAt(i));
     });
   });
 
