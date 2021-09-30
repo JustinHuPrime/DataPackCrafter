@@ -1,4 +1,20 @@
-import { DatapackDecl, Define, Expression, File, For, Id, If, Import, Let, Print } from "../ast/ast";
+import {
+  Advancement,
+  ASTNumber,
+  ASTString, Begin,
+  DatapackDecl,
+  Define,
+  Expression,
+  False,
+  File,
+  For,
+  Id,
+  If,
+  Import,
+  Let, List, MCFunction, On,
+  Print,
+  True,
+} from "../ast/ast";
 import Options from "../options";
 import Token, { TokenType } from "../ast/token";
 import Lexer from "./lexer";
@@ -13,6 +29,14 @@ export default class Parser {
     this.options = options;
     this.lexer = new Lexer(filename);
   }
+
+  private throwUnexpectedCharacterError(token: Token): void {
+    const { content, span } = token;
+    const { start } = span;
+    const { line, character } = start;
+    throw new ParserError(`${this.filename}: ${line}:${character}: unexpected token '${content}`);
+  }
+
   private parseDatapackDeclaration (): DatapackDecl {
     const datapackToken: Token = this.lexer.lexRegular();
     this.expect(datapackToken, TokenType.LITERAL, "datapack");
@@ -39,6 +63,123 @@ export default class Parser {
     return new Import(keyword, target);
   }
 
+  private parseTrue(): True {
+    const keyword = this.lexer.lexRegular();
+    this.expect(keyword, TokenType.LITERAL, "true");
+
+    return new True(keyword);
+  }
+
+  private parseFalse(): False {
+    const keyword = this.lexer.lexRegular();
+    this.expect(keyword, TokenType.LITERAL, "false");
+
+    return new False(keyword);
+  }
+
+  private parseString(): ASTString {
+    const leftQuote = this.lexer.lexRegular();
+    this.expect(leftQuote, TokenType.LITERAL, '"');
+
+    const components: (string | Expression)[] = [];
+
+    let stringBuilder = "";
+
+    let current = this.lexer.lexString();
+
+    while (current.content !== '"') {
+      if (current.type === TokenType.STRING_CHAR) {
+        stringBuilder += current.content;
+      } else if (current.type === TokenType.LITERAL && current.content === "{") {
+        components.push(stringBuilder);
+        stringBuilder = "";
+        components.push(this.parseExpression());
+      } else if (current.type === TokenType.EOF) {
+        this.throwUnexpectedCharacterError(current);
+      }
+
+      current = this.lexer.lexString();
+    }
+
+    if (stringBuilder.length > 0) {
+      components.push(stringBuilder);
+    }
+
+    return new ASTString(leftQuote, components, current);
+  }
+
+  private parseNumber(): ASTNumber {
+    const token = this.lexer.lexRegular();
+    this.expect(token, TokenType.NUMBER);
+
+    return new ASTNumber(token);
+  }
+
+  private parseFunction(): MCFunction {
+    throw new Error("not implemented yet");
+  }
+
+  private parseAdvancement(): Advancement {
+    throw new Error("not implemented yet");
+  }
+
+  private parseOn(): On {
+    throw new Error("not implemented yet");
+  }
+
+  private parseBegin(): Begin {
+    throw new Error("not implemented yet");
+  }
+
+  private parseList(): List {
+    throw new Error("not implemented yet");
+  }
+
+  // TODO： Remove
+  // @ts-ignore
+  private parsePrimaryExpression(): Expression {
+    const token = this.lexer.lexRegular();
+    this.lexer.unlex(token);
+    switch (token.type) {
+      case TokenType.LITERAL:
+        switch (token.content) {
+          case "(":
+            break;
+          case "[":
+            return this.parseList();
+            break;
+          case "{":
+            return this.parseBegin();
+            break;
+          case "on":
+            return this.parseOn();
+            break;
+          case "advancement":
+            return this.parseAdvancement();
+            break;
+          case "function":
+            return this.parseFunction();
+          case '"':
+            return this.parseString();
+          case "true":
+            return this.parseTrue();
+          case "false":
+            return this.parseFalse();
+          default:
+            this.throwUnexpectedCharacterError(token);
+            break;
+        }
+          break;
+      case TokenType.ID:
+        return this.parseId();
+      case TokenType.NUMBER:
+        return this.parseNumber();
+      default:
+        this.throwUnexpectedCharacterError(token);
+        break;
+    }
+  }
+
   private parseLogicalExpression(): Expression {
     throw new Error("not implemented yet");
   }
@@ -55,34 +196,33 @@ export default class Parser {
 
     if (identifierToken.type === TokenType.ID) {
       id = this.parseId();
-      this.lexer.unlex(identifierToken);
     }
 
     const openParan = this.lexer.lexRegular();
 
     this.expect(openParan, TokenType.LITERAL, "(");
 
-    const arg1 = this.parseId();
-    args.push(arg1);
-
     let current = this.lexer.lexRegular();
-
+    let idFlag = false;
     while (current.content !== ")") {
-      const { type, content, span } = current;
-      const { start } = span;
-      const { line, character } = start;
-
+      const { type } = current;
       switch (type) {
         case TokenType.ID:
           this.lexer.unlex(current);
           const id = this.parseId();
           args.push(id);
+          idFlag = true;
           break;
         case TokenType.LITERAL:
-          this.expect(current, TokenType.LITERAL, ",");
+          if (idFlag) {
+            this.expect(current, TokenType.LITERAL, ",");
+            idFlag = false;
+          } else {
+            this.throwUnexpectedCharacterError(current);
+          }
           break;
         default:
-          throw new ParserError(`${this.filename}: ${line}:${character}: unexpected token '${content}`);
+          this.throwUnexpectedCharacterError(current);
           break;
       }
       current = this.lexer.lexRegular();
@@ -180,6 +320,7 @@ export default class Parser {
     return new Print(keyword, expression);
   }
 
+  // TODO: Remove
   // @ts-ignore
   private parseExpression() : Expression {
     const next = this.lexer.lexRegular();
