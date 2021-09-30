@@ -1,18 +1,34 @@
 import {
   Advancement,
+  AdvancementSpec,
   ASTNumber,
-  ASTString, Begin,
+  ASTString,
+  Begin,
+  CombinedTrigger,
+  Command,
+  ConsumeItem,
   DatapackDecl,
-  Define,
+  Define, Description, Execute,
   Expression,
   False,
   File,
-  For,
+  For, Grant, Icon,
   Id,
   If,
   Import,
-  Let, List, MCFunction, On,
-  Print,
+  InventoryChanged,
+  ItemMatcher,
+  ItemSpec,
+  Let,
+  List,
+  Load,
+  MCFunction,
+  On, Parent,
+  Print, RawCommand,
+  RawTrigger, Revoke,
+  TagMatcher,
+  Tick, Title,
+  Trigger,
   True,
 } from "../ast/ast";
 import Options from "../options";
@@ -31,10 +47,15 @@ export default class Parser {
   }
 
   private throwUnexpectedCharacterError(token: Token): void {
+    throw this.buildUnexpectedCharacterError(token);
+  }
+
+  private buildUnexpectedCharacterError(token: Token): ParserError {
     const { content, span } = token;
     const { start } = span;
     const { line, character } = start;
-    throw new ParserError(`${this.filename}: ${line}:${character}: unexpected token '${content}`);
+
+    return new ParserError(`${this.filename}: ${line}:${character}: unexpected token '${content}`);
   }
 
   private parseDatapackDeclaration (): DatapackDecl {
@@ -123,20 +144,256 @@ export default class Parser {
     throw new Error("not implemented yet");
   }
 
+  private parseItemSpec(): ItemSpec {
+    const start = this.lexer.lexRegular();
+
+    this.expect(start, TokenType.LITERAL, ["item", "tag"]);
+
+    const { content } = start;
+
+    this.expect(this.lexer.lexRegular(), TokenType.LITERAL, "{");
+
+    const name: Expression = this.parseExpression();
+
+    this.expect(this.lexer.lexRegular(), TokenType.LITERAL, "}");
+
+    if (content === "item") {
+      return new ItemMatcher(start, name);
+    } else {
+      return new TagMatcher(start, name);
+    }
+  }
+
+  private parseAdvancementSpec(): AdvancementSpec {
+    const keyword = this.lexer.lexRegular();
+    this.expect(keyword, TokenType.LITERAL, ["title", "icon", "description", "parent"]);
+
+    this.expect(this.lexer.lexRegular(), TokenType.LITERAL, "=");
+
+    const expression = this.parseExpression();
+
+    const { content } = keyword;
+
+    switch (content) {
+      case "title":
+        return new Title(keyword, expression);
+      case "icon":
+        return new Icon(keyword, expression);
+      case "description":
+        return new Description(keyword, expression);
+      default:
+        return new Parent(keyword, expression);
+    }
+  }
+
+  private parseBaseCommand(): Command {
+    const start = this.lexer.lexRegular();
+    this.expect(start, TokenType.LITERAL, ["grant", "revoke", "execute"]);
+
+    const expression = this.parseExpression();
+
+    const { content } = start;
+
+    switch (content) {
+      case "grant":
+        return new Grant(start, expression);
+      case "revoke":
+        return new Revoke(start, expression);
+      default:
+        return new Execute(start, expression);
+    }
+  }
+
+  private parseCommand(): Command {
+    const keyword = this.lexer.lexRegular();
+
+    const { content } = keyword;
+
+    switch (content) {
+      case "grant":
+      case "revoke":
+      case "execute":
+        this.lexer.lexRegular();
+        return this.parseBaseCommand();
+      default:
+        return new RawCommand(this.parseExpression());
+    }
+  }
+
+  private parseBasePrimaryTrigger(): InventoryChanged | ConsumeItem {
+    const start = this.lexer.lexRegular();
+    this.expect(start, TokenType.LITERAL, ["inventory_changed", "consume_item"]);
+
+    this.expect(this.lexer.lexRegular(), TokenType.LITERAL, "{");
+
+    let currentToken = this.lexer.lexRegular();
+    const itemSpecs: ItemSpec[] = []
+
+    if (currentToken.content !== '}') {
+      this.lexer.unlex(currentToken);
+      itemSpecs.push(this.parseItemSpec());
+      currentToken = this.lexer.lexRegular();
+    }
+
+    const { content } = start;
+
+    if (content === "inventory_changed") {
+      return new InventoryChanged(start, itemSpecs, currentToken);
+    } else {
+      return new ConsumeItem(start, itemSpecs, currentToken);
+    }
+  }
+
+  private parsePrimaryTrigger(): Trigger {
+    const start = this.lexer.lexRegular();
+
+    const { content } = start;
+
+    if (content === 'consume_item' || content === 'inventory_changed') {
+      this.lexer.unlex(start);
+
+      this.parseBasePrimaryTrigger();
+    }
+
+    return new RawTrigger(this.parseExpression());
+  }
+
+  private parseCombinedTrigger(): Trigger {
+    const lhs = this.parsePrimaryTrigger();
+
+    const next = this.lexer.lexRegular();
+    const { content } = next;
+
+    if (content !== '||') {
+      this.lexer.unlex(next);
+      return lhs;
+    }
+
+    const rhs = this.parseCombinedTrigger();
+
+    return new CombinedTrigger(lhs, rhs);
+  }
+
+  private parseTrigger(): Trigger {
+    const start = this.lexer.lexRegular();
+    this.expect(start, TokenType.LITERAL, ["load", "tick"]);
+
+    const { content } = start;
+
+    if (content === 'load') {
+      return new Load(start);
+    } else if (content === 'tick') {
+      return new Tick(start);
+    }
+
+    return this.parseCombinedTrigger();
+  }
+
   private parseOn(): On {
-    throw new Error("not implemented yet");
+    const start = this.lexer.lexRegular();
+    this.expect(start, TokenType.LITERAL, "on");
+
+    this.expect(this.lexer.lexRegular(), TokenType.LITERAL, "(");
+
+    const trigger = this.parseTrigger();
+
+    this.expect(this.lexer.lexRegular(), TokenType.LITERAL, ")");
+    this.expect(this.lexer.lexRegular(), TokenType.LITERAL, "{");
+
+    const commands: Command[] = [];
+
+    let current = this.lexer.lexRegular();
+
+    while (current.content !== "}") {
+      commands.push(this.parseCommand());
+    }
+
+    return new On(start, trigger, commands, current);
   }
 
   private parseBegin(): Begin {
-    throw new Error("not implemented yet");
+    const start = this.lexer.lexRegular();
+    this.expect(start, TokenType.LITERAL, "{");
+
+    const elements: Expression[] = [];
+
+    let current = this.lexer.lexRegular();
+
+    while (current.content !== "]") {
+      if (current.type === TokenType.EOF) {
+        this.throwUnexpectedCharacterError(current);
+      }
+
+      elements.push(this.parseExpression());
+    }
+
+    if (elements.length === 0) {
+      this.throwUnexpectedCharacterError(current);
+    }
+
+    return new Begin(start, elements, current);
   }
 
   private parseList(): List {
-    throw new Error("not implemented yet");
+    const start = this.lexer.lexRegular();
+    this.expect(start, TokenType.LITERAL, "[");
+    const list: Expression[] = [];
+
+    const first = this.parseExpression();
+    list.push(first);
+
+    let current = this.lexer.lexRegular();
+    let itemFlag = true;
+
+    while (current.content !== ']') {
+      if (current.type === TokenType.LITERAL && itemFlag) {
+        this.expect(current, TokenType.LITERAL, ',');
+        itemFlag = false;
+      } else if (current.type === TokenType.EOF) {
+        this.throwUnexpectedCharacterError(current);
+      } else {
+        const expression = this.parseExpression();
+        list.push(expression);
+        itemFlag = true;
+      }
+    }
+
+    return new List(start, list, current);
   }
 
-  // TODO： Remove
+  private parseBracketExpression(): Expression {
+    const start = this.lexer.lexRegular();
+    this.expect(start, TokenType.LITERAL, "(");
+
+    const expression = this.parseExpression();
+
+    const end = this.lexer.lexRegular();
+    this.expect(end, TokenType.LITERAL, ")");
+
+    return expression;
+  }
+
   // @ts-ignore
+  private parsePostfixExpression(): Expression {
+    const lhs = this.parsePrimaryExpression();
+
+    const next = this.lexer.lexRegular();
+    const { content } = next;
+
+    // TODO: Postfix expression can have unlimited sequences...how to handle???
+    switch (content) {
+      case "[":
+        this.lexer.unlex(next);
+        break;
+      case "(":
+        this.lexer.unlex(next);
+        break;
+      default:
+        return lhs;
+    }
+  }
+
+
   private parsePrimaryExpression(): Expression {
     const token = this.lexer.lexRegular();
     this.lexer.unlex(token);
@@ -144,19 +401,15 @@ export default class Parser {
       case TokenType.LITERAL:
         switch (token.content) {
           case "(":
-            break;
+            return this.parseBracketExpression()
           case "[":
             return this.parseList();
-            break;
           case "{":
             return this.parseBegin();
-            break;
           case "on":
             return this.parseOn();
-            break;
           case "advancement":
             return this.parseAdvancement();
-            break;
           case "function":
             return this.parseFunction();
           case '"':
@@ -175,9 +428,10 @@ export default class Parser {
       case TokenType.NUMBER:
         return this.parseNumber();
       default:
-        this.throwUnexpectedCharacterError(token);
         break;
     }
+
+    throw this.buildUnexpectedCharacterError(token);
   }
 
   private parseLogicalExpression(): Expression {
@@ -320,8 +574,6 @@ export default class Parser {
     return new Print(keyword, expression);
   }
 
-  // TODO: Remove
-  // @ts-ignore
   private parseExpression() : Expression {
     const next = this.lexer.lexRegular();
     this.lexer.unlex(next);
@@ -349,18 +601,33 @@ export default class Parser {
         }
         break;
       }
+      case TokenType.EOF:
+        this.throwUnexpectedCharacterError(next);
+        break;
       default: {
-        return this.parseLogicalExpression();
+       break;
       }
     }
+
+    return this.parseLogicalExpression();
   }
 
-  private expect(token: Token, tokenType: TokenType, value?: string): void {
+  private expect(token: Token, tokenType: TokenType, value?: string | string[]): void {
     const { type, content, span } = token;
     const { start } = span;
     const { line, character } = start;
 
-    if (type !== tokenType || (value && content !== value)) {
+    let meetValueCriteria = true;
+
+    if (value) {
+      if (typeof value === "string") {
+        meetValueCriteria = value === content;
+      } else {
+        meetValueCriteria = value.includes(content);
+      }
+    }
+
+    if (type !== tokenType || !meetValueCriteria) {
       throw new ParserError(`${this.filename}: ${line}:${character}: unexpected token '${content}`);
     }
   }
