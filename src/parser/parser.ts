@@ -243,20 +243,20 @@ export default class Parser {
     this.expect(this.lexer.lexRegular(), TokenType.LITERAL, "{");
 
     let currentToken = this.lexer.lexRegular();
-    const itemSpecs: ItemSpec[] = []
+    let itemSpec: ItemSpec | null = null;
 
     if (currentToken.content !== '}') {
       this.lexer.unlex(currentToken);
-      itemSpecs.push(this.parseItemSpec());
+      itemSpec = this.parseItemSpec();
       currentToken = this.lexer.lexRegular();
     }
 
     const { content } = start;
 
     if (content === "inventory_changed") {
-      return new InventoryChanged(start, itemSpecs, currentToken);
+      return new InventoryChanged(start, itemSpec, currentToken);
     } else {
-      return new ConsumeItem(start, itemSpecs, currentToken);
+      return new ConsumeItem(start, itemSpec, currentToken);
     }
   }
 
