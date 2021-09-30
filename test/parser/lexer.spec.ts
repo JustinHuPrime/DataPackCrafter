@@ -9,15 +9,16 @@ const sinon = require("sinon");
 describe("lexer", () => {
   let lexer: Lexer;
 
-  const stubReadFileSync = (response: string) => {
+  const setup = (response: string) => {
      sinon.stub(fs, "readFileSync").returns(response);
-    lexer = new Lexer("");
+      lexer = new Lexer("");
+      sinon.restore();
   }
 
   describe('lexString', () => {
     it("should lex non-reserved character as string", () => {
       const token = "k";
-      stubReadFileSync(token);
+      setup(token);
 
       assert.deepEqual(lexer.lexString(), new Token(TokenType.STRING_CHAR, new Span(new Location(1,1), new Location(1,2)), token));
     });
@@ -26,7 +27,7 @@ describe("lexer", () => {
       const strings = ['\\\\', '\\"', '\\{', '\\}'];
 
       for (const s of strings) {
-        stubReadFileSync(s);
+        setup(s);
 
         assert.deepEqual(lexer.lexString(), new Token(TokenType.STRING_CHAR, new Span(new Location(1,1), new Location(1,s.length + 1)), s));
 
@@ -37,21 +38,21 @@ describe("lexer", () => {
       const characters = ['"', '\\', '{', '}'];
 
       for (const character of characters) {
-        stubReadFileSync(character);
+        setup(character);
 
         assert.deepEqual(lexer.lexString(), new Token(TokenType.LITERAL, new Span(new Location(1,1), new Location(1,2)), character));
       }
     })
 
     it("should lex EOF", () => {
-      stubReadFileSync("");
+      setup("");
 
       assert.deepEqual(lexer.lexString(), new Token(TokenType.EOF, new Span(new Location(1,1), new Location(1,1)), ""));
     })
 
     it("should lex individual string characters", () => {
       const token = "jwtxrfa";
-      stubReadFileSync(token);
+      setup(token);
 
       for (let i = 0; i < token.length; i++) {
         assert.deepEqual(lexer.lexString(), new Token(TokenType.STRING_CHAR, new Span(new Location(1,i+1), new Location(1,i+2)), token.charAt(i)));
@@ -61,7 +62,7 @@ describe("lexer", () => {
 
   describe("unlex", () => {
     it("should add unlexed token back to front", () => {
-      stubReadFileSync("define bird");
+      setup("define bird");
 
       const token = lexer.lexRegular();
 
@@ -75,36 +76,36 @@ describe("lexer", () => {
 
   describe('lexRegular', () => {
     it('should lex EOF correctly', () => {
-      stubReadFileSync("");
+      setup("");
 
       assert.deepEqual(lexer.lexRegular(), new Token(TokenType.EOF, new Span(new Location(1,1), new Location(1,1)), ""));
     });
 
     it('should lex ID correctly', () => {
-      stubReadFileSync("hello");
+      setup("hello");
 
       assert.deepEqual(lexer.lexRegular(), new Token(TokenType.ID, new Span(new Location(1,1), new Location(1,6)), "hello"));
     });
 
     it('should lex with newline', () => {
-      stubReadFileSync("\n\nhello");
+      setup("\n\nhello");
       assert.deepEqual(lexer.lexRegular(), new Token(TokenType.ID, new Span(new Location(3,1), new Location(3,6)), "hello"));
     });
 
     it('should lex ID with space', () => {
-      stubReadFileSync("   hello");
+      setup("   hello");
 
       assert.deepEqual(lexer.lexRegular(), new Token(TokenType.ID, new Span(new Location(1,4), new Location(1,9)), "hello"));
     });
 
     it('should lex token 1 line after comment', () => {
-      stubReadFileSync("#this is a comment \nhello");
+      setup("#this is a comment \nhello");
 
       assert.deepEqual(lexer.lexRegular(), new Token(TokenType.ID, new Span(new Location(2,1), new Location(2,6)), "hello"));
     });
 
     it('should lex EOF if comment is all there is', () => {
-      stubReadFileSync("#this is a comment");
+      setup("#this is a comment");
 
       assert.deepEqual(lexer.lexRegular(), new Token(TokenType.EOF, new Span(new Location(2,1), new Location(2,1)), ""));
     })
@@ -114,7 +115,7 @@ describe("lexer", () => {
       const tokens = ["5.2551", "-2131.321", "5", "30.213", "0.232", "0", "37712", "1337", "-0", "-0.00"];
 
       for (const token of tokens) {
-        stubReadFileSync(token);
+        setup(token);
 
         assert.deepEqual(lexer.lexRegular(), new Token(TokenType.NUMBER, new Span(new Location(1,1), new Location(1,token.length + 1)), token));
       }
@@ -122,7 +123,7 @@ describe("lexer", () => {
 
     it('should lex keywords correctly', () => {
       for (const keyword of keywordArr) {
-        stubReadFileSync(keyword);
+        setup(keyword);
 
         assert.deepEqual(lexer.lexRegular(), new Token(TokenType.LITERAL, new Span(new Location(1,1), new Location(1,keyword.length + 1)), keyword));
       }
@@ -132,14 +133,14 @@ describe("lexer", () => {
       const tokens = ['==', '&&', '!=', '<=', '>=', '||', '&', '(', ')', '=', '{', '}', '%', '+', '-', '/', ':', '[', ']', '"'];
 
       for (const token of tokens) {
-        stubReadFileSync(token);
+        setup(token);
 
         assert.deepEqual(lexer.lexRegular(), new Token(TokenType.LITERAL, new Span(new Location(1,1), new Location(1,token.length + 1)), token));
       }
     })
 
     it('should lex multiple tokens', () => {
-      stubReadFileSync("datapack test");
+      setup("datapack test");
 
       assert.deepEqual(lexer.lexRegular(), new Token(TokenType.LITERAL, new Span(new Location(1,1), new Location(1,9)), "datapack"));
       assert.deepEqual(lexer.lexRegular(), new Token(TokenType.ID, new Span(new Location(1,10), new Location(1,14)), "test"));
@@ -147,7 +148,7 @@ describe("lexer", () => {
     });
 
     it('should throw error on invalid token parse', () => {
-      stubReadFileSync("$");
+      setup("$");
 
       assert.throws(() => { lexer.lexRegular() }, LexerError, "file.txt: 1:1: error: invalid character $");
     })

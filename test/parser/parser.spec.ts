@@ -11,7 +11,7 @@ describe("parse", () => {
   let parser: Parser;
   const dummyOptions: Options = { outputFile: "test.out" };
 
-  const stubReadFileSync = (response: string) => {
+  const setup = (response: string) => {
     sinon.stub(fs, "readFileSync").returns(response);
     parser = new Parser("", dummyOptions);
     sinon.restore();
@@ -19,7 +19,7 @@ describe("parse", () => {
 
   describe("parsePrint", () => {
     it("should parse printing string correctly (happy path)", () => {
-      stubReadFileSync('datapack test \n print "test"');
+      setup('datapack test \n print "test"');
 
       const file = parser.parse();
 
@@ -42,7 +42,7 @@ describe("parse", () => {
 
   describe("parseDatapack", () => {
     it("should parse datapack declaration - happy path", () => {
-      stubReadFileSync("datapack test");
+      setup("datapack test");
 
       const file = parser.parse();
 
@@ -54,19 +54,19 @@ describe("parse", () => {
     });
 
     it("should throw if datapack declaration is invalid - EOF", () => {
-      stubReadFileSync("datapack   ");
+      setup("datapack   ");
 
       assert.throws(() => { parser.parse() }, ParserError);
     })
 
     it("should throw if datapack declaration is invalid - number", () => {
-      stubReadFileSync("datapack 5.012");
+      setup("datapack 5.012");
 
       assert.throws(() => { parser.parse() }, ParserError);
     })
 
     it("should throw if datapack declaration is invalid - literal", () => {
-      stubReadFileSync("datapack datapack");
+      setup("datapack datapack");
 
       assert.throws(() => { parser.parse() }, ParserError);
     })
