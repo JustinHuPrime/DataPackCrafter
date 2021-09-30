@@ -18,6 +18,18 @@ describe("parse", () => {
     sinon.restore();
   })
 
+  describe("parsePrint", () => {
+    it("should parse printing string correctly (happy path)", () => {
+      stubReadFileSync('datapack test \n print "test"');
+
+      const parser = new Parser("", dummyOptions);
+
+      const file = parser.parse();
+
+      console.log(file);
+    })
+  })
+
   describe("parseDatapack", () => {
     it("should parse datapack declaration - happy path", () => {
       stubReadFileSync("datapack test");

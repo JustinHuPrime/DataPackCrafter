@@ -4,18 +4,25 @@ import {
   ASTNumber,
   ASTString,
   Begin,
+  BinaryOperator, Binop,
+  Call,
   CombinedTrigger,
   Command,
   ConsumeItem,
   DatapackDecl,
-  Define, Description, Execute,
+  Define,
+  Description,
+  Execute,
   Expression,
   False,
   File,
-  For, Grant, Icon,
+  For,
+  Grant,
+  Icon,
   Id,
   If,
   Import,
+  Index,
   InventoryChanged,
   ItemMatcher,
   ItemSpec,
@@ -23,13 +30,20 @@ import {
   List,
   Load,
   MCFunction,
-  On, Parent,
-  Print, RawCommand,
-  RawTrigger, Revoke,
+  On,
+  Parent,
+  Print,
+  RawCommand,
+  RawTrigger,
+  Revoke,
+  Slice,
   TagMatcher,
-  Tick, Title,
+  Tick,
+  Title,
   Trigger,
   True,
+  UnaryOperator,
+  Unop,
 } from "../ast/ast";
 import Options from "../options";
 import Token, { TokenType } from "../ast/token";
@@ -164,6 +178,8 @@ export default class Parser {
     }
   }
 
+  //TODO remove @ts-ignore
+  // @ts-ignore
   private parseAdvancementSpec(): AdvancementSpec {
     const keyword = this.lexer.lexRegular();
     this.expect(keyword, TokenType.LITERAL, ["title", "icon", "description", "parent"]);
@@ -373,26 +389,249 @@ export default class Parser {
     return expression;
   }
 
-  // @ts-ignore
-  private parsePostfixExpression(): Expression {
-    const lhs = this.parsePrimaryExpression();
+  private parseLogicalExpression(exp?: Expression): Expression {
+    const lhs = exp || this.parseEqualityExpression();
 
-    const next = this.lexer.lexRegular();
-    const { content } = next;
+    const token = this.lexer.lexRegular();
+    let operation: BinaryOperator = BinaryOperator.AND;
 
-    // TODO: Postfix expression can have unlimited sequences...how to handle???
-    switch (content) {
-      case "[":
-        this.lexer.unlex(next);
+    switch (token.content) {
+      case "&&":
+        operation = BinaryOperator.AND;
         break;
-      case "(":
-        this.lexer.unlex(next);
+      case "||":
+        operation = BinaryOperator.OR;
         break;
       default:
+        this.lexer.unlex(token);
         return lhs;
+    }
+
+    const rhs = this.parseEqualityExpression();
+    const binOp = new Binop(lhs, operation, rhs);
+
+    return this.parseLogicalExpression(binOp);
+  }
+
+  private parseEqualityExpression(exp?: Expression): Expression {
+    const lhs = exp || this.parseRelationalExpression();
+
+    const token = this.lexer.lexRegular();
+    let operation: BinaryOperator = BinaryOperator.EQ;
+
+    switch (token.content) {
+      case "==":
+        operation = BinaryOperator.EQ;
+        break;
+      case ">":
+        operation = BinaryOperator.NEQ;
+        break;
+      default:
+        this.lexer.unlex(token);
+        return lhs;
+    }
+
+    const rhs = this.parseRelationalExpression();
+    const binOp = new Binop(lhs, operation, rhs);
+
+    return this.parseEqualityExpression(binOp);
+  }
+
+  private parseRelationalExpression(exp?: Expression): Expression {
+    const lhs = exp || this.parseAdditiveExpression();
+
+    const token = this.lexer.lexRegular();
+    let operation: BinaryOperator = BinaryOperator.LT;
+
+    switch (token.content) {
+      case "<":
+        operation = BinaryOperator.LT;
+        break;
+      case ">":
+        operation = BinaryOperator.GT;
+        break;
+      case "<=":
+        operation = BinaryOperator.LTE;
+        break;
+      case ">=":
+        operation = BinaryOperator.GTE;
+        break;
+      default:
+        this.lexer.unlex(token);
+        return lhs;
+    }
+
+    const rhs = this.parseAdditiveExpression();
+    const binOp = new Binop(lhs, operation, rhs);
+
+    return this.parseRelationalExpression(binOp);
+  }
+
+  private parseAdditiveExpression(exp?: Expression): Expression {
+    const lhs = exp || this.parseMultiplicativeExpression();
+
+    const token = this.lexer.lexRegular();
+    let operation: BinaryOperator = BinaryOperator.ADD;
+
+    switch (token.content) {
+      case "+":
+        operation = BinaryOperator.ADD;
+        break;
+      case "-":
+        operation = BinaryOperator.SUB;
+        break;
+      default:
+        this.lexer.unlex(token);
+        return lhs;
+    }
+
+    const rhs = this.parseMultiplicativeExpression();
+    const binOp = new Binop(lhs, operation, rhs);
+
+    return this.parseAdditiveExpression(binOp);
+  }
+
+
+  private parseMultiplicativeExpression(exp?: Expression): Expression {
+    const lhs = exp || this.parsePrefixExpression();
+
+    const token = this.lexer.lexRegular();
+    let operation: BinaryOperator = BinaryOperator.MUL;
+
+    switch (token.content) {
+      case "*":
+        operation = BinaryOperator.MUL;
+        break;
+      case "/":
+        operation = BinaryOperator.DIV;
+        break;
+      case "%":
+        operation = BinaryOperator.MOD;
+        break;
+      default:
+        this.lexer.unlex(token);
+        return lhs;
+    }
+
+    const rhs = this.parsePrefixExpression();
+    const binOp = new Binop(lhs, operation, rhs);
+
+    return this.parseMultiplicativeExpression(binOp);
+  }
+
+  private parsePrefixExpression(): Expression {
+    const token = this.lexer.lexRegular();
+    const { content } = token;
+
+    switch (content) {
+      case "!":
+        return new Unop(token, UnaryOperator.NOT, this.parsePrefixExpression());
+      case "-":
+        return new Unop(token, UnaryOperator.NEG, this.parsePrefixExpression());
+      default:
+        this.lexer.unlex(token);
+        return this.parsePostfixExpression();
     }
   }
 
+  private parseCall(target: Expression): Expression {
+    const begin = this.lexer.lexRegular();
+    this.expect(begin, TokenType.LITERAL, "(");
+
+    const args: Expression[] = [];
+
+    let current = this.lexer.lexRegular();
+    let expFlag = false;
+
+    while (current.content !== ")") {
+      if (current.content === ",") {
+        if (!expFlag) {
+          this.throwUnexpectedCharacterError(current);
+        }
+        expFlag = false;
+      } else {
+        this.lexer.unlex(current);
+        args.push(this.parseExpression());
+        expFlag = true;
+      }
+
+      current = this.lexer.lexRegular();
+    }
+
+    this.expect(current, TokenType.LITERAL, ")");
+
+    return this.parsePostfixExpression(new Call(target, args, current));
+  }
+
+  private parseSlice(target: Expression): Expression {
+    const begin = this.lexer.lexRegular();
+    this.expect(begin, TokenType.LITERAL, "[");
+
+    let current = this.lexer.lexRegular();
+    let from: Expression | null = null;
+    let to: Expression | null = null;
+
+    let sliceFlag = false;
+
+    while (current.content !== ']') {
+      if (current.type === TokenType.EOF) {
+        this.throwUnexpectedCharacterError(current);
+      }
+
+      if (current.content === ':') {
+        if (sliceFlag) {
+          this.throwUnexpectedCharacterError(current);
+        }
+
+        sliceFlag = true;
+      } else {
+        if (!from && !sliceFlag) {
+          this.lexer.unlex(current);
+          from = this.parseExpression();
+        } else if (!to && sliceFlag) {
+          this.lexer.unlex(current);
+          to = this.parseExpression();
+        } else {
+          this.throwUnexpectedCharacterError(current);
+        }
+      }
+
+      current = this.lexer.lexRegular();
+    }
+
+    this.expect(current, TokenType.LITERAL, ']');
+
+    if (!from && !to) {
+      const { span } = begin;
+      const { start } = span;
+      const { line, character } = start;
+      throw new ParserError(`${this.filename}: ${line}:${character}: invalid index/slice`);
+    }
+
+    if (!sliceFlag && from) {
+      return this.parsePostfixExpression(new Index(target, from, current));
+    } else {
+      return this.parsePostfixExpression(new Slice(target, from, to, current));
+    }
+  }
+
+  private parsePostfixExpression(exp?: Expression): Expression {
+    const target = exp || this.parsePrimaryExpression();
+
+    const begin = this.lexer.lexRegular();
+    const { content } = begin;
+
+    this.lexer.unlex(begin);
+
+    switch (content) {
+      case "[":
+        return this.parseSlice(target);
+      case "(":
+        return this.parseCall(target);
+      default:
+        return target;
+    }
+  }
 
   private parsePrimaryExpression(): Expression {
     const token = this.lexer.lexRegular();
@@ -432,10 +671,6 @@ export default class Parser {
     }
 
     throw this.buildUnexpectedCharacterError(token);
-  }
-
-  private parseLogicalExpression(): Expression {
-    throw new Error("not implemented yet");
   }
 
   private parseDefine(): Expression {
@@ -613,9 +848,7 @@ export default class Parser {
   }
 
   private expect(token: Token, tokenType: TokenType, value?: string | string[]): void {
-    const { type, content, span } = token;
-    const { start } = span;
-    const { line, character } = start;
+    const { type, content } = token;
 
     let meetValueCriteria = true;
 
@@ -628,7 +861,7 @@ export default class Parser {
     }
 
     if (type !== tokenType || !meetValueCriteria) {
-      throw new ParserError(`${this.filename}: ${line}:${character}: unexpected token '${content}`);
+      this.throwUnexpectedCharacterError(token);
     }
   }
 
