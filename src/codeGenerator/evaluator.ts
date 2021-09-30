@@ -1,8 +1,11 @@
-import { Import, Define, Let, If, For, Print, Binop, Unop, Index, Slice, Call, List, Begin, On, Advancement, True, False, ASTNumber, ASTString, MCFunction, Expression, BinaryOperator, UnaryOperator, Id } from "../ast/ast";
+import { Import, Define, Let, If, For, Print, Binop, Unop, Index, Slice, Call, List, Begin, On, Advancement, True, False, ASTNumber, ASTString, MCFunction, Expression, BinaryOperator, UnaryOperator, Id, Title, Icon, Description, Parent } from "../ast/ast";
 import { ExpressionVisitor } from "../ast/visitor";
-import { DSLIndexError, DSLMathError, DSLReferenceError, DSLSyntaxError, DSLTypeError } from "./exceptions"
-//import STORE from "./store"
+import { DSLIndexError, DSLMathError, DSLNameConflictError, DSLReferenceError, DSLSyntaxError, DSLTypeError } from "./exceptions"
+import STORE, {AdvancementValue, FunctionValue} from "./store"
 let deepEqual = require('deep-equal');
+
+// Used to validate user defined advancement / function names
+export let VALID_MC_ID_REGEX = /^[0-9a-z_-]+[0-9a-z_.-]*/;
 
 /**
  * Represents internal data types known to the evaluator.
@@ -66,6 +69,10 @@ export class FunctionClosure {
 
 
 export class Evaluator implements ExpressionVisitor {
+    // Counters used to generate Minecraft function and advancement names
+    fnCounter = 0;
+    advCounter = 0;
+
     /**
      * Evaluate a DSL expression.
      * @param expression expression
@@ -79,11 +86,49 @@ export class Evaluator implements ExpressionVisitor {
         return expression.accept(this, env);
     }
 
+    /**
+     * Evaluate a DSL expression with type checking.
+     * @param expression    expression
+     * @param env           environment of variables
+     * @param expectedType  JavaScript built-in type to check output against
+     * @param typeErrorDesc element description to raise DSLTypeError with, if expectedType check fails
+     * @returns             result of evaluation (a subtype of EvaluatorData)
+     */
+     evaluateExpectType(expression: Expression, env: EvaluatorEnv, expectedType: string, typeErrorDesc?: string) {
+        if (env == null) {
+            env = new EvaluatorEnv({});
+        }
+        let result = expression.accept(this, env);
+        if (expectedType != null && typeof result !== expectedType) {
+            let desc = typeErrorDesc ? `for ${typeErrorDesc}` : "";
+            throw new DSLTypeError(expression, `expected type ${desc} ${expectedType}, got ${typeof result}`);
+        }
+        return result;
+    }
     protected sanitize(expr: Expression, data: EvaluatorData) : EvaluatorData {
         if (typeof data === "number" && !isFinite(data)) {
             throw new DSLMathError(expr, "Math overflow or divide by zero");
         }
         return data;
+    }
+
+    /**
+     * Generates an advancement with an optional prefix.
+     */
+    genAdvancementName(prefix?: string) {
+        let counter = this.advCounter++;
+        return `.${prefix || "advancement"}${counter}`;
+    }
+
+    /**
+     * Update the store with the given value, throwing a DSLNameConflictError
+     * if an identifier of that name already exists
+     */
+    updateStore(name: string, value: FunctionValue | AdvancementValue, sourceExpression: Expression) {
+        if (STORE.has(name)) {
+            throw new DSLNameConflictError(sourceExpression, `function / advancement name collision on ${name}`);
+        }
+        return STORE.set(name, value);
     }
 
     visitImport(_astNode: Import, _env: EvaluatorEnv) : EvaluatorData {
@@ -334,7 +379,7 @@ export class Evaluator implements ExpressionVisitor {
         for (let idx in astNode.args) {
             let fnArgName = fnClosure.fn.args[idx]?.id;
             let fnArgExpr = astNode.args[idx];
-            if (fnArgName == null || fnArgExpr == null ) {
+            if (fnArgName == null || fnArgExpr == null) {
                 throw new DSLSyntaxError(astNode, `call: could not read arguments for ${fnName} (either name ` +
                                          `${JSON.stringify(fnArgName)} or arg ${JSON.stringify(fnArgExpr)} are null`);
             }
@@ -356,8 +401,35 @@ export class Evaluator implements ExpressionVisitor {
     visitOn(_astNode: On, _env: EvaluatorEnv) : EvaluatorData {
         throw new Error("Method not implemented.");
     }
-    visitAdvancement(_astNode: Advancement, _env: EvaluatorEnv) : EvaluatorData {
-        throw new Error("Method not implemented.");
+    visitAdvancement(astNode: Advancement, env: EvaluatorEnv) : EvaluatorData {
+        let name: string;
+        if (astNode.name != null) {
+            let evalName = this.evaluateExpectType(astNode.name, env, "string", "advancement name");
+            if (!VALID_MC_ID_REGEX.test(evalName)) {
+                throw new DSLSyntaxError(astNode, `advancement: invalid advancement name ${JSON.stringify(evalName)}`);
+            }
+            name = evalName;
+        }
+        name ||= this.genAdvancementName();
+
+        let title = undefined;
+        let iconItem = undefined;
+        let description = undefined;
+        let parent = undefined;
+        for (let element of astNode.details) {
+            if (element instanceof Title) {
+                title = this.evaluateExpectType(element.title, env, "string", "advancement title");
+            } else if (element instanceof Icon) {
+                iconItem = this.evaluateExpectType(element.icon, env, "string", "advancement icon");
+            } else if (element instanceof Description) {
+                description = this.evaluateExpectType(element.description, env, "string", "advancement description");
+            } else if (element instanceof Parent) {
+                parent = this.evaluateExpectType(element.parent, env, "string", "advancement parent");
+            }
+        }
+        let advancementValue = new AdvancementValue(name, title, iconItem, undefined, description, parent, undefined, []);
+        this.updateStore(name, advancementValue, astNode);
+        return name;
     }
     visitFunction(_astNode: MCFunction, _env: EvaluatorEnv) : EvaluatorData {
         throw new Error("Method not implemented.");

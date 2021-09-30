@@ -1,8 +1,10 @@
 import { assert } from "chai";
-import { ASTNumber, ASTString, Begin, BinaryOperator, Binop, Call, Define, Expression, False, For, Id, If, Index, Let, List, Slice, True, UnaryOperator, Unop } from "../../src/ast/ast";
+import { Advancement, ASTNumber, ASTString, Begin, BinaryOperator, Binop, Call, Define, Description, Expression, False, For, Icon, Id, If, Index, Let, List, Parent, Slice, Title, True, UnaryOperator, Unop } from "../../src/ast/ast";
 import Span, { Location } from "../../src/ast/span";
 import Token, { TokenType } from "../../src/ast/token";
 import { Evaluator } from "../../src/codeGenerator/evaluator";
+import { DSLNameConflictError } from "../../src/codeGenerator/exceptions";
+import STORE, { AdvancementValue } from "../../src/codeGenerator/store";
 
 function dummyToken(content?: string) : Token {
     /**
@@ -58,7 +60,7 @@ let factorialFunc : Define;
     factorialFunc = new Define(dummyToken(), fnId, [n], body);
 }
 
-describe("evaluator", () => {
+describe("evaluator - core", () => {
 
     it('visitTrue', function() {
         let evaluator = new Evaluator();
@@ -728,5 +730,102 @@ describe("evaluator", () => {
         let evaluator = new Evaluator();
         // FIXME: check the stdout
         assert.equal(evaluator.evaluate(stringNode("visitPrint test")), "visitPrint test");
+    });
+});
+
+describe("evaluator - store integration", () => {
+    beforeEach(() => {
+        STORE.clear();
+    })
+
+    it('visitAdvancement generated name', function() {
+        let evaluator = new Evaluator();
+        let expr = new Advancement(dummyToken(), null, [], dummyToken());
+        let name = evaluator.evaluate(expr);
+        assert.isTrue(STORE.has(name));
+        assert.isTrue(name.startsWith("."), "Randomly generated advancement names should start with .");
+        assert.equal(STORE.get(name)!.name, name);
+    });
+
+    it('visitAdvancement provided name', function() {
+        let evaluator = new Evaluator();
+        let expr = new Advancement(dummyToken(), stringNode("foo"), [], dummyToken());
+        assert.equal(evaluator.evaluate(expr), "foo");
+        assert.isTrue(STORE.has("foo"));
+        assert.equal(STORE.get("foo")!.name, "foo");
+    });
+
+    it('visitAdvancement some fields provided', function() {
+        let evaluator = new Evaluator();
+        let title = "Congratulations, you've won!";
+        let desc = "You are the 100,000th visitor to this website. Click [here] to claim your prize";
+        let expr = new Advancement(dummyToken(), null, [
+            new Title(dummyToken(), stringNode(title)),
+            new Description(dummyToken(), stringNode(desc)),
+        ], dummyToken());
+
+        let name = evaluator.evaluate(expr);
+        let advancement = STORE.get(name);
+        assert.isNotNull(advancement);
+        assert.isTrue(advancement instanceof AdvancementValue);
+        if (advancement instanceof AdvancementValue) { // narrow down union type for TS
+            assert.equal(advancement.name, name);
+            assert.equal(advancement.title, title);
+            assert.equal(advancement.description, desc);
+            assert.isUndefined(advancement.iconItem);
+            assert.isUndefined(advancement.parent);
+        }
+    });
+
+    it('visitAdvancement all fields provided', function() {
+        let evaluator = new Evaluator();
+        let name = "netheriteBlock"
+        let title = "Hardcore Miner";
+        let desc = "Obtain a Block of Netherite";
+        let parent = "diamondPick";
+        let iconItem = "minecraft:netherite_block";
+        let expr = new Advancement(dummyToken(), stringNode(name), [
+            new Title(dummyToken(), stringNode(title)),
+            new Description(dummyToken(), stringNode(desc)),
+            new Parent(dummyToken(), stringNode(parent)),
+            new Icon(dummyToken(), stringNode(iconItem)),
+        ], dummyToken());
+
+        assert.equal(evaluator.evaluate(expr), name);
+
+        let advancement = STORE.get(name);
+        assert.isNotNull(advancement);
+        assert.isTrue(advancement instanceof AdvancementValue);
+        if (advancement instanceof AdvancementValue) { // narrow down union type for TS
+            assert.equal(advancement.name, name);
+            assert.equal(advancement.title, title);
+            assert.equal(advancement.description, desc);
+            assert.equal(advancement.parent, parent);
+            assert.equal(advancement.iconItem, iconItem);
+        }
+    });
+
+    it('visitAdvancement error: wrong type for name', function() {
+        let evaluator = new Evaluator();
+        let expr = new Advancement(dummyToken(), numNode("410"), [], dummyToken());
+        assert.throws(() => evaluator.evaluate(expr));
+        assert.equal(STORE.size, 0, "Store should be empty");
+    });
+
+    it('visitAdvancement error: wrong type for field', function() {
+        let evaluator = new Evaluator();
+        let expr = new Advancement(dummyToken(), null, [
+            new Title(dummyToken(), addXYFunc),
+            new Description(dummyToken(), stringNode("add x to y?!?!")),
+        ], dummyToken());
+        assert.throws(() => evaluator.evaluate(expr));
+        assert.equal(STORE.size, 0, "Store should be empty");
+    });
+
+    it('visitAdvancement error: name conflict', function() {
+        let evaluator = new Evaluator();
+        let expr = new Advancement(dummyToken(), stringNode("kaboom"), [], dummyToken());
+        assert.equal(evaluator.evaluate(expr), "kaboom");
+        assert.throws(() => evaluator.evaluate(expr), DSLNameConflictError);
     });
 });
