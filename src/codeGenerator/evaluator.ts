@@ -408,7 +408,10 @@ export class Evaluator implements ExpressionVisitor {
     }
 
     // FIXME: lots of switch on type nonsense
-    translateItemSpec(itemSpec: ItemSpec, env: EvaluatorEnv, sourceExpression: Expression): Store.ItemSpec {
+    translateItemSpec(itemSpec: ItemSpec | null, env: EvaluatorEnv, sourceExpression: Expression): Store.ItemSpec | null {
+        if (itemSpec == null) {
+            return null;
+        }
         if (itemSpec instanceof ItemMatcher) {
             let str = this.evaluateExpectType(itemSpec.name, env, "string", "advancement trigger item specification");
             return new Store.ItemMatcher(str);
