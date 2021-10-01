@@ -1099,4 +1099,26 @@ describe("evaluator - store integration", () => {
             assert.deepEqual(fn.commands, ["advancement revoke @p only minecraft:arbalistic"]);
         }
     });
+
+    it('visitFunction error: bad name', function() {
+        let evaluator = new Evaluator();
+        let expr = new MCFunction(dummyToken(), stringNode("SHOULD-BE-LOWERCASE"),
+                                [new Revoke(dummyToken(), stringNode("minecraft:arbalistic"))], dummyToken());
+        assert.throws(() => evaluator.evaluate(expr));
+    });
+
+    it('visitFunction error: bad type of name', function() {
+        let evaluator = new Evaluator();
+        let expr = new MCFunction(dummyToken(), numNode("5"),
+                                [new Revoke(dummyToken(), stringNode("minecraft:arbalistic"))], dummyToken());
+        assert.throws(() => evaluator.evaluate(expr));
+    });
+
+    it('visitFunction error: type error in body', function() {
+        let evaluator = new Evaluator();
+        let expr = new MCFunction(dummyToken(), null,
+                                [new Revoke(dummyToken(), stringNode("minecraft:arbalistic")),
+                                 numNode("11111111111111111111")], dummyToken());
+        assert.throws(() => evaluator.evaluate(expr));
+    });
 });
