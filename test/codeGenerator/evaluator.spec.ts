@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import { Advancement, ASTNumber, ASTString, Begin, BinaryOperator, Binop, Call, ConsumeItem, Define, Description, Expression, False, For, Icon, Id, If, Index, ItemMatcher, Let, List, Parent, Slice, Title, True, UnaryOperator, Unop, TagMatcher, InventoryChanged, CombinedTrigger, Load, Tick, Grant, Revoke, Execute, Command, RawCommand, On } from "../../src/ast/ast";
+import { Advancement, ASTNumber, ASTString, Begin, BinaryOperator, Binop, Call, ConsumeItem, Define, Description, Expression, False, For, Icon, Id, If, Index, ItemMatcher, Let, List, Parent, Slice, Title, True, UnaryOperator, Unop, TagMatcher, InventoryChanged, CombinedTrigger, Load, Tick, Grant, Revoke, Execute, Command, RawCommand, On, MCFunction } from "../../src/ast/ast";
 import Span, { Location } from "../../src/ast/span";
 import Token, { TokenType } from "../../src/ast/token";
 import { Evaluator, EvaluatorEnv } from "../../src/codeGenerator/evaluator";
@@ -1068,5 +1068,35 @@ describe("evaluator - store integration", () => {
         for (let name of names) {
             assert.isTrue(STORE.has(name), `expected store to contain ${name}, got ${Array.from(STORE.keys())}`);
         };
+    });
+
+    it('visitFunction random name', function() {
+        let evaluator = new Evaluator();
+        let expr = new MCFunction(dummyToken(), null,
+                                [new Grant(dummyToken(), stringNode("minecraft:arbalistic"))], dummyToken());
+        let fnName = evaluator.evaluate(expr);
+        assert.equal(fnName, ".function0");
+        assert.equal(STORE.size, 1);
+        let fn = STORE.get(fnName);
+        assert(fn instanceof Store.FunctionValue);
+        if (fn instanceof Store.FunctionValue) {
+            assert.equal(fn.name, fnName);
+            assert.deepEqual(fn.commands, ["advancement grant @p only minecraft:arbalistic"]);
+        }
+    });
+
+    it('visitFunction set name', function() {
+        let evaluator = new Evaluator();
+        let expr = new MCFunction(dummyToken(), stringNode("revoky"),
+                                [new Revoke(dummyToken(), stringNode("minecraft:arbalistic"))], dummyToken());
+        let fnName = evaluator.evaluate(expr);
+        assert.equal(fnName, "revoky");
+        assert.equal(STORE.size, 1);
+        let fn = STORE.get(fnName);
+        assert(fn instanceof Store.FunctionValue);
+        if (fn instanceof Store.FunctionValue) {
+            assert.equal(fn.name, fnName);
+            assert.deepEqual(fn.commands, ["advancement revoke @p only minecraft:arbalistic"]);
+        }
     });
 });

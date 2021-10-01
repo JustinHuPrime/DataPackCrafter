@@ -526,8 +526,20 @@ export class Evaluator implements ExpressionVisitor {
         this.updateStore(name, advancementValue, astNode);
         return name;
     }
-    visitFunction(_astNode: MCFunction, _env: EvaluatorEnv) : EvaluatorData {
-        throw new Error("Method not implemented.");
+    visitFunction(astNode: MCFunction, env: EvaluatorEnv) : EvaluatorData {
+        let name: string;
+        if (astNode.name != null) {
+            let evalName = this.evaluateExpectType(astNode.name, env, "string", "function name");
+            if (!VALID_MC_ID_REGEX.test(evalName)) {
+                throw new DSLSyntaxError(astNode, `function: invalid name ${JSON.stringify(evalName)}`);
+            }
+            name = evalName;
+        }
+        name ||= this.genFunctionName();
+        let commands = this.parseCommands(astNode.commands, env, astNode);
+        let fnValue = Store.FunctionValue.regular(name, commands);
+        this.updateStore(name, fnValue, astNode);
+        return name;
     }
     visitTrue(_astNode: True, _env: EvaluatorEnv) : EvaluatorData {
         return true;
