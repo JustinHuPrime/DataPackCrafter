@@ -74,7 +74,7 @@ export default class Lexer {
       return this.lexToken(matchNumberToken[0] as string, TokenType.NUMBER);
 
     const matchPunctuationToken = this.file.match(
-      /^(==|&&|!=|<=|>=|\|\||\(|\)|=|,|{|}|%|\+|-|\/|:|\[|]|")/,
+      /^(==|&&|!=|<=|>=|<|>|\|\||\(|\)|=|,|{|}|%|\+|-|\*|\/|:|\[|]|")|!/,
     );
 
     if (matchPunctuationToken)

@@ -232,11 +232,8 @@ export default class Parser {
       case "description": {
         return new Description(keyword, expression);
       }
-      case "parent": {
-        return new Parent(keyword, expression);
-      }
       default: {
-        return undefined as never;
+        return new Parent(keyword, expression);
       }
     }
   }
@@ -264,11 +261,11 @@ export default class Parser {
 
     const { content } = keyword;
 
+    this.lexer.unlex(keyword);
     switch (content) {
       case "grant":
       case "revoke":
       case "execute":
-        this.lexer.lexRegular();
         return this.parseBaseCommand();
       default:
         return new RawCommand(this.parseExpression());
@@ -320,7 +317,6 @@ export default class Parser {
 
     let peek = this.lexer.lexRegular();
     while (peek.content === "||") {
-      this.lexer.unlex(peek);
       lhs = new CombinedTrigger(lhs, this.parsePrimaryTrigger());
       peek = this.lexer.lexRegular();
     }
@@ -390,6 +386,8 @@ export default class Parser {
       return new List(start, list, peek);
     }
 
+    this.lexer.unlex(peek);
+
     let done = false;
     while (!done) {
       list.push(this.parseExpression());
@@ -434,6 +432,8 @@ export default class Parser {
         peek.content === "&&" ? BinaryOperator.AND : BinaryOperator.OR,
         rhs,
       );
+
+      peek = this.lexer.lexRegular();
     }
     this.lexer.unlex(peek);
 
@@ -451,6 +451,7 @@ export default class Parser {
         peek.content === "==" ? BinaryOperator.EQ : BinaryOperator.NEQ,
         rhs,
       );
+      peek = this.lexer.lexRegular();
     }
     this.lexer.unlex(peek);
 
@@ -486,6 +487,7 @@ export default class Parser {
           break;
         }
       }
+      peek = this.lexer.lexRegular();
     }
     this.lexer.unlex(peek);
 
@@ -503,7 +505,9 @@ export default class Parser {
         peek.content === "+" ? BinaryOperator.ADD : BinaryOperator.SUB,
         rhs,
       );
+      peek = this.lexer.lexRegular();
     }
+
     this.lexer.unlex(peek);
 
     return lhs;
@@ -533,7 +537,10 @@ export default class Parser {
           break;
         }
       }
+
+      peek = this.lexer.lexRegular();
     }
+
     this.lexer.unlex(peek);
 
     return lhs;
@@ -637,8 +644,8 @@ export default class Parser {
       }
       peek = this.lexer.lexRegular();
     }
-    this.lexer.unlex(peek);
 
+    this.lexer.unlex(peek);
     return target;
   }
 
@@ -757,7 +764,7 @@ export default class Parser {
     const values: Expression[] = [];
 
     const id0 = this.lexer.lexRegular();
-    this.expect(keyword, TokenType.ID);
+    this.expect(id0, TokenType.ID);
 
     const eq0 = this.lexer.lexRegular();
     this.expect(eq0, TokenType.LITERAL, "=");
@@ -782,7 +789,7 @@ export default class Parser {
       ids.push(id);
       values.push(value);
 
-      this.lexer.lexRegular();
+      current = this.lexer.lexRegular();
     }
     this.lexer.unlex(current);
 

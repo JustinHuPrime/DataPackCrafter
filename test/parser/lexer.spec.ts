@@ -30,7 +30,7 @@ describe("lexer", () => {
       );
     });
 
-    it("should parse special strings as string", () => {
+    it("should lex special strings as string", () => {
       const strings = ["\\\\", '\\"', "\\{", "\\}"];
 
       for (const s of strings) {
@@ -243,6 +243,8 @@ describe("lexer", () => {
         "!=",
         "<=",
         ">=",
+        "<",
+        ">",
         "||",
         "(",
         ")",
@@ -251,11 +253,13 @@ describe("lexer", () => {
         "}",
         "%",
         "+",
+        "*",
         "-",
         "/",
         ":",
         "[",
         "]",
+        "!",
         '"',
       ];
 
@@ -302,7 +306,7 @@ describe("lexer", () => {
       );
     });
 
-    it("should throw error on invalid token parse", () => {
+    it("should throw error on invalid token lex", () => {
       setup("$");
 
       assert.throws(
