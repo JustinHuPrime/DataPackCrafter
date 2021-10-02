@@ -2,18 +2,18 @@ import { Load, Tick, CombinedTrigger, ConsumeItem, InventoryChanged, RawTrigger,
 import { TriggerVisitor } from "../ast/visitor";
 import { Evaluator, EvaluatorEnv } from "./evaluator";
 import { DSLSyntaxError } from "./exceptions";
-import ItemSpecParser from "./itemSpecParser";
+import ItemSpecEvaluator from "./itemSpecEvaluator";
 import * as Store from "./store";
 
-export default class TriggerParser implements TriggerVisitor {
+export default class TriggerEvaluator implements TriggerVisitor {
     private evaluator: Evaluator;
     private env: EvaluatorEnv;
-    private itemSpecParser: ItemSpecParser;
+    private itemSpecEvaluator: ItemSpecEvaluator;
 
     constructor(evaluator: Evaluator, env: EvaluatorEnv) {
         this.evaluator = evaluator;
         this.env = env;
-        this.itemSpecParser = new ItemSpecParser(evaluator, env);
+        this.itemSpecEvaluator = new ItemSpecEvaluator(evaluator, env);
     }
 
     parse(trigger: Trigger): Store.Trigger[] {
@@ -33,11 +33,11 @@ export default class TriggerParser implements TriggerVisitor {
         return results;
     }
     visitConsumeItem(astNode: ConsumeItem): Store.Trigger[] {
-        let itemSpec = this.itemSpecParser.parse(astNode.details);
+        let itemSpec = this.itemSpecEvaluator.parse(astNode.details);
         return [new Store.ConsumeItem(itemSpec)];
     }
     visitInventoryChanged(astNode: InventoryChanged): Store.Trigger[] {
-        let itemSpec = this.itemSpecParser.parse(astNode.details);
+        let itemSpec = this.itemSpecEvaluator.parse(astNode.details);
         return [new Store.InventoryChanged(itemSpec)];
     }
     visitRawTrigger(astNode: RawTrigger): Store.Trigger[] {

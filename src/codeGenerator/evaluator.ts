@@ -1,8 +1,8 @@
 import { Import, Define, Let, If, For, Print, Binop, Unop, Index, Slice, Call, List, Begin, On, Advancement, True, False, ASTNumber, ASTString, MCFunction, Expression, BinaryOperator, UnaryOperator, Id, Title, Icon, Description, Parent, Trigger, Load, Tick, Command } from "../ast/ast";
-import CommandParser from "./commandParser";
+import CommandEvaluator from "./commandEvaluator";
 import { ExpressionVisitor } from "../ast/visitor";
 import { DSLIndexError, DSLMathError, DSLNameConflictError, DSLReferenceError, DSLSyntaxError, DSLTypeError } from "./exceptions"
-import TriggerParser from "./triggerParser"
+import TriggerEvaluator from "./triggerEvaluator"
 import STORE, * as Store from "./store";
 let deepEqual = require('deep-equal');
 
@@ -410,15 +410,15 @@ export class Evaluator implements ExpressionVisitor {
     }
 
     parseTrigger(trigger: Trigger, env: EvaluatorEnv) : Store.Trigger[] {
-        let triggerParser = new TriggerParser(this, env);
-        return triggerParser.parse(trigger);
+        let triggerEvaluator = new TriggerEvaluator(this, env);
+        return triggerEvaluator.parse(trigger);
     }
 
     parseCommands(astCommands: Command[], env: EvaluatorEnv) : string[] {
         let commands: string[] = [];
-        let commandParser = new CommandParser(this, env);;
+        let commandEvaluator = new CommandEvaluator(this, env);;
         for (let astCommand of astCommands) {
-            commands = commands.concat(commandParser.parse(astCommand));
+            commands = commands.concat(commandEvaluator.parse(astCommand));
         }
         return commands;
     }

@@ -3,7 +3,7 @@ import { CommandVisitor } from "../ast/visitor";
 import { Evaluator, EvaluatorEnv } from "./evaluator";
 import { DSLTypeError } from "./exceptions";
 
-export default class CommandParser implements CommandVisitor {
+export default class CommandEvaluator implements CommandVisitor {
     private evaluator: Evaluator;
     private env: EvaluatorEnv;
 

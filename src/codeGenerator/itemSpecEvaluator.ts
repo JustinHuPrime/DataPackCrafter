@@ -3,7 +3,7 @@ import { ItemSpecVisitor } from "../ast/visitor";
 import { Evaluator, EvaluatorEnv } from "./evaluator";
 import * as Store from "./store";
 
-export default class ItemSpecParser implements ItemSpecVisitor {
+export default class ItemSpecEvaluator implements ItemSpecVisitor {
     private evaluator: Evaluator;
     private env: EvaluatorEnv;
 
