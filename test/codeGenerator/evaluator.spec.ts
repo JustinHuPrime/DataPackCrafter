@@ -894,7 +894,7 @@ describe("evaluator - store integration", () => {
         ]
         let emptyEnv = new EvaluatorEnv({});
 
-        assert.deepEqual(evaluator.parseCommands(commands, emptyEnv, stringNode("dummy")),
+        assert.deepEqual(evaluator.parseCommands(commands, emptyEnv),
                          ["advancement grant @p only test123",
                           "advancement revoke @p only test123",
                           "function foobar"]);
@@ -906,11 +906,11 @@ describe("evaluator - store integration", () => {
         let emptyEnv = new EvaluatorEnv({});
 
         commands = [new Grant(dummyToken(), numNode("3"))]
-        assert.throws(() => evaluator.parseCommands(commands, emptyEnv, stringNode("dummy")));
+        assert.throws(() => evaluator.parseCommands(commands, emptyEnv));
         commands = [new Revoke(dummyToken(), numNode("2"))]
-        assert.throws(() => evaluator.parseCommands(commands, emptyEnv, stringNode("dummy")));
+        assert.throws(() => evaluator.parseCommands(commands, emptyEnv));
         commands = [new Execute(dummyToken(), numNode("1"))]
-        assert.throws(() => evaluator.parseCommands(commands, emptyEnv, stringNode("dummy")));
+        assert.throws(() => evaluator.parseCommands(commands, emptyEnv));
     });
 
     it('parseCommands raw commands as string', function() {
@@ -921,7 +921,7 @@ describe("evaluator - store integration", () => {
         ]
         let emptyEnv = new EvaluatorEnv({});
 
-        assert.deepEqual(evaluator.parseCommands(commands, emptyEnv, stringNode("dummy")),
+        assert.deepEqual(evaluator.parseCommands(commands, emptyEnv),
                          ["tell @a foo", "tell @a bar"]);
     });
     it('parseCommands raw commands as list', function() {
@@ -931,7 +931,7 @@ describe("evaluator - store integration", () => {
         ]
         let emptyEnv = new EvaluatorEnv({});
 
-        assert.deepEqual(evaluator.parseCommands(commands, emptyEnv, stringNode("dummy")),
+        assert.deepEqual(evaluator.parseCommands(commands, emptyEnv),
                          ["tell @a foo", "tell @a bar"]);
     });
 
@@ -943,12 +943,12 @@ describe("evaluator - store integration", () => {
         commands = [
             new RawCommand(new List(dummyToken(), [stringNode("tell @a foo"), factorialFunc], dummyToken()))
         ];
-        assert.throws(() => evaluator.parseCommands(commands, emptyEnv, stringNode("dummy")));
+        assert.throws(() => evaluator.parseCommands(commands, emptyEnv));
 
         commands = [
             new RawCommand(new True(dummyToken()))
         ];
-        assert.throws(() => evaluator.parseCommands(commands, emptyEnv, stringNode("dummy")));
+        assert.throws(() => evaluator.parseCommands(commands, emptyEnv));
     });
 
     it('visitOn ConsumeItem', function() {
@@ -1117,8 +1117,7 @@ describe("evaluator - store integration", () => {
     it('visitFunction error: type error in body', function() {
         let evaluator = new Evaluator();
         let expr = new MCFunction(dummyToken(), null,
-                                [new Revoke(dummyToken(), stringNode("minecraft:arbalistic")),
-                                 numNode("11111111111111111111")], dummyToken());
+                                [new Revoke(dummyToken(), numNode("111111111"))], dummyToken());
         assert.throws(() => evaluator.evaluate(expr));
     });
 });

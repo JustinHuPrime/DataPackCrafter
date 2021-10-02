@@ -1,4 +1,5 @@
-import { Import, Define, Let, If, For, Print, Binop, Unop, Index, Slice, Call, List, Begin, On, Advancement, True, False, ASTNumber, ASTString, MCFunction, Expression, BinaryOperator, UnaryOperator, Id, Title, Icon, Description, Parent, Trigger, Load, Execute, Grant, Revoke, RawCommand, Tick, ConsumeItem, ItemSpec, TagMatcher, ItemMatcher, InventoryChanged, CombinedTrigger, Command } from "../ast/ast";
+import { Import, Define, Let, If, For, Print, Binop, Unop, Index, Slice, Call, List, Begin, On, Advancement, True, False, ASTNumber, ASTString, MCFunction, Expression, BinaryOperator, UnaryOperator, Id, Title, Icon, Description, Parent, Trigger, Load, Tick, ConsumeItem, ItemSpec, TagMatcher, ItemMatcher, InventoryChanged, CombinedTrigger, Command } from "../ast/ast";
+import CommandParser from "./commandParser";
 import { ExpressionVisitor } from "../ast/visitor";
 import { DSLEvaluationError, DSLIndexError, DSLMathError, DSLNameConflictError, DSLReferenceError, DSLSyntaxError, DSLTypeError } from "./exceptions"
 import STORE, * as Store from "./store";
@@ -423,6 +424,7 @@ export class Evaluator implements ExpressionVisitor {
         }
     }
 
+    // FIXME: lots of switch on type nonsense
     parseTrigger(trigger: Trigger, env: EvaluatorEnv, sourceExpression: Expression) : Store.Trigger[] {
         let results: Store.Trigger[] = [];
         if (trigger instanceof Load || trigger instanceof Tick) {
@@ -440,40 +442,17 @@ export class Evaluator implements ExpressionVisitor {
         return results;
     }
 
-    // FIXME: lots of switch on type nonsense
-    parseCommands(astCommands: Command[], env: EvaluatorEnv, sourceExpression: Expression) : string[] {
+    parseCommands(astCommands: Command[], env: EvaluatorEnv) : string[] {
         let commands: string[] = [];
+        let commandParser = new CommandParser(this, env);;
         for (let astCommand of astCommands) {
-            if (astCommand instanceof Grant) {
-                commands.push(`advancement grant @p only ${this.evaluateExpectType(astCommand.name, env, "string", "grant command parameter")}`);
-            } else if (astCommand instanceof Revoke) {
-                commands.push(`advancement revoke @p only ${this.evaluateExpectType(astCommand.name, env, "string", "revoke command parameter")}`);
-            } else if (astCommand instanceof Execute) {
-                commands.push( `function ${this.evaluateExpectType(astCommand.name, env, "string", "execute command parameter")}`);
-            } else if (astCommand instanceof RawCommand) {
-                let result = astCommand.command.accept(this, env);
-                if (typeof result === "string") {
-                    commands.push(result)
-                } else if (Array.isArray(result)) {
-                    for (let command of result) {
-                        if (typeof command === "string") {
-                            commands.push(command);
-                        } else {
-                            throw new DSLTypeError(sourceExpression, `expected string array in raw command list, got item of type ${typeof command}`);
-                        }
-                    }
-                } else {
-                    throw new DSLTypeError(sourceExpression, `expected string in raw command list, got item of type ${typeof result}`)
-                }
-            } else {
-                throw new DSLEvaluationError(sourceExpression, `on: Unknown command type ${astCommand.constructor.name}`);
-            }
+            commands = commands.concat(commandParser.parse(astCommand));
         }
         return commands;
     }
 
     visitOn(astNode: On, env: EvaluatorEnv) : EvaluatorData {
-        let commands = this.parseCommands(astNode.commands, env, astNode);
+        let commands = this.parseCommands(astNode.commands, env);
 
         // Read the advancement trigger and prepare a Minecraft function
         let fnValue: Store.FunctionValue;
@@ -539,7 +518,7 @@ export class Evaluator implements ExpressionVisitor {
             name = evalName;
         }
         name ||= this.genFunctionName();
-        let commands = this.parseCommands(astNode.commands, env, astNode);
+        let commands = this.parseCommands(astNode.commands, env);
         let fnValue = Store.FunctionValue.regular(name, commands);
         this.updateStore(name, fnValue, astNode);
         return name;
