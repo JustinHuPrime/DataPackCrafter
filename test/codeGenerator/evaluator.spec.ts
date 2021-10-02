@@ -825,7 +825,7 @@ describe("evaluator - store integration", () => {
         let evaluator = new Evaluator();
         let trigger = new ConsumeItem(dummyToken(), new ItemMatcher(dummyToken(), stringNode("carrot")), dummyToken());
         let emptyEnv = new EvaluatorEnv({});
-        assert.deepEqual(evaluator.parseTrigger(trigger, emptyEnv, stringNode("dummy")),
+        assert.deepEqual(evaluator.parseTrigger(trigger, emptyEnv),
                          [new Store.ConsumeItem(new Store.ItemMatcher("carrot"))]);
     });
 
@@ -833,7 +833,7 @@ describe("evaluator - store integration", () => {
         let evaluator = new Evaluator();
         let trigger = new InventoryChanged(dummyToken(), new TagMatcher(dummyToken(), stringNode("TEST")), dummyToken());
         let emptyEnv = new EvaluatorEnv({});
-        assert.deepEqual(evaluator.parseTrigger(trigger, emptyEnv, stringNode("dummy")),
+        assert.deepEqual(evaluator.parseTrigger(trigger, emptyEnv),
                          [new Store.InventoryChanged(new Store.TagMatcher("TEST"))]);
     });
 
@@ -844,7 +844,7 @@ describe("evaluator - store integration", () => {
         let trigger = new CombinedTrigger(trigger1, trigger2);
         let emptyEnv = new EvaluatorEnv({});
 
-        assert.deepEqual(evaluator.parseTrigger(trigger, emptyEnv, stringNode("dummy")),
+        assert.deepEqual(evaluator.parseTrigger(trigger, emptyEnv),
                          [new Store.InventoryChanged(new Store.TagMatcher("TEST")),
                           new Store.ConsumeItem(new Store.TagMatcher("BEST"))]);
     });
@@ -856,7 +856,7 @@ describe("evaluator - store integration", () => {
         let trigger = new CombinedTrigger(trigger1, trigger2);
         let emptyEnv = new EvaluatorEnv({});
 
-        assert.throws(() => evaluator.parseTrigger(trigger, emptyEnv, stringNode("dummy")));
+        assert.throws(() => evaluator.parseTrigger(trigger, emptyEnv));
     });
 
     it('parseTrigger error: Tick in CombinedTrigger', function() {
@@ -866,7 +866,7 @@ describe("evaluator - store integration", () => {
         let trigger = new CombinedTrigger(trigger1, trigger2);
         let emptyEnv = new EvaluatorEnv({});
 
-        assert.throws(() => evaluator.parseTrigger(trigger, emptyEnv, stringNode("dummy")));
+        assert.throws(() => evaluator.parseTrigger(trigger, emptyEnv));
     });
 
     it('parseTrigger error: bad type of trigger value', function() {
@@ -874,7 +874,7 @@ describe("evaluator - store integration", () => {
         let trigger = new InventoryChanged(dummyToken(), new TagMatcher(dummyToken(), new True(dummyToken())), dummyToken());
         let emptyEnv = new EvaluatorEnv({});
 
-        assert.throws(() => evaluator.parseTrigger(trigger, emptyEnv, stringNode("dummy")));
+        assert.throws(() => evaluator.parseTrigger(trigger, emptyEnv));
     });
 
     it('parseCommands typed commands', function() {

@@ -1,5 +1,5 @@
 import { Grant, Revoke, Execute, RawCommand, Command } from "../ast/ast";
-import {CommandVisitor} from "../ast/visitor";
+import { CommandVisitor } from "../ast/visitor";
 import { Evaluator, EvaluatorEnv } from "./evaluator";
 import { DSLTypeError } from "./exceptions";
 

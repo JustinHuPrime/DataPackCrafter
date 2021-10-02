@@ -31,6 +31,8 @@ import {
   Load,
   RawTrigger,
   Tick,
+  ItemMatcher,
+  TagMatcher,
 } from "./ast";
 
 export interface ExpressionVisitor {
@@ -73,3 +75,7 @@ export interface TriggerVisitor {
   visitRawTrigger(astNode: RawTrigger) : any;
 }
 
+export interface ItemSpecVisitor {
+  visitItemMatcher(astNode: ItemMatcher) : any;
+  visitTagMatcher(astNode: TagMatcher) : any;
+}

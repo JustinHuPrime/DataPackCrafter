@@ -1,7 +1,7 @@
 import { EvaluatorEnv } from "../codeGenerator/evaluator";
 import Span, { merge } from "./span";
 import Token from "./token";
-import { CommandVisitor, ExpressionVisitor, TriggerVisitor } from "./visitor";
+import { CommandVisitor, ExpressionVisitor, ItemSpecVisitor, TriggerVisitor } from "./visitor";
 
 export abstract class Ast {
   span: Span;
@@ -493,7 +493,9 @@ export class RawTrigger extends Trigger {
   }
 }
 
-export abstract class ItemSpec extends Ast {}
+export abstract class ItemSpec extends Ast {
+  abstract accept(visitor: ItemSpecVisitor): any;
+}
 
 export class ItemMatcher extends ItemSpec {
   name: Expression;
@@ -501,6 +503,9 @@ export class ItemMatcher extends ItemSpec {
   constructor(keyword: Token, name: Expression) {
     super(merge(keyword.span, name.span));
     this.name = name;
+  }
+  accept(visitor: ItemSpecVisitor) {
+    return visitor.visitItemMatcher(this);
   }
 }
 
@@ -510,6 +515,9 @@ export class TagMatcher extends ItemSpec {
   constructor(keyword: Token, name: Expression) {
     super(merge(keyword.span, name.span));
     this.name = name;
+  }
+  accept(visitor: ItemSpecVisitor) {
+    return visitor.visitTagMatcher(this);
   }
 }
 

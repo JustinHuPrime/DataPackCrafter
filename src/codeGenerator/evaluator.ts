@@ -1,7 +1,8 @@
-import { Import, Define, Let, If, For, Print, Binop, Unop, Index, Slice, Call, List, Begin, On, Advancement, True, False, ASTNumber, ASTString, MCFunction, Expression, BinaryOperator, UnaryOperator, Id, Title, Icon, Description, Parent, Trigger, Load, Tick, ConsumeItem, ItemSpec, TagMatcher, ItemMatcher, InventoryChanged, CombinedTrigger, Command } from "../ast/ast";
+import { Import, Define, Let, If, For, Print, Binop, Unop, Index, Slice, Call, List, Begin, On, Advancement, True, False, ASTNumber, ASTString, MCFunction, Expression, BinaryOperator, UnaryOperator, Id, Title, Icon, Description, Parent, Trigger, Load, Tick, Command } from "../ast/ast";
 import CommandParser from "./commandParser";
 import { ExpressionVisitor } from "../ast/visitor";
-import { DSLEvaluationError, DSLIndexError, DSLMathError, DSLNameConflictError, DSLReferenceError, DSLSyntaxError, DSLTypeError } from "./exceptions"
+import { DSLIndexError, DSLMathError, DSLNameConflictError, DSLReferenceError, DSLSyntaxError, DSLTypeError } from "./exceptions"
+import TriggerParser from "./triggerParser"
 import STORE, * as Store from "./store";
 let deepEqual = require('deep-equal');
 
@@ -408,38 +409,9 @@ export class Evaluator implements ExpressionVisitor {
         return result;  // just return the last result
     }
 
-    // FIXME: lots of switch on type nonsense
-    translateItemSpec(itemSpec: ItemSpec | null, env: EvaluatorEnv, sourceExpression: Expression): Store.ItemSpec | null {
-        if (itemSpec == null) {
-            return null;
-        }
-        if (itemSpec instanceof ItemMatcher) {
-            let str = this.evaluateExpectType(itemSpec.name, env, "string", "advancement trigger item specification");
-            return new Store.ItemMatcher(str);
-        } else if (itemSpec instanceof TagMatcher) {
-            let str = this.evaluateExpectType(itemSpec.name, env, "string", "advancement trigger item specification");
-            return new Store.TagMatcher(str);
-        } else {
-            throw new DSLEvaluationError(sourceExpression, `Unknown ItemSpec class ${itemSpec.constructor.name}`);
-        }
-    }
-
-    // FIXME: lots of switch on type nonsense
-    parseTrigger(trigger: Trigger, env: EvaluatorEnv, sourceExpression: Expression) : Store.Trigger[] {
-        let results: Store.Trigger[] = [];
-        if (trigger instanceof Load || trigger instanceof Tick) {
-            throw new DSLSyntaxError(sourceExpression, "load and tick triggers cannot be combined");
-        } else if (trigger instanceof ConsumeItem) {
-            let itemSpec = this.translateItemSpec(trigger.details, env, sourceExpression);
-            results.push(new Store.ConsumeItem(itemSpec));
-        } else if (trigger instanceof InventoryChanged) {
-            let itemSpec = this.translateItemSpec(trigger.details, env, sourceExpression);
-            results.push(new Store.InventoryChanged(itemSpec));
-        } else if (trigger instanceof CombinedTrigger) {
-            results = results.concat(this.parseTrigger(trigger.lhs, env, sourceExpression));
-            results = results.concat(this.parseTrigger(trigger.rhs, env, sourceExpression));
-        }
-        return results;
+    parseTrigger(trigger: Trigger, env: EvaluatorEnv) : Store.Trigger[] {
+        let triggerParser = new TriggerParser(this, env);
+        return triggerParser.parse(trigger);
     }
 
     parseCommands(astCommands: Command[], env: EvaluatorEnv) : string[] {
@@ -467,7 +439,7 @@ export class Evaluator implements ExpressionVisitor {
 
             // For things that aren't load or tick, generate an advancement too
             advName = `.adv${fnName}`;
-            let triggers = this.parseTrigger(astNode.trigger, env, astNode);
+            let triggers = this.parseTrigger(astNode.trigger, env);
             let advValue = new Store.AdvancementValue(
                 // everything is undefined, what has the world come to?? -JL
                 advName, undefined, undefined, undefined, undefined, undefined, fnName, triggers
