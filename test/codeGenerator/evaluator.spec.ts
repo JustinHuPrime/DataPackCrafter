@@ -1,8 +1,10 @@
 import { assert } from "chai";
-import { ASTNumber, ASTString, Begin, BinaryOperator, Binop, Call, Define, Expression, False, For, Id, If, Index, Let, List, Slice, True, UnaryOperator, Unop } from "../../src/ast/ast";
+import { Advancement, ASTNumber, ASTString, Begin, BinaryOperator, Binop, Call, ConsumeItem, Define, Description, Expression, False, For, Icon, Id, If, Index, ItemMatcher, Let, List, Parent, Slice, Title, True, UnaryOperator, Unop, TagMatcher, InventoryChanged, CombinedTrigger, Load, Tick, Grant, Revoke, Execute, Command, RawCommand, On, MCFunction } from "../../src/ast/ast";
 import Span, { Location } from "../../src/ast/span";
 import Token, { TokenType } from "../../src/ast/token";
-import { Evaluator } from "../../src/codeGenerator/evaluator";
+import { Evaluator, EvaluatorEnv } from "../../src/codeGenerator/evaluator";
+import { DSLNameConflictError } from "../../src/codeGenerator/exceptions";
+import STORE, * as Store from "../../src/codeGenerator/store";
 
 function dummyToken(content?: string) : Token {
     /**
@@ -58,7 +60,7 @@ let factorialFunc : Define;
     factorialFunc = new Define(dummyToken(), fnId, [n], body);
 }
 
-describe("evaluator", () => {
+describe("evaluator - core", () => {
 
     it('visitTrue', function() {
         let evaluator = new Evaluator();
@@ -728,5 +730,395 @@ describe("evaluator", () => {
         let evaluator = new Evaluator();
         // FIXME: check the stdout
         assert.equal(evaluator.evaluate(stringNode("visitPrint test")), "visitPrint test");
+    });
+});
+
+describe("evaluator - store integration", () => {
+    beforeEach(() => {
+        STORE.clear();
+    })
+
+    it('visitAdvancement generated name', function() {
+        let evaluator = new Evaluator();
+        let expr = new Advancement(dummyToken(), null, [], dummyToken());
+        let name = evaluator.evaluate(expr);
+        assert.isTrue(STORE.has(name));
+        assert.isTrue(name.startsWith("."), "Randomly generated advancement names should start with .");
+        assert.equal(STORE.get(name)!.name, name);
+    });
+
+    it('visitAdvancement provided name', function() {
+        let evaluator = new Evaluator();
+        let expr = new Advancement(dummyToken(), stringNode("foo"), [], dummyToken());
+        assert.equal(evaluator.evaluate(expr), "foo");
+        assert.isTrue(STORE.has("foo"));
+        assert.equal(STORE.get("foo")!.name, "foo");
+    });
+
+    it('visitAdvancement some fields provided', function() {
+        let evaluator = new Evaluator();
+        let title = "Congratulations, you've won!";
+        let desc = "You are the 100,000th visitor to this website. Click [here] to claim your prize";
+        let expr = new Advancement(dummyToken(), null, [
+            new Title(dummyToken(), stringNode(title)),
+            new Description(dummyToken(), stringNode(desc)),
+        ], dummyToken());
+
+        let name = evaluator.evaluate(expr);
+        let advancement = STORE.get(name);
+        assert.isNotNull(advancement);
+        assert.isTrue(advancement instanceof Store.AdvancementValue);
+        if (advancement instanceof Store.AdvancementValue) { // narrow down union type for TS
+            assert.equal(advancement.name, name);
+            assert.equal(advancement.title, title);
+            assert.equal(advancement.description, desc);
+            assert.isUndefined(advancement.iconItem);
+            assert.isUndefined(advancement.parent);
+        }
+    });
+
+    it('visitAdvancement all fields provided', function() {
+        let evaluator = new Evaluator();
+        let name = "netheriteBlock"
+        let title = "Hardcore Miner";
+        let desc = "Obtain a Block of Netherite";
+        let parent = "diamondPick";
+        let iconItem = "minecraft:netherite_block";
+        let expr = new Advancement(dummyToken(), stringNode(name), [
+            new Title(dummyToken(), stringNode(title)),
+            new Description(dummyToken(), stringNode(desc)),
+            new Parent(dummyToken(), stringNode(parent)),
+            new Icon(dummyToken(), stringNode(iconItem)),
+        ], dummyToken());
+
+        assert.equal(evaluator.evaluate(expr), name);
+
+        let advancement = STORE.get(name);
+        assert.isNotNull(advancement);
+        assert.isTrue(advancement instanceof Store.AdvancementValue);
+        if (advancement instanceof Store.AdvancementValue) { // narrow down union type for TS
+            assert.equal(advancement.name, name);
+            assert.equal(advancement.title, title);
+            assert.equal(advancement.description, desc);
+            assert.equal(advancement.parent, parent);
+            assert.equal(advancement.iconItem, iconItem);
+        }
+    });
+
+    it('visitAdvancement error: wrong type for name', function() {
+        let evaluator = new Evaluator();
+        let expr = new Advancement(dummyToken(), numNode("410"), [], dummyToken());
+        assert.throws(() => evaluator.evaluate(expr));
+        assert.equal(STORE.size, 0, "Store should be empty");
+    });
+
+    it('visitAdvancement error: wrong type for field', function() {
+        let evaluator = new Evaluator();
+        let expr = new Advancement(dummyToken(), null, [
+            new Title(dummyToken(), addXYFunc),
+            new Description(dummyToken(), stringNode("add x to y?!?!")),
+        ], dummyToken());
+        assert.throws(() => evaluator.evaluate(expr));
+        assert.equal(STORE.size, 0, "Store should be empty");
+    });
+
+    it('visitAdvancement error: name conflict', function() {
+        let evaluator = new Evaluator();
+        let expr = new Advancement(dummyToken(), stringNode("kaboom"), [], dummyToken());
+        assert.equal(evaluator.evaluate(expr), "kaboom");
+        assert.throws(() => evaluator.evaluate(expr), DSLNameConflictError);
+    });
+
+    it('parseTrigger consumeItem / ItemMatcher', function() {
+        let evaluator = new Evaluator();
+        let trigger = new ConsumeItem(dummyToken(), new ItemMatcher(dummyToken(), stringNode("carrot")), dummyToken());
+        let emptyEnv = new EvaluatorEnv({});
+        assert.deepEqual(evaluator.parseTrigger(trigger, emptyEnv, stringNode("dummy")),
+                         [new Store.ConsumeItem(new Store.ItemMatcher("carrot"))]);
+    });
+
+    it('parseTrigger InventoryChanged / TagMatcher', function() {
+        let evaluator = new Evaluator();
+        let trigger = new InventoryChanged(dummyToken(), new TagMatcher(dummyToken(), stringNode("TEST")), dummyToken());
+        let emptyEnv = new EvaluatorEnv({});
+        assert.deepEqual(evaluator.parseTrigger(trigger, emptyEnv, stringNode("dummy")),
+                         [new Store.InventoryChanged(new Store.TagMatcher("TEST"))]);
+    });
+
+    it('parseTrigger CombinedTrigger', function() {
+        let evaluator = new Evaluator();
+        let trigger1 = new InventoryChanged(dummyToken(), new TagMatcher(dummyToken(), stringNode("TEST")), dummyToken());
+        let trigger2 = new ConsumeItem(dummyToken(), new TagMatcher(dummyToken(), stringNode("BEST")), dummyToken());
+        let trigger = new CombinedTrigger(trigger1, trigger2);
+        let emptyEnv = new EvaluatorEnv({});
+
+        assert.deepEqual(evaluator.parseTrigger(trigger, emptyEnv, stringNode("dummy")),
+                         [new Store.InventoryChanged(new Store.TagMatcher("TEST")),
+                          new Store.ConsumeItem(new Store.TagMatcher("BEST"))]);
+    });
+
+    it('parseTrigger error: Load in CombinedTrigger', function() {
+        let evaluator = new Evaluator();
+        let trigger1 = new Load(dummyToken());
+        let trigger2 = new ConsumeItem(dummyToken(), new ItemMatcher(dummyToken(), stringNode("BEST")), dummyToken());
+        let trigger = new CombinedTrigger(trigger1, trigger2);
+        let emptyEnv = new EvaluatorEnv({});
+
+        assert.throws(() => evaluator.parseTrigger(trigger, emptyEnv, stringNode("dummy")));
+    });
+
+    it('parseTrigger error: Tick in CombinedTrigger', function() {
+        let evaluator = new Evaluator();
+        let trigger1 = new Tick(dummyToken());
+        let trigger2 = new ConsumeItem(dummyToken(), new TagMatcher(dummyToken(), stringNode("BEST")), dummyToken());
+        let trigger = new CombinedTrigger(trigger1, trigger2);
+        let emptyEnv = new EvaluatorEnv({});
+
+        assert.throws(() => evaluator.parseTrigger(trigger, emptyEnv, stringNode("dummy")));
+    });
+
+    it('parseTrigger error: bad type of trigger value', function() {
+        let evaluator = new Evaluator();
+        let trigger = new InventoryChanged(dummyToken(), new TagMatcher(dummyToken(), new True(dummyToken())), dummyToken());
+        let emptyEnv = new EvaluatorEnv({});
+
+        assert.throws(() => evaluator.parseTrigger(trigger, emptyEnv, stringNode("dummy")));
+    });
+
+    it('parseCommands typed commands', function() {
+        let evaluator = new Evaluator();
+        let commands = [
+            new Grant(dummyToken(), stringNode("test123")),
+            new Revoke(dummyToken(), stringNode("test123")),
+            new Execute(dummyToken(), stringNode("foobar")),
+        ]
+        let emptyEnv = new EvaluatorEnv({});
+
+        assert.deepEqual(evaluator.parseCommands(commands, emptyEnv, stringNode("dummy")),
+                         ["advancement grant @p only test123",
+                          "advancement revoke @p only test123",
+                          "function foobar"]);
+    });
+
+    it('parseCommands error: wrong param type for typed commands', function() {
+        let evaluator = new Evaluator();
+        let commands: Command[];
+        let emptyEnv = new EvaluatorEnv({});
+
+        commands = [new Grant(dummyToken(), numNode("3"))]
+        assert.throws(() => evaluator.parseCommands(commands, emptyEnv, stringNode("dummy")));
+        commands = [new Revoke(dummyToken(), numNode("2"))]
+        assert.throws(() => evaluator.parseCommands(commands, emptyEnv, stringNode("dummy")));
+        commands = [new Execute(dummyToken(), numNode("1"))]
+        assert.throws(() => evaluator.parseCommands(commands, emptyEnv, stringNode("dummy")));
+    });
+
+    it('parseCommands raw commands as string', function() {
+        let evaluator = new Evaluator();
+        let commands = [
+            new RawCommand(stringNode("tell @a foo")),
+            new RawCommand(stringNode("tell @a bar"))
+        ]
+        let emptyEnv = new EvaluatorEnv({});
+
+        assert.deepEqual(evaluator.parseCommands(commands, emptyEnv, stringNode("dummy")),
+                         ["tell @a foo", "tell @a bar"]);
+    });
+    it('parseCommands raw commands as list', function() {
+        let evaluator = new Evaluator();
+        let commands = [
+            new RawCommand(new List(dummyToken(), [stringNode("tell @a foo"), stringNode("tell @a bar")], dummyToken()))
+        ]
+        let emptyEnv = new EvaluatorEnv({});
+
+        assert.deepEqual(evaluator.parseCommands(commands, emptyEnv, stringNode("dummy")),
+                         ["tell @a foo", "tell @a bar"]);
+    });
+
+    it('parseCommands error: wrong param type for raw commands', function() {
+        let evaluator = new Evaluator();
+        let commands: Command[];
+        let emptyEnv = new EvaluatorEnv({});
+
+        commands = [
+            new RawCommand(new List(dummyToken(), [stringNode("tell @a foo"), factorialFunc], dummyToken()))
+        ];
+        assert.throws(() => evaluator.parseCommands(commands, emptyEnv, stringNode("dummy")));
+
+        commands = [
+            new RawCommand(new True(dummyToken()))
+        ];
+        assert.throws(() => evaluator.parseCommands(commands, emptyEnv, stringNode("dummy")));
+    });
+
+    it('visitOn ConsumeItem', function() {
+        let evaluator = new Evaluator();
+        let expr = new On(dummyToken(),
+                          new ConsumeItem(dummyToken(),
+                                          new ItemMatcher(dummyToken(), stringNode("golden_apple")), dummyToken()),
+                         [new RawCommand(stringNode("tell @a someone ate a golden apple"))], dummyToken());
+
+        let advName = evaluator.evaluate(expr);
+        assert.isTrue(STORE.has(advName));
+        assert.equal(STORE.size, 2);
+        assert.equal(advName, ".adv.consumeitem0");
+
+        let advancement = STORE.get(advName)!;
+        assert.equal(advancement.name, advName);
+        assert.isTrue(advancement instanceof Store.AdvancementValue);
+
+        if (advancement instanceof Store.AdvancementValue) {
+            // Grab the generated function name attached to the advancement
+            let fnName = advancement.rewardFunction || "";
+            assert.equal(fnName, ".consumeitem0");
+            assert.isTrue(STORE.has(fnName));
+            let fn = STORE.get(fnName)!;
+            assert.isTrue(fn instanceof Store.FunctionValue);
+
+            if (fn instanceof Store.FunctionValue) {
+                assert.deepEqual(fn.commands, ["tell @a someone ate a golden apple"]);
+                assert.equal(fn.name, fnName);
+                assert.isUndefined(fn.tag);
+            }
+        }
+    });
+
+    it('visitOn InventoryChanged', function() {
+        let evaluator = new Evaluator();
+        let expr = new On(dummyToken(),
+                          new InventoryChanged(dummyToken(),
+                                          new ItemMatcher(dummyToken(), stringNode("golden_apple")), dummyToken()),
+                         [new RawCommand(stringNode("say someone got a golden apple"))], dummyToken());
+
+        let advName = evaluator.evaluate(expr);
+        assert.isTrue(STORE.has(advName));
+        assert.equal(STORE.size, 2);
+        assert.equal(advName, ".adv.inventorychanged0");
+
+        let advancement = STORE.get(advName)!;
+        assert.equal(advancement.name, advName);
+        assert.isTrue(advancement instanceof Store.AdvancementValue);
+
+        if (advancement instanceof Store.AdvancementValue) {
+            // Grab the generated function name attached to the advancement
+            let fnName = advancement.rewardFunction || "";
+            assert.equal(fnName, ".inventorychanged0");
+            assert.isTrue(STORE.has(fnName));
+            let fn = STORE.get(fnName)!;
+            assert.isTrue(fn instanceof Store.FunctionValue);
+
+            if (fn instanceof Store.FunctionValue) {
+                assert.deepEqual(fn.commands, ["say someone got a golden apple"]);
+                assert.equal(fn.name, fnName);
+                assert.isUndefined(fn.tag);
+            }
+        }
+    });
+
+    // FIXME: add one for TagMatcher - I don't really understand the semantics -JL
+
+    it('visitOn load', function() {
+        let evaluator = new Evaluator();
+        let expr = new On(dummyToken(),
+                          new Load(dummyToken()),
+                         [new RawCommand(stringNode("spreadplayers"))], dummyToken());
+        evaluator.evaluate(expr);
+        assert.equal(STORE.size, 1);
+        let fn = STORE.get(STORE.keys().next().value);
+        if (fn instanceof Store.FunctionValue) {
+            assert.equal(fn.name, '.load0');
+            assert.equal(fn.tag, "load");
+            assert.deepEqual(fn.commands, ["spreadplayers"]);
+        }
+    });
+
+    it('visitOn tick', function() {
+        let evaluator = new Evaluator();
+        let expr = new On(dummyToken(),
+                          new Tick(dummyToken()),
+                          // a lovely christmas present -JL
+                         [new RawCommand(stringNode("loot give players @a loot coal_ore"))], dummyToken());
+        evaluator.evaluate(expr);
+        assert.equal(STORE.size, 1);
+        let fn = STORE.get(STORE.keys().next().value);
+
+        assert.isTrue(fn instanceof Store.FunctionValue);
+        if (fn instanceof Store.FunctionValue) {
+            assert.equal(fn.name, '.tick0');
+            assert.equal(fn.tag, "tick");
+            assert.deepEqual(fn.commands, ["loot give players @a loot coal_ore"]);
+        }
+    });
+
+    it('visitOn multiple on blocks', function() {
+        let evaluator = new Evaluator();
+        let expr1 = new On(dummyToken(),
+                            new ConsumeItem(dummyToken(),
+                                            new ItemMatcher(dummyToken(), stringNode("golden_apple")), dummyToken()),
+                            [new Grant(dummyToken(), stringNode("ate_golden_apple"))], dummyToken());
+        let expr2 = new On(dummyToken(),
+                            new Load(dummyToken()),
+                            [new RawCommand(stringNode("say welcome!"))], dummyToken());
+
+        evaluator.evaluate(expr1);
+        evaluator.evaluate(expr2);
+        evaluator.evaluate(expr1); // again, just for good measure
+        let names = [".consumeitem0", ".adv.consumeitem0", ".load1", ".consumeitem2", ".adv.consumeitem2"];
+        assert.equal(STORE.size, names.length);
+        for (let name of names) {
+            assert.isTrue(STORE.has(name), `expected store to contain ${name}, got ${Array.from(STORE.keys())}`);
+        };
+    });
+
+    it('visitFunction random name', function() {
+        let evaluator = new Evaluator();
+        let expr = new MCFunction(dummyToken(), null,
+                                [new Grant(dummyToken(), stringNode("minecraft:arbalistic"))], dummyToken());
+        let fnName = evaluator.evaluate(expr);
+        assert.equal(fnName, ".function0");
+        assert.equal(STORE.size, 1);
+        let fn = STORE.get(fnName);
+        assert(fn instanceof Store.FunctionValue);
+        if (fn instanceof Store.FunctionValue) {
+            assert.equal(fn.name, fnName);
+            assert.deepEqual(fn.commands, ["advancement grant @p only minecraft:arbalistic"]);
+        }
+    });
+
+    it('visitFunction set name', function() {
+        let evaluator = new Evaluator();
+        let expr = new MCFunction(dummyToken(), stringNode("revoky"),
+                                [new Revoke(dummyToken(), stringNode("minecraft:arbalistic"))], dummyToken());
+        let fnName = evaluator.evaluate(expr);
+        assert.equal(fnName, "revoky");
+        assert.equal(STORE.size, 1);
+        let fn = STORE.get(fnName);
+        assert(fn instanceof Store.FunctionValue);
+        if (fn instanceof Store.FunctionValue) {
+            assert.equal(fn.name, fnName);
+            assert.deepEqual(fn.commands, ["advancement revoke @p only minecraft:arbalistic"]);
+        }
+    });
+
+    it('visitFunction error: bad name', function() {
+        let evaluator = new Evaluator();
+        let expr = new MCFunction(dummyToken(), stringNode("SHOULD-BE-LOWERCASE"),
+                                [new Revoke(dummyToken(), stringNode("minecraft:arbalistic"))], dummyToken());
+        assert.throws(() => evaluator.evaluate(expr));
+    });
+
+    it('visitFunction error: bad type of name', function() {
+        let evaluator = new Evaluator();
+        let expr = new MCFunction(dummyToken(), numNode("5"),
+                                [new Revoke(dummyToken(), stringNode("minecraft:arbalistic"))], dummyToken());
+        assert.throws(() => evaluator.evaluate(expr));
+    });
+
+    it('visitFunction error: type error in body', function() {
+        let evaluator = new Evaluator();
+        let expr = new MCFunction(dummyToken(), null,
+                                [new Revoke(dummyToken(), stringNode("minecraft:arbalistic")),
+                                 numNode("11111111111111111111")], dummyToken());
+        assert.throws(() => evaluator.evaluate(expr));
     });
 });

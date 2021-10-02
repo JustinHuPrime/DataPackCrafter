@@ -139,44 +139,50 @@ export abstract class Trigger implements Serializable {
 
 
 export class ConsumeItem extends Trigger {
-  item: ItemSpec;
+  item: ItemSpec | null;
 
-  constructor(item: ItemSpec) {
+  constructor(item: ItemSpec | null) {
     super();
     this.item = item;
   }
 
   public serialize(): any {
-    return {
-      trigger: "minecraft:consume_item",
-      conditions: {
+    let result: {[key: string]: any} = {
+      trigger: "minecraft:consume_item"
+    }
+    if (this.item) {
+      result["conditions"] = {
         item: {
           items: [this.item.getIdentifier()],
         },
-      },
-    };
+      }
+    }
+    return result;
   }
 }
 
 export class InventoryChanged extends Trigger {
-  item: ItemSpec;
+  item: ItemSpec | null;
 
-  constructor(item: ItemSpec) {
+  constructor(item: ItemSpec | null) {
     super();
     this.item = item;
   }
 
   public serialize(): any {
-    return {
-      trigger: "minecraft:inventory_changed",
-      conditions: {
+    let result: {[key: string]: any} = {
+      trigger: "minecraft:inventory_changed"
+    }
+    if (this.item) {
+      result["conditions"] = {
         items: [
           {
             items: [this.item.getIdentifier()],
           },
         ],
-      },
-    };
+      }
+    }
+    return result;
   }
 }
 
