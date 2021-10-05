@@ -16,7 +16,7 @@ export class DSLEvaluationError extends Error {
 }
 
 /**
- * Error thrown when using an unknown (unbound) variable
+ * Error thrown when referencing an unknown variable, advancement, or Minecraft function
  */
 export class DSLReferenceError extends DSLEvaluationError {
     constructor(astNode: Ast | null, message: string) {
