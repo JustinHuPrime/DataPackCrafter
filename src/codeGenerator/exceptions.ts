@@ -60,12 +60,23 @@ export class DSLTypeError extends DSLEvaluationError {
 }
 
 /**
- * Errors to represent array index out of range
+ * Error to represent out-of-range array access
  */
  export class DSLIndexError extends DSLEvaluationError {
     constructor(expr: Expression | null, message: string) {
         super(expr, message);
         this.name = "DSLIndexError"
+        this.expr = expr;
+    }
+}
+
+/**
+ * Minecraft identifier name conflict
+ */
+ export class DSLNameConflictError extends DSLEvaluationError {
+    constructor(expr: Expression | null, message: string) {
+        super(expr, message);
+        this.name = "DSLNameConflictError"
         this.expr = expr;
     }
 }
