@@ -1,6 +1,8 @@
-import { Import, Define, Let, If, For, Print, Binop, Unop, Index, Slice, Call, List, Begin, On, Advancement, True, False, ASTNumber, ASTString, MCFunction, Expression, BinaryOperator, UnaryOperator, Id, Title, Icon, Description, Parent, Trigger, Load, Execute, Grant, Revoke, RawCommand, Tick, ConsumeItem, ItemSpec, TagMatcher, ItemMatcher, InventoryChanged, CombinedTrigger, Command } from "../ast/ast";
+import { Import, Define, Let, If, For, Print, Binop, Unop, Index, Slice, Call, List, Begin, On, Advancement, True, False, ASTNumber, ASTString, MCFunction, Expression, BinaryOperator, UnaryOperator, Id, Title, Icon, Description, Parent, Trigger, Load, Tick, Command } from "../ast/ast";
+import CommandEvaluator from "./commandEvaluator";
 import { ExpressionVisitor } from "../ast/visitor";
-import { DSLEvaluationError, DSLIndexError, DSLMathError, DSLNameConflictError, DSLReferenceError, DSLSyntaxError, DSLTypeError } from "./exceptions"
+import { DSLIndexError, DSLMathError, DSLNameConflictError, DSLReferenceError, DSLSyntaxError, DSLTypeError } from "./exceptions"
+import TriggerEvaluator from "./triggerEvaluator"
 import STORE, * as Store from "./store";
 let deepEqual = require('deep-equal');
 
@@ -407,73 +409,22 @@ export class Evaluator implements ExpressionVisitor {
         return result;  // just return the last result
     }
 
-    // FIXME: lots of switch on type nonsense
-    translateItemSpec(itemSpec: ItemSpec | null, env: EvaluatorEnv, sourceExpression: Expression): Store.ItemSpec | null {
-        if (itemSpec == null) {
-            return null;
-        }
-        if (itemSpec instanceof ItemMatcher) {
-            let str = this.evaluateExpectType(itemSpec.name, env, "string", "advancement trigger item specification");
-            return new Store.ItemMatcher(str);
-        } else if (itemSpec instanceof TagMatcher) {
-            let str = this.evaluateExpectType(itemSpec.name, env, "string", "advancement trigger item specification");
-            return new Store.TagMatcher(str);
-        } else {
-            throw new DSLEvaluationError(sourceExpression, `Unknown ItemSpec class ${itemSpec.constructor.name}`);
-        }
+    parseTrigger(trigger: Trigger, env: EvaluatorEnv) : Store.Trigger[] {
+        let triggerEvaluator = new TriggerEvaluator(this, env);
+        return triggerEvaluator.parse(trigger);
     }
 
-    parseTrigger(trigger: Trigger, env: EvaluatorEnv, sourceExpression: Expression) : Store.Trigger[] {
-        let results: Store.Trigger[] = [];
-        if (trigger instanceof Load || trigger instanceof Tick) {
-            throw new DSLSyntaxError(sourceExpression, "load and tick triggers cannot be combined");
-        } else if (trigger instanceof ConsumeItem) {
-            let itemSpec = this.translateItemSpec(trigger.details, env, sourceExpression);
-            results.push(new Store.ConsumeItem(itemSpec));
-        } else if (trigger instanceof InventoryChanged) {
-            let itemSpec = this.translateItemSpec(trigger.details, env, sourceExpression);
-            results.push(new Store.InventoryChanged(itemSpec));
-        } else if (trigger instanceof CombinedTrigger) {
-            results = results.concat(this.parseTrigger(trigger.lhs, env, sourceExpression));
-            results = results.concat(this.parseTrigger(trigger.rhs, env, sourceExpression));
-        }
-        return results;
-    }
-
-    // FIXME: lots of switch on type nonsense
-    parseCommands(astCommands: Command[], env: EvaluatorEnv, sourceExpression: Expression) : string[] {
+    parseCommands(astCommands: Command[], env: EvaluatorEnv) : string[] {
         let commands: string[] = [];
+        let commandEvaluator = new CommandEvaluator(this, env);;
         for (let astCommand of astCommands) {
-            if (astCommand instanceof Grant) {
-                commands.push(`advancement grant @p only ${this.evaluateExpectType(astCommand.name, env, "string", "grant command parameter")}`);
-            } else if (astCommand instanceof Revoke) {
-                commands.push(`advancement revoke @p only ${this.evaluateExpectType(astCommand.name, env, "string", "revoke command parameter")}`);
-            } else if (astCommand instanceof Execute) {
-                commands.push( `function ${this.evaluateExpectType(astCommand.name, env, "string", "execute command parameter")}`);
-            } else if (astCommand instanceof RawCommand) {
-                let result = astCommand.command.accept(this, env);
-                if (typeof result === "string") {
-                    commands.push(result)
-                } else if (Array.isArray(result)) {
-                    for (let command of result) {
-                        if (typeof command === "string") {
-                            commands.push(command);
-                        } else {
-                            throw new DSLTypeError(sourceExpression, `expected string array in raw command list, got item of type ${typeof command}`);
-                        }
-                    }
-                } else {
-                    throw new DSLTypeError(sourceExpression, `expected string in raw command list, got item of type ${typeof result}`)
-                }
-            } else {
-                throw new DSLEvaluationError(sourceExpression, `on: Unknown command type ${astCommand.constructor.name}`);
-            }
+            commands = commands.concat(commandEvaluator.parse(astCommand));
         }
         return commands;
     }
 
     visitOn(astNode: On, env: EvaluatorEnv) : EvaluatorData {
-        let commands = this.parseCommands(astNode.commands, env, astNode);
+        let commands = this.parseCommands(astNode.commands, env);
 
         // Read the advancement trigger and prepare a Minecraft function
         let fnValue: Store.FunctionValue;
@@ -488,7 +439,7 @@ export class Evaluator implements ExpressionVisitor {
 
             // For things that aren't load or tick, generate an advancement too
             advName = `.adv${fnName}`;
-            let triggers = this.parseTrigger(astNode.trigger, env, astNode);
+            let triggers = this.parseTrigger(astNode.trigger, env);
             let advValue = new Store.AdvancementValue(
                 // everything is undefined, what has the world come to?? -JL
                 advName, undefined, undefined, undefined, undefined, undefined, fnName, triggers
@@ -539,7 +490,7 @@ export class Evaluator implements ExpressionVisitor {
             name = evalName;
         }
         name ||= this.genFunctionName();
-        let commands = this.parseCommands(astNode.commands, env, astNode);
+        let commands = this.parseCommands(astNode.commands, env);
         let fnValue = Store.FunctionValue.regular(name, commands);
         this.updateStore(name, fnValue, astNode);
         return name;

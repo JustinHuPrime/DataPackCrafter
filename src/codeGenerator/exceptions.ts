@@ -1,17 +1,17 @@
-import { Expression } from "../ast/ast";
+import { Ast } from "../ast/ast";
 
 /**
  * Generic class for evaluator errors.
- * @expr    the expression that caused the error
+ * @astNode the AST node that caused the error
  * @message a detailed description of what went wrong
  */
 export class DSLEvaluationError extends Error {
-    expr: Expression | null;
+    astNode: Ast | null;
 
-    constructor(expr: Expression | null, message: string) {
+    constructor(astNode: Ast | null, message: string) {
         super(message);
         this.name = "DSLEvaluationError"
-        this.expr = expr;
+        this.astNode = astNode;
     }
 }
 
@@ -19,10 +19,10 @@ export class DSLEvaluationError extends Error {
  * Error thrown when using an unknown (unbound) variable
  */
 export class DSLReferenceError extends DSLEvaluationError {
-    constructor(expr: Expression | null, message: string) {
-        super(expr, message);
+    constructor(astNode: Ast | null, message: string) {
+        super(astNode, message);
         this.name = "DSLReferenceError"
-        this.expr = expr;
+        this.astNode = astNode;
     }
 }
 
@@ -30,10 +30,10 @@ export class DSLReferenceError extends DSLEvaluationError {
  * Math error (overflow or divide by zero)
  */
 export class DSLMathError extends DSLEvaluationError {
-    constructor(expr: Expression | null, message: string) {
-        super(expr, message);
+    constructor(astNode: Ast | null, message: string) {
+        super(astNode, message);
         this.name = "DSLMathError"
-        this.expr = expr;
+        this.astNode = astNode;
     }
 }
 
@@ -41,10 +41,10 @@ export class DSLMathError extends DSLEvaluationError {
  * Malformed expressions (e.g. let with mismatched argument lists)
  */
 export class DSLSyntaxError extends DSLEvaluationError {
-    constructor(expr: Expression | null, message: string) {
-        super(expr, message);
+    constructor(astNode: Ast | null, message: string) {
+        super(astNode, message);
         this.name = "DSLSyntaxError"
-        this.expr = expr;
+        this.astNode = astNode;
     }
 }
 
@@ -52,10 +52,10 @@ export class DSLSyntaxError extends DSLEvaluationError {
  * Runtime type errors
  */
 export class DSLTypeError extends DSLEvaluationError {
-    constructor(expr: Expression | null, message: string) {
-        super(expr, message);
+    constructor(astNode: Ast | null, message: string) {
+        super(astNode, message);
         this.name = "DSLTypeError"
-        this.expr = expr;
+        this.astNode = astNode;
     }
 }
 
@@ -63,10 +63,10 @@ export class DSLTypeError extends DSLEvaluationError {
  * Error to represent out-of-range array access
  */
  export class DSLIndexError extends DSLEvaluationError {
-    constructor(expr: Expression | null, message: string) {
-        super(expr, message);
+    constructor(astNode: Ast | null, message: string) {
+        super(astNode, message);
         this.name = "DSLIndexError"
-        this.expr = expr;
+        this.astNode = astNode;
     }
 }
 
@@ -74,9 +74,9 @@ export class DSLTypeError extends DSLEvaluationError {
  * Minecraft identifier name conflict
  */
  export class DSLNameConflictError extends DSLEvaluationError {
-    constructor(expr: Expression | null, message: string) {
-        super(expr, message);
+    constructor(astNode: Ast | null, message: string) {
+        super(astNode, message);
         this.name = "DSLNameConflictError"
-        this.expr = expr;
+        this.astNode = astNode;
     }
 }
