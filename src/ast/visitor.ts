@@ -21,6 +21,18 @@ import {
   ASTString,
   MCFunction,
   Id,
+  Execute,
+  Grant,
+  RawCommand,
+  Revoke,
+  CombinedTrigger,
+  ConsumeItem,
+  InventoryChanged,
+  Load,
+  RawTrigger,
+  Tick,
+  ItemMatcher,
+  TagMatcher,
 } from "./ast";
 
 export interface ExpressionVisitor {
@@ -45,4 +57,25 @@ export interface ExpressionVisitor {
   visitId(astNode: Id, env: EvaluatorEnv): any;
   visitNumber(astNode: ASTNumber, env: EvaluatorEnv): any;
   visitString(astNode: ASTString, env: EvaluatorEnv): any;
+}
+
+export interface CommandVisitor {
+  visitGrant(astNode: Grant) : any;
+  visitRevoke(astNode: Revoke) : any;
+  visitExecute(astNode: Execute) : any;
+  visitRawCommand(astNode: RawCommand) : any;
+}
+
+export interface TriggerVisitor {
+  visitLoad(astNode: Load) : any;
+  visitTick(astNode: Tick) : any;
+  visitCombinedTrigger(astNode: CombinedTrigger) : any;
+  visitConsumeItem(astNode: ConsumeItem) : any;
+  visitInventoryChanged(astNode: InventoryChanged) : any;
+  visitRawTrigger(astNode: RawTrigger) : any;
+}
+
+export interface ItemSpecVisitor {
+  visitItemMatcher(astNode: ItemMatcher) : any;
+  visitTagMatcher(astNode: TagMatcher) : any;
 }

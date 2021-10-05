@@ -1,7 +1,7 @@
 import { EvaluatorEnv } from "../codeGenerator/evaluator";
 import Span, { merge } from "./span";
 import Token from "./token";
-import { ExpressionVisitor } from "./visitor";
+import { CommandVisitor, ExpressionVisitor, ItemSpecVisitor, TriggerVisitor } from "./visitor";
 
 export abstract class Ast {
   span: Span;
@@ -359,7 +359,9 @@ export class False extends Expression {
   }
 }
 
-export abstract class Command extends Ast {}
+export abstract class Command extends Ast {
+  abstract accept(visitor: CommandVisitor): any;
+}
 
 export class Grant extends Command {
   name: Expression;
@@ -367,6 +369,10 @@ export class Grant extends Command {
   constructor(keyword: Token, name: Expression) {
     super(merge(keyword.span, name.span));
     this.name = name;
+  }
+
+  accept(visitor: CommandVisitor) {
+    return visitor.visitGrant(this);
   }
 }
 
@@ -377,6 +383,10 @@ export class Revoke extends Command {
     super(merge(keyword.span, name.span));
     this.name = name;
   }
+
+  accept(visitor: CommandVisitor) {
+    return visitor.visitRevoke(this);
+  }
 }
 
 export class Execute extends Command {
@@ -385,6 +395,10 @@ export class Execute extends Command {
   constructor(keyword: Token, name: Expression) {
     super(merge(keyword.span, name.span));
     this.name = name;
+  }
+
+  accept(visitor: CommandVisitor) {
+    return visitor.visitExecute(this);
   }
 }
 
@@ -395,19 +409,33 @@ export class RawCommand extends Command {
     super(command.span);
     this.command = command;
   }
+
+  accept(visitor: CommandVisitor) {
+    return visitor.visitRawCommand(this);
+  }
 }
 
-export abstract class Trigger extends Ast {}
+export abstract class Trigger extends Ast {
+  abstract accept(visitor: TriggerVisitor): any;
+}
 
 export class Load extends Trigger {
   constructor(token: Token) {
     super(token.span);
+  }
+
+  accept(visitor: TriggerVisitor) {
+    return visitor.visitLoad(this);
   }
 }
 
 export class Tick extends Trigger {
   constructor(token: Token) {
     super(token.span);
+  }
+
+  accept(visitor: TriggerVisitor) {
+    return visitor.visitTick(this);
   }
 }
 
@@ -420,6 +448,10 @@ export class CombinedTrigger extends Trigger {
     this.lhs = lhs;
     this.rhs = rhs;
   }
+
+  accept(visitor: TriggerVisitor) {
+    return visitor.visitCombinedTrigger(this);
+  }
 }
 
 export class ConsumeItem extends Trigger {
@@ -428,6 +460,10 @@ export class ConsumeItem extends Trigger {
   constructor(keyword: Token, details: ItemSpec | null, closeBrace: Token) {
     super(merge(keyword.span, closeBrace.span));
     this.details = details;
+  }
+
+  accept(visitor: TriggerVisitor) {
+    return visitor.visitConsumeItem(this);
   }
 }
 
@@ -438,6 +474,10 @@ export class InventoryChanged extends Trigger {
     super(merge(keyword.span, closeBrace.span));
     this.details = details;
   }
+
+  accept(visitor: TriggerVisitor) {
+    return visitor.visitInventoryChanged(this);
+  }
 }
 
 export class RawTrigger extends Trigger {
@@ -447,9 +487,15 @@ export class RawTrigger extends Trigger {
     super(name.span);
     this.name = name;
   }
+
+  accept(visitor: TriggerVisitor) {
+    return visitor.visitRawTrigger(this);
+  }
 }
 
-export abstract class ItemSpec extends Ast {}
+export abstract class ItemSpec extends Ast {
+  abstract accept(visitor: ItemSpecVisitor): any;
+}
 
 export class ItemMatcher extends ItemSpec {
   name: Expression;
@@ -457,6 +503,9 @@ export class ItemMatcher extends ItemSpec {
   constructor(keyword: Token, name: Expression) {
     super(merge(keyword.span, name.span));
     this.name = name;
+  }
+  accept(visitor: ItemSpecVisitor) {
+    return visitor.visitItemMatcher(this);
   }
 }
 
@@ -466,6 +515,9 @@ export class TagMatcher extends ItemSpec {
   constructor(keyword: Token, name: Expression) {
     super(merge(keyword.span, name.span));
     this.name = name;
+  }
+  accept(visitor: ItemSpecVisitor) {
+    return visitor.visitTagMatcher(this);
   }
 }
 
