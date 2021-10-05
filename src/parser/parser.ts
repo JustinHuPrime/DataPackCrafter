@@ -22,7 +22,6 @@ import {
   Icon,
   Id,
   If,
-  Import,
   Index,
   InventoryChanged,
   ItemMatcher,
@@ -85,15 +84,6 @@ export default class Parser {
     this.expect(token, TokenType.ID);
 
     return new Id(token);
-  }
-
-  private parseImport(): Import {
-    const keyword = this.lexer.lexRegular();
-    this.expect(keyword, TokenType.LITERAL, "import");
-
-    const target = this.parseExpression();
-
-    return new Import(keyword, target);
   }
 
   private parseTrue(): True {
@@ -847,9 +837,6 @@ export default class Parser {
     switch (next.type) {
       case TokenType.LITERAL: {
         switch (next.content) {
-          case "import": {
-            return this.parseImport();
-          }
           case "define": {
             return this.parseDefine();
           }

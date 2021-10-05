@@ -2,7 +2,6 @@ import Span from "./span";
 
 export const KEYWORDS = new Set([
   "datapack",
-  "import",
   "define",
   "let",
   "if",
