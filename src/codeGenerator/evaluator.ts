@@ -1,4 +1,4 @@
-import { Define, Let, If, For, Print, Binop, Unop, Index, Slice, Call, List, Begin, On, Advancement, True, False, ASTNumber, ASTString, MCFunction, Expression, BinaryOperator, UnaryOperator, Id, Title, Icon, Description, Parent, Trigger, Load, Tick, Command } from "../ast/ast";
+import { Define, Let, If, For, Print, Binop, Unop, Index, Slice, Call, List, Begin, On, Advancement, True, False, ASTNumber, ASTString, MCFunction, Expression, BinaryOperator, UnaryOperator, Id, Title, Icon, Description, Parent, Trigger, Load, Command } from "../ast/ast";
 import CommandEvaluator from "./commandEvaluator";
 import { ExpressionVisitor } from "../ast/visitor";
 import { DSLIndexError, DSLMathError, DSLNameConflictError, DSLReferenceError, DSLSyntaxError, DSLTypeError } from "./exceptions"
@@ -429,21 +429,23 @@ export class Evaluator implements ExpressionVisitor {
         let advName = ""; // FIXME: no advancement name to return for load and tick
         if (astNode.trigger instanceof Load) {
             fnValue = Store.FunctionValue.onLoad(fnName, commands);
-        } else if (astNode.trigger instanceof Tick) {
-            fnValue = Store.FunctionValue.onTick(fnName, commands);
         } else {
             fnValue = Store.FunctionValue.regular(fnName, commands);
 
-            // For things that aren't load or tick, generate an advancement too
-            advName = `.adv${fnName}`;
-            let triggers = this.parseTrigger(astNode.trigger, env);
-            let advValue = new Store.AdvancementValue(
-                // everything is undefined, what has the world come to?? -JL
-                advName, undefined, undefined, undefined, undefined, undefined, fnName, triggers
-            )
-            this.updateStore(advName, advValue, astNode);
+            // For things that aren't load, generate an advancement too
+            advName = this.storeAdvancementFromTrigger(advName, fnName, astNode, env);
         }
         this.updateStore(fnName, fnValue, astNode);
+        return advName;
+    }
+
+    private storeAdvancementFromTrigger(advName: string, fnName: string, astNode: On, env: EvaluatorEnv) {
+        advName = `.adv${fnName}`;
+        const triggers = this.parseTrigger(astNode.trigger, env);
+        const advValue = new Store.AdvancementValue(
+          advName, undefined, undefined, undefined, undefined, undefined, fnName, triggers,
+        );
+        this.updateStore(advName, advValue, astNode);
         return advName;
     }
 

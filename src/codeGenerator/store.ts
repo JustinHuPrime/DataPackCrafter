@@ -1,4 +1,11 @@
-import { AdvancementValueWriter, FunctionValueWriter, Serializable, Writeable, Writer } from "./writer";
+import {
+  AdvancementValueWriter,
+  FunctionValueWriter,
+  LoadFunctionTagValueWriter,
+  Serializable,
+  Writeable,
+  Writer,
+} from "./writer";
 
 const STORE: Map<string, FunctionValue | AdvancementValue> = new Map();
 export default STORE;
@@ -7,6 +14,8 @@ export class FunctionValue implements Serializable, Writeable {
   name: string;
   commands: string[];
   tag: string | undefined;
+
+  static LOAD = "load";
 
   constructor(name: string, commands: string[], tag: string | undefined) {
     this.name = name;
@@ -18,20 +27,20 @@ export class FunctionValue implements Serializable, Writeable {
     return new FunctionValue(name, commands, undefined);
   }
 
-  static onTick(name: string, commands: string[]) {
-    return new FunctionValue(name, commands, "tick");
+  static onLoad(name: string, commands: string[]) {
+    return new FunctionValue(name, commands, FunctionValue.LOAD);
   }
 
-  static onLoad(name: string, commands: string[]) {
-    return new FunctionValue(name, commands, "load");
+  public isLoadFunction(): boolean {
+    return this.tag === FunctionValue.LOAD;
   }
 
   public serialize(): any {
     return this.commands.join("\n");
   }
 
-  public getWriter(path: string): Writer {
-    return new FunctionValueWriter(path, this);
+  public getWriter(namespace: string): Writer {
+    return new FunctionValueWriter(namespace, this);
   }
 }
 
@@ -128,8 +137,28 @@ export class AdvancementValue implements Serializable, Writeable {
     };
   }
 
-  public getWriter(path: string): Writer {
-    return new AdvancementValueWriter(path, this);
+  public getWriter(namespace: string): Writer {
+    return new AdvancementValueWriter(namespace, this);
+  }
+}
+
+export class LoadFunctionTagValue implements Serializable, Writeable {
+  namespace: string;
+  functionValues: FunctionValue[];
+
+  constructor(namespace: string, functionValues: FunctionValue[]) {
+    this.namespace = namespace;
+    this.functionValues = functionValues;
+  }
+
+  public serialize(): any {
+    return {
+      values: this.functionValues.map((functionValue: FunctionValue) => `${this.namespace}:${functionValue.name}`),
+    };
+  }
+
+  public getWriter(): Writer {
+    return new LoadFunctionTagValueWriter(this);
   }
 }
 
@@ -137,6 +166,13 @@ export abstract class Trigger implements Serializable {
   public abstract serialize(): any;
 }
 
+export class Tick extends Trigger {
+  public serialize(): any {
+    return {
+      trigger: "minecraft:tick",
+    };
+  }
+}
 
 export class ConsumeItem extends Trigger {
   item: ItemSpec | null;
@@ -147,15 +183,15 @@ export class ConsumeItem extends Trigger {
   }
 
   public serialize(): any {
-    let result: {[key: string]: any} = {
-      trigger: "minecraft:consume_item"
-    }
+    let result: { [key: string]: any } = {
+      trigger: "minecraft:consume_item",
+    };
     if (this.item) {
       result["conditions"] = {
         item: {
           items: [this.item.getIdentifier()],
         },
-      }
+      };
     }
     return result;
   }
@@ -170,9 +206,9 @@ export class InventoryChanged extends Trigger {
   }
 
   public serialize(): any {
-    let result: {[key: string]: any} = {
-      trigger: "minecraft:inventory_changed"
-    }
+    let result: { [key: string]: any } = {
+      trigger: "minecraft:inventory_changed",
+    };
     if (this.item) {
       result["conditions"] = {
         items: [
@@ -180,7 +216,7 @@ export class InventoryChanged extends Trigger {
             items: [this.item.getIdentifier()],
           },
         ],
-      }
+      };
     }
     return result;
   }
