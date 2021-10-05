@@ -6,10 +6,6 @@ An expression evaluates to a value, and may, as a side effect, modify the global
 
 At the end of evaluation, the contents of the global store are produced as a Minecraft datapack in the namespace declared above.
 
-## Import Expressions
-
-An import expression expects a string, and when evaluated, produces that string. As a side effect, the contents of the datapack zip or folder at the path specified by the string are added to the global store. The specified datapack may have any namespace.
-
 ## Define Expressions
 
 A define expression defines a (possibly anonymous) DSL-level function, taking a finite number of arguments. The body of the function is evaluated using standard lexical scoping and closure rules. Additionally, when a function is defined, it's enclosing scope is mutated to include a reference to the function (to allow mutual recursion). This produces the function defined by the expression.
@@ -103,3 +99,5 @@ Commands expressions translate to Minecraft commands, which allows for the follo
 - An `execute` command expects a string naming a function, and is translated into a command to run that (Minecraft) function.
 
 - The literal command expects a string or list of strings, and is inserted verbatim. No type checks happen.
+
+For the `grant`, `revoke`, and `execute` commands, the function or advancement name must be previously defined in the DSL datapack, unless the name contains a `:`. Names containing a `:` are assumed to refer to another [Minecraft namespace](https://minecraft.fandom.com/wiki/Resource_location#Namespaces), e.g. a 3rd party data pack, and are not validated further.

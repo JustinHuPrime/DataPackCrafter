@@ -1,6 +1,5 @@
 import { EvaluatorEnv } from "../codeGenerator/evaluator";
 import {
-  Import,
   Define,
   Let,
   If,
@@ -36,7 +35,6 @@ import {
 } from "./ast";
 
 export interface ExpressionVisitor {
-  visitImport(astNode: Import, env: EvaluatorEnv): any;
   visitDefine(astNode: Define, env: EvaluatorEnv): any;
   visitLet(astNode: Let, env: EvaluatorEnv): any;
   visitIf(astNode: If, env: EvaluatorEnv): any;

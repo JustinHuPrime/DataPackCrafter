@@ -1,4 +1,4 @@
-import { Import, Define, Let, If, For, Print, Binop, Unop, Index, Slice, Call, List, Begin, On, Advancement, True, False, ASTNumber, ASTString, MCFunction, Expression, BinaryOperator, UnaryOperator, Id, Title, Icon, Description, Parent, Trigger, Load, Tick, Command } from "../ast/ast";
+import { Define, Let, If, For, Print, Binop, Unop, Index, Slice, Call, List, Begin, On, Advancement, True, False, ASTNumber, ASTString, MCFunction, Expression, BinaryOperator, UnaryOperator, Id, Title, Icon, Description, Parent, Trigger, Load, Tick, Command } from "../ast/ast";
 import CommandEvaluator from "./commandEvaluator";
 import { ExpressionVisitor } from "../ast/visitor";
 import { DSLIndexError, DSLMathError, DSLNameConflictError, DSLReferenceError, DSLSyntaxError, DSLTypeError } from "./exceptions"
@@ -7,7 +7,7 @@ import STORE, * as Store from "./store";
 let deepEqual = require('deep-equal');
 
 // Used to validate user defined advancement / function names
-export let VALID_MC_ID_REGEX = /^[0-9a-z_-]+[0-9a-z_.-]*/;
+export let VALID_MC_ID_REGEX = /^[0-9a-z_-]+[0-9a-z_.-]*$/;
 
 /**
  * Represents internal data types known to the evaluator.
@@ -141,9 +141,6 @@ export class Evaluator implements ExpressionVisitor {
         return STORE.set(name, value);
     }
 
-    visitImport(_astNode: Import, _env: EvaluatorEnv) : EvaluatorData {
-        throw new Error("Method not implemented.");
-    }
     visitDefine(astNode: Define, env: EvaluatorEnv) : EvaluatorData {
         let fnArgNames = new Set();
         for (let fnArgName of astNode.args) {

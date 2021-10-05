@@ -39,19 +39,6 @@ export abstract class Expression extends Ast {
   abstract accept(visitor: ExpressionVisitor, env: EvaluatorEnv): any;
 }
 
-export class Import extends Expression {
-  target: Expression;
-
-  constructor(keyword: Token, target: Expression) {
-    super(merge(keyword.span, target.span));
-    this.target = target;
-  }
-
-  accept(visitor: ExpressionVisitor, env: EvaluatorEnv) {
-    return visitor.visitImport(this, env);
-  }
-}
-
 export class Define extends Expression {
   id: Id | null;
   args: Id[];

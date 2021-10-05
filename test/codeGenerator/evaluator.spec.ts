@@ -3,7 +3,7 @@ import { Advancement, ASTNumber, ASTString, Begin, BinaryOperator, Binop, Call, 
 import Span, { Location } from "../../src/ast/span";
 import Token, { TokenType } from "../../src/ast/token";
 import { Evaluator, EvaluatorEnv } from "../../src/codeGenerator/evaluator";
-import { DSLNameConflictError } from "../../src/codeGenerator/exceptions";
+import { DSLNameConflictError, DSLReferenceError, DSLSyntaxError, DSLTypeError } from "../../src/codeGenerator/exceptions";
 import STORE, * as Store from "../../src/codeGenerator/store";
 
 function dummyToken(content?: string) : Token {
@@ -775,7 +775,7 @@ describe("evaluator - store integration", () => {
 
     it('visitAdvancement all fields provided', function() {
         let evaluator = new Evaluator();
-        let name = "netheriteBlock"
+        let name = "netherite_block"
         let title = "Hardcore Miner";
         let desc = "Obtain a Block of Netherite";
         let parent = "diamondPick";
@@ -877,19 +877,19 @@ describe("evaluator - store integration", () => {
         assert.throws(() => evaluator.parseTrigger(trigger, emptyEnv));
     });
 
-    it('parseCommands typed commands', function() {
+    it('parseCommands Grant/Revoke/Execute external', function() {
         let evaluator = new Evaluator();
         let commands = [
-            new Grant(dummyToken(), stringNode("test123")),
-            new Revoke(dummyToken(), stringNode("test123")),
-            new Execute(dummyToken(), stringNode("foobar")),
+            new Grant(dummyToken(), stringNode("minecraft:nether/brew_potion")),
+            new Revoke(dummyToken(), stringNode("minecraft:adventure/trade")),
+            new Execute(dummyToken(), stringNode("dummypack:foobar")),
         ]
         let emptyEnv = new EvaluatorEnv({});
 
         assert.deepEqual(evaluator.parseCommands(commands, emptyEnv),
-                         ["advancement grant @p only test123",
-                          "advancement revoke @p only test123",
-                          "function foobar"]);
+                         ["advancement grant @p only minecraft:nether/brew_potion",
+                          "advancement revoke @p only minecraft:adventure/trade",
+                          "function dummypack:foobar"]);
     });
 
     it('parseCommands error: wrong param type for typed commands', function() {
@@ -940,6 +940,30 @@ describe("evaluator - store integration", () => {
         commands = [
             new RawCommand(new True(dummyToken()))
         ];
+        assert.throws(() => evaluator.parseCommands(commands, emptyEnv));
+    });
+
+    it('parseCommands error: Grant/Revoke non-existent advancement', function() {
+        let evaluator = new Evaluator();
+        let emptyEnv = new EvaluatorEnv({});
+        let commands: Command[];
+
+        commands = [
+            new Grant(dummyToken(), stringNode("non-existent")),
+        ]
+        assert.throws(() => evaluator.parseCommands(commands, emptyEnv));
+        commands = [
+            new Revoke(dummyToken(), stringNode("non-existent")),
+        ]
+        assert.throws(() => evaluator.parseCommands(commands, emptyEnv));
+    });
+
+    it('parseCommands error: Execute non-existent function', function() {
+        let evaluator = new Evaluator();
+        let emptyEnv = new EvaluatorEnv({});
+        let commands = [
+            new Execute(dummyToken(), stringNode("helloworld")),
+        ]
         assert.throws(() => evaluator.parseCommands(commands, emptyEnv));
     });
 
@@ -1025,7 +1049,7 @@ describe("evaluator - store integration", () => {
         let expr1 = new On(dummyToken(),
                             new ConsumeItem(dummyToken(),
                                             new ItemMatcher(dummyToken(), stringNode("golden_apple")), dummyToken()),
-                            [new Grant(dummyToken(), stringNode("ate_golden_apple"))], dummyToken());
+                            [new Grant(dummyToken(), stringNode("dummytest:ate_golden_apple"))], dummyToken());
         let expr2 = new On(dummyToken(),
                             new Load(dummyToken()),
                             [new RawCommand(stringNode("say welcome!"))], dummyToken());
@@ -1066,22 +1090,96 @@ describe("evaluator - store integration", () => {
 
     it('visitFunction error: bad name', function() {
         let evaluator = new Evaluator();
-        let expr = new MCFunction(dummyToken(), stringNode("SHOULD-BE-LOWERCASE"),
+        let expr: Expression;
+        expr = new MCFunction(dummyToken(), stringNode("SHOULD-BE-LOWERCASE"),
                                 [new Revoke(dummyToken(), stringNode("minecraft:arbalistic"))], dummyToken());
-        assert.throws(() => evaluator.evaluate(expr));
+        assert.throws(() => evaluator.evaluate(expr), DSLSyntaxError);
+
+        expr = new MCFunction(dummyToken(), stringNode("camelCase"),
+                                [new Revoke(dummyToken(), stringNode("minecraft:arbalistic"))], dummyToken());
+        assert.throws(() => evaluator.evaluate(expr), DSLSyntaxError);
+
+        expr = new MCFunction(dummyToken(), stringNode(".dotsarereserved"),
+                                [new Revoke(dummyToken(), stringNode("minecraft:arbalistic"))], dummyToken());
+        assert.throws(() => evaluator.evaluate(expr), DSLSyntaxError);
+
+        expr = new MCFunction(dummyToken(), stringNode("bad/chars"),
+                                [new Revoke(dummyToken(), stringNode("minecraft:arbalistic"))], dummyToken());
+        assert.throws(() => evaluator.evaluate(expr), DSLSyntaxError);
+
+        expr = new MCFunction(dummyToken(), stringNode("123foo:bar"),
+                                [new Revoke(dummyToken(), stringNode("minecraft:arbalistic"))], dummyToken());
+        assert.throws(() => evaluator.evaluate(expr), DSLSyntaxError);
     });
 
     it('visitFunction error: bad type of name', function() {
         let evaluator = new Evaluator();
         let expr = new MCFunction(dummyToken(), numNode("5"),
                                 [new Revoke(dummyToken(), stringNode("minecraft:arbalistic"))], dummyToken());
-        assert.throws(() => evaluator.evaluate(expr));
+        assert.throws(() => evaluator.evaluate(expr), DSLTypeError);
     });
 
     it('visitFunction error: type error in body', function() {
         let evaluator = new Evaluator();
         let expr = new MCFunction(dummyToken(), null,
                                 [new Revoke(dummyToken(), numNode("111111111"))], dummyToken());
-        assert.throws(() => evaluator.evaluate(expr));
+        assert.throws(() => evaluator.evaluate(expr), DSLTypeError);
+    });
+
+    it('visitFunction Grant/Revoke internal advancement', function() {
+        let evaluator = new Evaluator();
+        let commands = [
+            new Grant(dummyToken(), stringNode("my_adv")),
+            new Revoke(dummyToken(), stringNode("my_adv")),
+        ]
+        let adv = new Advancement(dummyToken(), stringNode("my_adv"), [], dummyToken());
+        let fn = new MCFunction(dummyToken(), stringNode("my_fn"), commands, dummyToken());
+        let expr = new Begin(dummyToken(), [adv, fn], dummyToken())
+        assert.equal(evaluator.evaluate(expr), "my_fn");
+    });
+
+    it('visitFunction error: Revoke non-existent advancement', function() {
+        let evaluator = new Evaluator();
+        let commands = [
+            new Revoke(dummyToken(), stringNode("bar")),
+        ]
+        let adv = new Advancement(dummyToken(), stringNode("my_adv"), [], dummyToken());
+        let fn = new MCFunction(dummyToken(), stringNode("my_fn"), commands, dummyToken());
+        let expr = new Begin(dummyToken(), [adv, fn], dummyToken())
+        assert.throws(() => evaluator.evaluate(expr), DSLReferenceError);
+    });
+
+    it('visitOn error: Grant non-existent advancement', function() {
+        let evaluator = new Evaluator();
+        let commands = [
+            new Grant(dummyToken(), stringNode("foo")),
+        ]
+        let adv = new Advancement(dummyToken(), stringNode("my_adv"), [], dummyToken());
+        let onExpr = new On(dummyToken(), new Tick(dummyToken()), commands, dummyToken())
+        let expr = new Begin(dummyToken(), [adv, onExpr], dummyToken())
+        assert.throws(() => evaluator.evaluate(expr), DSLReferenceError);
+    });
+
+    it('visitFunction Execute internal function', function() {
+        let evaluator = new Evaluator();
+        let fn1 = new MCFunction(dummyToken(), stringNode("helloworld"), [
+            new RawCommand(stringNode("say hello world"))
+        ], dummyToken());
+        let fn2 = new MCFunction(dummyToken(), stringNode("hellogoodbye"), [
+            new Execute(dummyToken(), stringNode("helloworld")),
+            new RawCommand(stringNode("say goodbye"))
+        ], dummyToken());
+
+        let expr = new Begin(dummyToken(), [fn1, fn2], dummyToken())
+        assert.equal(evaluator.evaluate(expr), "hellogoodbye");
+    });
+
+    it('visitFunction error: Execute non-existent function', function() {
+        let evaluator = new Evaluator();
+        let commands = [
+            new Execute(dummyToken(), stringNode("blahblah")),
+        ]
+        let fn = new MCFunction(dummyToken(), null, commands, dummyToken());
+        assert.throws(() => evaluator.evaluate(fn), DSLReferenceError);
     });
 });
