@@ -7,7 +7,7 @@ import STORE, * as Store from "./store";
 let deepEqual = require('deep-equal');
 
 // Used to validate user defined advancement / function names
-export let VALID_MC_ID_REGEX = /^[0-9a-z_-]+[0-9a-z_.-]*/;
+export let VALID_MC_ID_REGEX = /^[0-9a-z_-]+[0-9a-z_.-]*$/;
 
 /**
  * Represents internal data types known to the evaluator.
