@@ -11,7 +11,6 @@ import {
   For,
   Id,
   If,
-  Import,
   Index,
   Let,
   Print,
@@ -1641,34 +1640,6 @@ describe("parse", () => {
 
     it("should throw error for invalid if expression", () => {
       setup('print if (');
-      expectParserError();
-    })
-  })
-
-  describe("parseImport", () => {
-    it("should parse import expressions correctly", () => {
-      setup("import birb");
-
-      const file = parser.parse();
-
-      assert.isTrue(file.expressions[0] instanceof Import);
-      const astImport = file.expressions[0] as Import;
-
-      assert.isTrue(astImport.target instanceof Id);
-      const id = astImport.target as Id;
-
-      assert.deepEqual(id.id, "birb");
-    });
-
-    it("should throw error with incomplete import expression", () => {
-      setup("import {");
-
-      expectParserError();
-    })
-
-    it("should throw error with EOF import expression", () => {
-      setup("import ");
-
       expectParserError();
     })
   });
