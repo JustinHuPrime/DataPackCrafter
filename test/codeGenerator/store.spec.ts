@@ -4,8 +4,8 @@ import {
   AdvancementValue,
   ConsumeItem, FunctionValue,
   InventoryChanged,
-  ItemMatcher, Raw,
-  TagMatcher,
+  ItemMatcher, LoadFunctionTagValue, Raw,
+  TagMatcher, Tick,
   Trigger,
 } from "../../src/codeGenerator/store";
 
@@ -165,6 +165,31 @@ describe("store", () => {
       });
     });
 
+    describe("LoadFunctionTagValue", () => {
+      it("should serialize all functionValues passed", () => {
+        const functionValue1: FunctionValue = FunctionValue.regular("f1", ["this", "is", "sparta"]);
+        const functionValue2: FunctionValue = FunctionValue.regular("f2", ["this", "is", "sparta"]);
+        const functionValue3: FunctionValue = FunctionValue.regular("f3", ["this", "is", "sparta"]);
+        const loadFunctionTagValue: LoadFunctionTagValue = new LoadFunctionTagValue("test", [functionValue1, functionValue2, functionValue3]);
+
+        const serialized: any = loadFunctionTagValue.serialize();
+
+        assert.deepEqual(serialized, {
+          values: ["test:f1", "test:f2", "test:f3"],
+        });
+      });
+
+      it("should serialize empty functionValues passed", () => {
+        const loadFunctionTagValue: LoadFunctionTagValue = new LoadFunctionTagValue("test", []);
+
+        const serialized: any = loadFunctionTagValue.serialize();
+
+        assert.deepEqual(serialized, {
+          values: [],
+        });
+      });
+    });
+
     describe("Trigger", () => {
       it("should serialize InventoryChanged trigger", () => {
         const inventoryChanged: InventoryChanged = new InventoryChanged(new TagMatcher("tag"));
@@ -193,6 +218,16 @@ describe("store", () => {
               items: ["minecraft:cooked_chicken"],
             },
           },
+        });
+      });
+
+      it("should serialize Tick Trigger", () => {
+        const tick: Tick = new Tick();
+
+        const serialized: any = tick.serialize();
+
+        assert.deepEqual(serialized, {
+          trigger: "minecraft:tick",
         });
       });
 

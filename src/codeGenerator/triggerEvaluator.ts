@@ -1,4 +1,4 @@
-import { Load, Tick, CombinedTrigger, ConsumeItem, InventoryChanged, RawTrigger, Trigger } from "../ast/ast";
+import { Load, CombinedTrigger, ConsumeItem, InventoryChanged, RawTrigger, Trigger } from "../ast/ast";
 import { TriggerVisitor } from "../ast/visitor";
 import { Evaluator, EvaluatorEnv } from "./evaluator";
 import { DSLSyntaxError } from "./exceptions";
@@ -20,11 +20,10 @@ export default class TriggerEvaluator implements TriggerVisitor {
         return trigger.accept(this);
     }
     visitLoad(astNode: Load) {
-        throw new DSLSyntaxError(astNode, "load and tick triggers cannot be combined");
+        throw new DSLSyntaxError(astNode, "load trigger cannot be combined");
     }
-    visitTick(astNode: Tick) {
-        // FIXME: revisit this if we choose to implement tick triggers with an advancement
-        throw new DSLSyntaxError(astNode, "load and tick triggers cannot be combined");
+    visitTick() {
+        return [new Store.Tick()];
     }
     visitCombinedTrigger(astNode: CombinedTrigger): Store.Trigger[] {
         let results: Store.Trigger[] = [];

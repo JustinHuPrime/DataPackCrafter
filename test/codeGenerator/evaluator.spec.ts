@@ -866,7 +866,8 @@ describe("evaluator - store integration", () => {
         let trigger = new CombinedTrigger(trigger1, trigger2);
         let emptyEnv = new EvaluatorEnv({});
 
-        assert.throws(() => evaluator.parseTrigger(trigger, emptyEnv));
+        assert.deepEqual(evaluator.parseTrigger(trigger, emptyEnv), [new Store.Tick(),
+            new Store.ConsumeItem(new Store.TagMatcher("BEST"))]);
     });
 
     it('parseTrigger error: bad type of trigger value', function() {
@@ -1036,11 +1037,20 @@ describe("evaluator - store integration", () => {
                           new Tick(dummyToken()),
                           // a lovely christmas present -JL
                          [new RawCommand(stringNode("loot give players @a loot coal_ore"))], dummyToken());
-        evaluator.evaluate(expr);
-        assert.equal(STORE.size, 1);
-        let fn = STORE.get(STORE.keys().next().value) as Store.FunctionValue;
+        const advName = evaluator.evaluate(expr);
+        assert.isTrue(STORE.has(advName));
+        assert.equal(STORE.size, 2);
+        assert.equal(advName, ".adv.tick0");
+
+        const advancement = STORE.get(advName) as Store.AdvancementValue;
+        assert.equal(advancement.name, advName);
+
+        // Grab the generated function name attached to the advancement
+        const fnName = advancement.rewardFunction || "";
+        assert.isTrue(STORE.has(fnName));
+        const fn = STORE.get(fnName) as Store.FunctionValue;
         assert.equal(fn.name, '.tick0');
-        assert.equal(fn.tag, "tick");
+        assert.isUndefined(fn.tag);
         assert.deepEqual(fn.commands, ["loot give players @a loot coal_ore"]);
     });
 
