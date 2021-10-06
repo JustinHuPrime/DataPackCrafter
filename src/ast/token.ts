@@ -27,7 +27,7 @@ export const KEYWORDS = new Set([
   "icon",
   "description",
   "parent",
-  "execute"
+  "execute",
 ]);
 
 export enum TokenType {

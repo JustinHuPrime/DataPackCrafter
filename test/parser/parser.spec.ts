@@ -30,7 +30,15 @@ import {
   ConsumeItem,
   ItemMatcher,
   TagMatcher,
-  InventoryChanged, RawCommand, CombinedTrigger, Advancement, Title, Icon, Description, Parent, MCFunction,
+  InventoryChanged,
+  RawCommand,
+  CombinedTrigger,
+  Advancement,
+  Title,
+  Icon,
+  Description,
+  Parent,
+  MCFunction,
 } from "../../src/ast/ast";
 import { assert } from "chai";
 
@@ -52,7 +60,7 @@ describe("parse", () => {
 
   const expectParserError = () => {
     assert.throws(() => parser.parse(), ParserError);
-  }
+  };
 
   describe("parsePrint", () => {
     it("should throw error if expression not found after print", () => {
@@ -164,7 +172,7 @@ describe("parse", () => {
     });
 
     it("should parse let with multiple values correctly", () => {
-      setup('let a = true, b = false, c = 5 print a');
+      setup("let a = true, b = false, c = 5 print a");
       const file = parser.parse();
 
       assert.isTrue(file.expressions[0] instanceof Let);
@@ -189,41 +197,41 @@ describe("parse", () => {
     });
 
     it("should throw parse error with ending comma", () => {
-      setup('let a = true, b = false, c = 5, print a');
+      setup("let a = true, b = false, c = 5, print a");
       expectParserError();
     });
 
-    it('should throw parse error with no RHS in =', () => {
-      setup('let a=');
+    it("should throw parse error with no RHS in =", () => {
+      setup("let a=");
       expectParserError();
     });
 
-    it('should throw error with empty let', () => {
-      setup('let');
+    it("should throw error with empty let", () => {
+      setup("let");
       expectParserError();
     });
 
-    it('should throw error with no id', () => {
-      setup('let = myna');
+    it("should throw error with no id", () => {
+      setup("let = myna");
       expectParserError();
-    })
+    });
 
-    it('should throw error with no body', () => {
-      setup('let a = myna');
+    it("should throw error with no body", () => {
+      setup("let a = myna");
       expectParserError();
-    })
+    });
   });
 
-  describe('parsePrimaryExpression', () => {
-    it('should throw error on stray punctuation', () => {
-      setup('||');
+  describe("parsePrimaryExpression", () => {
+    it("should throw error on stray punctuation", () => {
+      setup("||");
       expectParserError();
-    })
+    });
   });
 
   describe("parseAdditiveExpression", () => {
     it("should parse binary add expression", () => {
-      setup('1 + 15');
+      setup("1 + 15");
       const file = parser.parse();
 
       assert.isTrue(file.expressions[0] instanceof Binop);
@@ -242,7 +250,7 @@ describe("parse", () => {
     });
 
     it("should parse binary sub expression", () => {
-      setup('3.5 - -2');
+      setup("3.5 - -2");
       const file = parser.parse();
 
       assert.isTrue(file.expressions[0] instanceof Binop);
@@ -261,15 +269,14 @@ describe("parse", () => {
     });
 
     it("should parse 3-length expression", () => {
-      setup('5 + 4 - 3');
+      setup("5 + 4 - 3");
 
       const file = parser.parse();
-
 
       assert.isTrue(file.expressions[0] instanceof Binop);
 
       const binOp0 = file.expressions[0] as Binop;
-      const { lhs: lhs0 ,rhs: rhs0, op: op0 } = binOp0;
+      const { lhs: lhs0, rhs: rhs0, op: op0 } = binOp0;
 
       assert.isTrue(lhs0 instanceof Binop);
       assert.equal(op0, BinaryOperator.SUB);
@@ -277,7 +284,7 @@ describe("parse", () => {
       assert.isTrue(rhs0 instanceof ASTNumber);
       assert.equal((rhs0 as ASTNumber).value, 3);
 
-      const { lhs: lhs1, rhs: rhs1, op: op1 } = (lhs0 as Binop);
+      const { lhs: lhs1, rhs: rhs1, op: op1 } = lhs0 as Binop;
 
       assert.isTrue(lhs1 instanceof ASTNumber);
       assert.equal((lhs1 as ASTNumber).value, 5);
@@ -286,22 +293,22 @@ describe("parse", () => {
 
       assert.isTrue(rhs1 instanceof ASTNumber);
       assert.equal((rhs1 as ASTNumber).value, 4);
-    })
+    });
 
     it("should throw parser error for incomplete logical expression", () => {
-      setup('print 2 + ');
+      setup("print 2 + ");
       expectParserError();
-    })
+    });
 
     it("should throw parser error for incomplete chained logical expression", () => {
-      setup('print 2 - -');
+      setup("print 2 - -");
       expectParserError();
-    })
+    });
   });
 
   describe("parseEqualityExpression", () => {
     it("should parse binary equal expression", () => {
-      setup('1 == 15');
+      setup("1 == 15");
       const file = parser.parse();
 
       assert.isTrue(file.expressions[0] instanceof Binop);
@@ -319,7 +326,7 @@ describe("parse", () => {
     });
 
     it("should parse binary not equal expression", () => {
-      setup('69 != 420');
+      setup("69 != 420");
       const file = parser.parse();
 
       assert.isTrue(file.expressions[0] instanceof Binop);
@@ -337,14 +344,14 @@ describe("parse", () => {
     });
 
     it("should parse 3-length expression", () => {
-      setup('5 != 10 == 3');
+      setup("5 != 10 == 3");
 
       const file = parser.parse();
 
       assert.isTrue(file.expressions[0] instanceof Binop);
 
       const binOp0 = file.expressions[0] as Binop;
-      const { lhs: lhs0 ,rhs: rhs0, op: op0 } = binOp0;
+      const { lhs: lhs0, rhs: rhs0, op: op0 } = binOp0;
 
       assert.isTrue(lhs0 instanceof Binop);
       assert.equal(op0, BinaryOperator.EQ);
@@ -352,7 +359,7 @@ describe("parse", () => {
       assert.isTrue(rhs0 instanceof ASTNumber);
       assert.equal((rhs0 as ASTNumber).value, 3);
 
-      const { lhs: lhs1, rhs: rhs1, op: op1 } = (lhs0 as Binop);
+      const { lhs: lhs1, rhs: rhs1, op: op1 } = lhs0 as Binop;
 
       assert.isTrue(lhs1 instanceof ASTNumber);
       assert.equal((lhs1 as ASTNumber).value, 5);
@@ -361,22 +368,22 @@ describe("parse", () => {
 
       assert.isTrue(rhs1 instanceof ASTNumber);
       assert.equal((rhs1 as ASTNumber).value, 10);
-    })
+    });
 
     it("should throw parser error for incomplete logical expression", () => {
-      setup('print 2 == ');
+      setup("print 2 == ");
       expectParserError();
-    })
+    });
 
     it("should throw parser error for incomplete chained logical expression", () => {
-      setup('print 2 != ==');
+      setup("print 2 != ==");
       expectParserError();
-    })
-  })
+    });
+  });
 
   describe("parseRelationalExpression", () => {
     it("should parse binary less-than expression", () => {
-      setup('1 < 15');
+      setup("1 < 15");
       const file = parser.parse();
 
       assert.isTrue(file.expressions[0] instanceof Binop);
@@ -395,7 +402,7 @@ describe("parse", () => {
     });
 
     it("should parse binary LTE expression", () => {
-      setup('69 <= 420');
+      setup("69 <= 420");
       const file = parser.parse();
 
       assert.isTrue(file.expressions[0] instanceof Binop);
@@ -413,7 +420,7 @@ describe("parse", () => {
     });
 
     it("should parse binary GT expression", () => {
-      setup('5 > 120');
+      setup("5 > 120");
       const file = parser.parse();
 
       assert.isTrue(file.expressions[0] instanceof Binop);
@@ -432,7 +439,7 @@ describe("parse", () => {
     });
 
     it("should parse binary GTE expression", () => {
-      setup('46 >= 1288');
+      setup("46 >= 1288");
       const file = parser.parse();
 
       assert.isTrue(file.expressions[0] instanceof Binop);
@@ -451,15 +458,14 @@ describe("parse", () => {
     });
 
     it("should parse 3-length expression", () => {
-      setup('5 <= 10 > 3');
+      setup("5 <= 10 > 3");
 
       const file = parser.parse();
-
 
       assert.isTrue(file.expressions[0] instanceof Binop);
 
       const binOp0 = file.expressions[0] as Binop;
-      const { lhs: lhs0 ,rhs: rhs0, op: op0 } = binOp0;
+      const { lhs: lhs0, rhs: rhs0, op: op0 } = binOp0;
 
       assert.isTrue(lhs0 instanceof Binop);
       assert.equal(op0, BinaryOperator.GT);
@@ -467,7 +473,7 @@ describe("parse", () => {
       assert.isTrue(rhs0 instanceof ASTNumber);
       assert.equal((rhs0 as ASTNumber).value, 3);
 
-      const { lhs: lhs1, rhs: rhs1, op: op1 } = (lhs0 as Binop);
+      const { lhs: lhs1, rhs: rhs1, op: op1 } = lhs0 as Binop;
 
       assert.isTrue(lhs1 instanceof ASTNumber);
       assert.equal((lhs1 as ASTNumber).value, 5);
@@ -476,22 +482,22 @@ describe("parse", () => {
 
       assert.isTrue(rhs1 instanceof ASTNumber);
       assert.equal((rhs1 as ASTNumber).value, 10);
-    })
+    });
 
     it("should throw parser error for incomplete logical expression", () => {
-      setup('print 2 < ');
+      setup("print 2 < ");
       expectParserError();
-    })
+    });
 
     it("should throw parser error for incomplete chained logical expression", () => {
-      setup('print 2 >= <=');
+      setup("print 2 >= <=");
       expectParserError();
-    })
+    });
   });
 
   describe("parseSlice", () => {
     it("should parse slice with from and to", () => {
-      setup('arr[1:5]');
+      setup("arr[1:5]");
 
       const file = parser.parse();
 
@@ -511,7 +517,7 @@ describe("parse", () => {
     });
 
     it("should parse slice with from only", () => {
-      setup('arr[1:]');
+      setup("arr[1:]");
 
       const file = parser.parse();
 
@@ -530,7 +536,7 @@ describe("parse", () => {
     });
 
     it("should parse slice with to only", () => {
-      setup('arr[:7]');
+      setup("arr[:7]");
 
       const file = parser.parse();
       assert.isTrue(file.expressions[0] instanceof Slice);
@@ -548,7 +554,7 @@ describe("parse", () => {
     });
 
     it("should parse multiple slices", () => {
-      setup('arr[1:7][0:5]');
+      setup("arr[1:7][0:5]");
 
       const file = parser.parse();
 
@@ -564,7 +570,7 @@ describe("parse", () => {
       assert.isTrue(to0 instanceof ASTNumber);
       assert.isTrue(target0 instanceof Slice);
 
-      const { from: from1, to: to1, target: target1 } = (target0 as Slice);
+      const { from: from1, to: to1, target: target1 } = target0 as Slice;
 
       assert.isTrue(from1 instanceof ASTNumber);
       assert.isTrue(to1 instanceof ASTNumber);
@@ -576,19 +582,19 @@ describe("parse", () => {
     });
 
     it("should throw error on empty slice", () => {
-      setup('arr[:]');
+      setup("arr[:]");
 
       expectParserError();
     });
 
     it("should throw error on incomplete slice", () => {
-      setup('arr[:');
+      setup("arr[:");
 
       expectParserError();
     });
 
     it("should throw error on empty square brackets", () => {
-      setup('arr[]');
+      setup("arr[]");
 
       expectParserError();
     });
@@ -596,12 +602,11 @@ describe("parse", () => {
 
   describe("parseIndex", () => {
     it("should parse index", () => {
-      setup('arr[1]');
+      setup("arr[1]");
 
       const file = parser.parse();
       assert.isTrue(file.expressions[0] instanceof Index);
       const index = file.expressions[0] as Index;
-
 
       const { index: indexValue, target } = index;
 
@@ -613,7 +618,7 @@ describe("parse", () => {
     });
 
     it("should parse multiple indices", () => {
-      setup('arr[0][5]');
+      setup("arr[0][5]");
 
       const file = parser.parse();
       assert.isTrue(file.expressions[0] instanceof Index);
@@ -626,24 +631,23 @@ describe("parse", () => {
 
       assert.isTrue(target0 instanceof Index);
 
-      const { index: indexValue1, target: target1 } = (target0 as Index);
+      const { index: indexValue1, target: target1 } = target0 as Index;
 
       assert.isTrue(indexValue1 instanceof ASTNumber);
       assert.equal((indexValue1 as ASTNumber).value, 0);
 
       assert.isTrue(target1 instanceof Id);
       assert.deepEqual((target1 as Id).id, "arr");
-    })
+    });
   });
 
   describe("parseCall", () => {
     it("should parse empty call", () => {
-      setup('arr()');
+      setup("arr()");
       const file = parser.parse();
 
       assert.isTrue(file.expressions[0] instanceof Call);
       const call = file.expressions[0] as Call;
-
 
       const { args, target } = call;
 
@@ -654,7 +658,7 @@ describe("parse", () => {
     });
 
     it("should parse call with args", () => {
-      setup('fn(1, 2, 3)');
+      setup("fn(1, 2, 3)");
       const file = parser.parse();
 
       assert.isTrue(file.expressions[0] instanceof Call);
@@ -664,7 +668,7 @@ describe("parse", () => {
 
       assert.equal(args.length, 3);
 
-      const argVals = [1,2,3];
+      const argVals = [1, 2, 3];
 
       for (let i = 0; i < args.length; i++) {
         assert.isTrue(args[i] instanceof ASTNumber);
@@ -676,7 +680,7 @@ describe("parse", () => {
     });
 
     it("should parse calls to calls", () => {
-      setup('fn(1)()');
+      setup("fn(1)()");
 
       const file = parser.parse();
 
@@ -688,16 +692,16 @@ describe("parse", () => {
       assert.isTrue(target0 instanceof Call);
       assert.equal(args0.length, 0);
 
-      const { args: args1, target: target1 } = (target0 as Call);
+      const { args: args1, target: target1 } = target0 as Call;
 
       assert.isTrue(target1 instanceof Id);
       assert.deepEqual((target1 as Id).id, "fn");
 
       assert.equal(args1.length, 1);
-    })
+    });
 
     it("should parse calls from slices", () => {
-      setup('fn[2:5]()');
+      setup("fn[2:5]()");
 
       const file = parser.parse();
 
@@ -711,7 +715,7 @@ describe("parse", () => {
     });
 
     it("should parse calls from indices", () => {
-      setup('fn[2]()');
+      setup("fn[2]()");
 
       const file = parser.parse();
 
@@ -725,12 +729,12 @@ describe("parse", () => {
     });
 
     it("should throw error if call is not closed", () => {
-      setup("fn(")
+      setup("fn(");
       expectParserError();
     });
 
     it("should throw error if call has an unexpected character", () => {
-      setup("fn(a}")
+      setup("fn(a}");
       expectParserError();
     });
   });
@@ -744,15 +748,15 @@ describe("parse", () => {
     });
 
     it("should throw error if bracket is not closed", () => {
-      setup("(")
+      setup("(");
       expectParserError();
-    })
+    });
 
     it("should throw error if bracket is empty", () => {
       setup("()");
       expectParserError();
-    })
-  })
+    });
+  });
 
   describe("parseBegin", () => {
     it("should parse begin with single expression", () => {
@@ -760,7 +764,7 @@ describe("parse", () => {
       const file = parser.parse();
 
       assert.isTrue(file.expressions[0] instanceof Begin);
-      const begin = (file.expressions[0]) as Begin;
+      const begin = file.expressions[0] as Begin;
 
       assert.equal(begin.elements.length, 1);
 
@@ -772,11 +776,11 @@ describe("parse", () => {
       const file = parser.parse();
 
       assert.isTrue(file.expressions[0] instanceof Begin);
-      const begin = (file.expressions[0]) as Begin;
+      const begin = file.expressions[0] as Begin;
 
       assert.equal(begin.elements.length, 3);
 
-      const ids = ['a','b','c'];
+      const ids = ["a", "b", "c"];
 
       for (let i = 0; i < begin.elements.length; i++) {
         assert.isTrue(begin.elements[i] instanceof Id);
@@ -787,8 +791,8 @@ describe("parse", () => {
     it("should throw error if begin is incomplete", () => {
       setup("{");
       expectParserError();
-    })
-  })
+    });
+  });
 
   describe("parseList", () => {
     it("should parse empty list", () => {
@@ -843,7 +847,7 @@ describe("parse", () => {
       const file = parser.parse();
 
       assert.isTrue(file.expressions[0] instanceof Advancement);
-      const advancement = (file.expressions[0]) as Advancement;
+      const advancement = file.expressions[0] as Advancement;
 
       assert.equal(advancement.details.length, 0);
       assert.isNull(advancement.name);
@@ -855,21 +859,23 @@ describe("parse", () => {
       const file = parser.parse();
 
       assert.isTrue(file.expressions[0] instanceof Advancement);
-      const advancement = (file.expressions[0]) as Advancement;
+      const advancement = file.expressions[0] as Advancement;
 
       assert.equal(advancement.details.length, 0);
 
       assert.isTrue(advancement.name instanceof Id);
       assert.deepEqual((advancement.name as Id).id, "birb");
-    })
+    });
 
     it("should parse advancement with advancement specs", () => {
-      setup('advancement (birb) { title = title0 icon = icon0 description = desc parent = par }');
+      setup(
+        "advancement (birb) { title = title0 icon = icon0 description = desc parent = par }",
+      );
 
       const file = parser.parse();
 
       assert.isTrue(file.expressions[0] instanceof Advancement);
-      const advancement = (file.expressions[0]) as Advancement;
+      const advancement = file.expressions[0] as Advancement;
 
       const { details } = advancement;
 
@@ -897,26 +903,25 @@ describe("parse", () => {
     });
 
     it("should throw error with empty advancement name if there are brackets", () => {
-      setup('advancement () {}');
+      setup("advancement () {}");
       expectParserError();
-    })
+    });
 
     it("should throw error with just advancement keyword", () => {
       setup("advancement");
       expectParserError();
-    })
+    });
 
     it("should throw error if advancement name bracket isn't closed", () => {
       setup("advancement(");
       expectParserError();
-    })
+    });
 
     it("should throw error if advancement curly brace not closed", () => {
       setup("advancement{");
       expectParserError();
     });
-
-  })
+  });
 
   describe("parseFunction", () => {
     it("should parse empty function", () => {
@@ -925,7 +930,7 @@ describe("parse", () => {
       const file = parser.parse();
 
       assert.isTrue(file.expressions[0] instanceof MCFunction);
-      const fn = (file.expressions[0]) as MCFunction;
+      const fn = file.expressions[0] as MCFunction;
 
       assert.isNull(fn.name);
       assert.equal(fn.commands.length, 0);
@@ -937,13 +942,13 @@ describe("parse", () => {
       const file = parser.parse();
 
       assert.isTrue(file.expressions[0] instanceof MCFunction);
-      const fn = (file.expressions[0]) as MCFunction;
+      const fn = file.expressions[0] as MCFunction;
 
       assert.equal(fn.commands.length, 0);
 
       assert.isTrue(fn.name instanceof Id);
       assert.deepEqual((fn.name as Id).id, "birb");
-    })
+    });
 
     it("should parse function with commands", () => {
       setup("function { grant birb revoke weekendPass execute order66}");
@@ -951,7 +956,7 @@ describe("parse", () => {
       const file = parser.parse();
 
       assert.isTrue(file.expressions[0] instanceof MCFunction);
-      const fn = (file.expressions[0]) as MCFunction;
+      const fn = file.expressions[0] as MCFunction;
 
       assert.equal(fn.commands.length, 3);
 
@@ -972,25 +977,25 @@ describe("parse", () => {
     });
 
     it("should throw error with empty function name if there are brackets", () => {
-      setup('function () {}');
+      setup("function () {}");
       expectParserError();
-    })
+    });
 
     it("should throw error with just function keyword", () => {
       setup("function");
       expectParserError();
-    })
+    });
 
     it("should throw error if function name bracket isn't closed", () => {
       setup("function(");
       expectParserError();
-    })
+    });
 
     it("should throw error if function curly brace not closed", () => {
       setup("function{");
       expectParserError();
-    })
-  })
+    });
+  });
 
   describe("parseOn", () => {
     it("should parse a load trigger", () => {
@@ -999,7 +1004,7 @@ describe("parse", () => {
       const file = parser.parse();
 
       assert.isTrue(file.expressions[0] instanceof On);
-      const on = (file.expressions[0]) as On;
+      const on = file.expressions[0] as On;
 
       assert.isTrue(on.trigger instanceof Load);
     });
@@ -1010,7 +1015,7 @@ describe("parse", () => {
       const file = parser.parse();
 
       assert.isTrue(file.expressions[0] instanceof On);
-      const on = (file.expressions[0]) as On;
+      const on = file.expressions[0] as On;
 
       assert.isTrue(on.trigger instanceof Tick);
     });
@@ -1021,7 +1026,7 @@ describe("parse", () => {
       const file = parser.parse();
 
       assert.isTrue(file.expressions[0] instanceof On);
-      const on = (file.expressions[0]) as On;
+      const on = file.expressions[0] as On;
 
       assert.isTrue(on.trigger instanceof Tick);
       assert.equal(on.commands.length, 3);
@@ -1049,16 +1054,19 @@ describe("parse", () => {
       const file = parser.parse();
 
       assert.isTrue(file.expressions[0] instanceof On);
-      const on = (file.expressions[0]) as On;
+      const on = file.expressions[0] as On;
 
       assert.isTrue(on.trigger instanceof Tick);
       assert.equal(on.commands.length, 1);
 
       assert.isTrue(on.commands[0] instanceof RawCommand);
-      const rawCommand = (on.commands[0] as RawCommand);
+      const rawCommand = on.commands[0] as RawCommand;
 
-      assert.isTrue(rawCommand.command instanceof ASTString)
-      assert.deepEqual((rawCommand.command as ASTString).components, Array.from("effect give @s slow_falling 10"))
+      assert.isTrue(rawCommand.command instanceof ASTString);
+      assert.deepEqual(
+        (rawCommand.command as ASTString).components,
+        Array.from("effect give @s slow_falling 10"),
+      );
     });
 
     it("should parse combined trigger - expression", () => {
@@ -1067,14 +1075,14 @@ describe("parse", () => {
       const file = parser.parse();
 
       assert.isTrue(file.expressions[0] instanceof On);
-      const on = (file.expressions[0]) as On;
+      const on = file.expressions[0] as On;
 
       assert.isTrue(on.trigger instanceof RawTrigger);
-      const rawTrigger = (on.trigger as RawTrigger);
+      const rawTrigger = on.trigger as RawTrigger;
 
       assert.isTrue(rawTrigger.name instanceof Id);
       assert.deepEqual((rawTrigger.name as Id).id, "fail");
-    })
+    });
 
     it("should parse combined trigger - consume item with item matcher", () => {
       setup('on (consume_item { item == "birb" }) {}');
@@ -1082,17 +1090,19 @@ describe("parse", () => {
       const file = parser.parse();
 
       assert.isTrue(file.expressions[0] instanceof On);
-      const on = (file.expressions[0]) as On;
+      const on = file.expressions[0] as On;
 
       assert.isTrue(on.trigger instanceof ConsumeItem);
-      const consumeItem = (on.trigger as ConsumeItem);
-
+      const consumeItem = on.trigger as ConsumeItem;
 
       assert.isTrue(consumeItem.details instanceof ItemMatcher);
       const itemMatcher = consumeItem.details as ItemMatcher;
 
       assert.isTrue(itemMatcher.name instanceof ASTString);
-      assert.deepEqual((itemMatcher.name as ASTString).components, Array.from("birb"));
+      assert.deepEqual(
+        (itemMatcher.name as ASTString).components,
+        Array.from("birb"),
+      );
     });
 
     it("should parse combined trigger - consume item with tag matcher", () => {
@@ -1101,17 +1111,19 @@ describe("parse", () => {
       const file = parser.parse();
 
       assert.isTrue(file.expressions[0] instanceof On);
-      const on = (file.expressions[0]) as On;
+      const on = file.expressions[0] as On;
 
       assert.isTrue(on.trigger instanceof ConsumeItem);
-      const consumeItem = (on.trigger as ConsumeItem);
-
+      const consumeItem = on.trigger as ConsumeItem;
 
       assert.isTrue(consumeItem.details instanceof TagMatcher);
       const itemMatcher = consumeItem.details as TagMatcher;
 
       assert.isTrue(itemMatcher.name instanceof ASTString);
-      assert.deepEqual((itemMatcher.name as ASTString).components, Array.from("birb"));
+      assert.deepEqual(
+        (itemMatcher.name as ASTString).components,
+        Array.from("birb"),
+      );
     });
 
     it("should parse combined trigger - inventory changed with item matcher", () => {
@@ -1120,17 +1132,19 @@ describe("parse", () => {
       const file = parser.parse();
 
       assert.isTrue(file.expressions[0] instanceof On);
-      const on = (file.expressions[0]) as On;
+      const on = file.expressions[0] as On;
 
       assert.isTrue(on.trigger instanceof InventoryChanged);
-      const consumeItem = (on.trigger as InventoryChanged);
-
+      const consumeItem = on.trigger as InventoryChanged;
 
       assert.isTrue(consumeItem.details instanceof ItemMatcher);
       const itemMatcher = consumeItem.details as ItemMatcher;
 
       assert.isTrue(itemMatcher.name instanceof ASTString);
-      assert.deepEqual((itemMatcher.name as ASTString).components, Array.from("birb"));
+      assert.deepEqual(
+        (itemMatcher.name as ASTString).components,
+        Array.from("birb"),
+      );
     });
 
     it("should parse combined trigger - inventory changed with tag matcher", () => {
@@ -1139,28 +1153,33 @@ describe("parse", () => {
       const file = parser.parse();
 
       assert.isTrue(file.expressions[0] instanceof On);
-      const on = (file.expressions[0]) as On;
+      const on = file.expressions[0] as On;
 
       assert.isTrue(on.trigger instanceof InventoryChanged);
-      const consumeItem = (on.trigger as InventoryChanged);
+      const consumeItem = on.trigger as InventoryChanged;
 
       assert.isTrue(consumeItem.details instanceof TagMatcher);
       const itemMatcher = consumeItem.details as TagMatcher;
 
       assert.isTrue(itemMatcher.name instanceof ASTString);
-      assert.deepEqual((itemMatcher.name as ASTString).components, Array.from("birb"));
+      assert.deepEqual(
+        (itemMatcher.name as ASTString).components,
+        Array.from("birb"),
+      );
     });
 
     it("should parse combined trigger - inventory changed with tag matcher", () => {
-      setup('on (inventory_changed { tag == "birb" } || consume_item { tag == id }) {}');
+      setup(
+        'on (inventory_changed { tag == "birb" } || consume_item { tag == id }) {}',
+      );
 
       const file = parser.parse();
 
       assert.isTrue(file.expressions[0] instanceof On);
-      const on = (file.expressions[0]) as On;
+      const on = file.expressions[0] as On;
 
       assert.isTrue(on.trigger instanceof CombinedTrigger);
-      const combinedTrigger = (on.trigger as CombinedTrigger);
+      const combinedTrigger = on.trigger as CombinedTrigger;
 
       const { lhs, rhs } = combinedTrigger;
 
@@ -1169,15 +1188,17 @@ describe("parse", () => {
     });
 
     it("should parse combined trigger - 3 deep", () => {
-      setup('on (inventory_changed { tag == "birb" } || consume_item { tag == id } || fn() ) {}');
+      setup(
+        'on (inventory_changed { tag == "birb" } || consume_item { tag == id } || fn() ) {}',
+      );
 
       const file = parser.parse();
 
       assert.isTrue(file.expressions[0] instanceof On);
-      const on = (file.expressions[0]) as On;
+      const on = file.expressions[0] as On;
 
       assert.isTrue(on.trigger instanceof CombinedTrigger);
-      const combinedTrigger = (on.trigger as CombinedTrigger);
+      const combinedTrigger = on.trigger as CombinedTrigger;
 
       const { lhs: lhs0, rhs: rhs0 } = combinedTrigger;
 
@@ -1185,7 +1206,7 @@ describe("parse", () => {
       assert.isTrue(rhs0 instanceof RawTrigger);
       assert.isTrue((rhs0 as RawTrigger).name instanceof Call);
 
-      const { lhs: lhs1, rhs: rhs1 } = (lhs0 as CombinedTrigger);
+      const { lhs: lhs1, rhs: rhs1 } = lhs0 as CombinedTrigger;
 
       assert.isTrue(lhs1 instanceof InventoryChanged);
       assert.isTrue(rhs1 instanceof ConsumeItem);
@@ -1194,22 +1215,22 @@ describe("parse", () => {
     it("should throw error if on has no trigger", () => {
       setup("on(){}");
       expectParserError();
-    })
+    });
 
     it("should throw error if on bracket is unclosed", () => {
       setup("on(");
       expectParserError();
     });
-  })
+  });
 
   describe("parseFor", () => {
     it("should parse complete for expression", () => {
-      setup('for i in arr print i');
+      setup("for i in arr print i");
 
       const file = parser.parse();
 
       assert.isTrue(file.expressions[0] instanceof For);
-      const forInstance = (file.expressions[0]) as For;
+      const forInstance = file.expressions[0] as For;
 
       const { id, iterable, body } = forInstance;
 
@@ -1222,40 +1243,40 @@ describe("parse", () => {
     });
 
     it("should error if body is missing", () => {
-      setup('for i in arr');
+      setup("for i in arr");
       expectParserError();
-    })
+    });
 
     it("should error if print is missing", () => {
-      setup('for i in');
+      setup("for i in");
       expectParserError();
     });
 
     it("should error if in is missing", () => {
-      setup('for i');
+      setup("for i");
       expectParserError();
     });
 
     it("should error if only for keyword is present", () => {
-      setup('for');
+      setup("for");
       expectParserError();
     });
 
     it("should error if for body is invalid", () => {
-      setup('for }');
+      setup("for }");
       expectParserError();
     });
 
     it("should error if iterable is invalid", () => {
-      setup('for a in {');
+      setup("for a in {");
       expectParserError();
     });
 
     it("should error if body is invalid", () => {
-      setup('for a in b datapack');
+      setup("for a in b datapack");
       expectParserError();
     });
-  })
+  });
 
   describe("parsePrefixExpression", () => {
     it("should parse NOT expression", () => {
@@ -1265,7 +1286,7 @@ describe("parse", () => {
 
       assert.isTrue(file.expressions[0] instanceof Unop);
 
-      const unop = file.expressions[0] as Unop
+      const unop = file.expressions[0] as Unop;
 
       assert.equal(unop.op, UnaryOperator.NOT);
       assert.isTrue(unop.target instanceof ASTNumber);
@@ -1280,7 +1301,7 @@ describe("parse", () => {
 
       assert.isTrue(file.expressions[0] instanceof Unop);
 
-      const unop = file.expressions[0] as Unop
+      const unop = file.expressions[0] as Unop;
 
       assert.equal(unop.op, UnaryOperator.NEG);
       assert.isTrue(unop.target instanceof Id);
@@ -1291,17 +1312,17 @@ describe("parse", () => {
     it("should throw parse error on multiple neg operators", () => {
       setup("print --");
       expectParserError();
-    })
+    });
 
     it("should throw parse error on multiple not operators", () => {
       setup("print !!");
       expectParserError();
-    })
+    });
   });
 
   describe("parseMultiplicativeExpression", () => {
     it("should parse binary multiply expression", () => {
-      setup('1 * 15');
+      setup("1 * 15");
       const file = parser.parse();
 
       assert.isTrue(file.expressions[0] instanceof Binop);
@@ -1320,7 +1341,7 @@ describe("parse", () => {
     });
 
     it("should parse binary mod expression", () => {
-      setup('1 % 15');
+      setup("1 % 15");
       const file = parser.parse();
       assert.isTrue(file.expressions[0] instanceof Binop);
 
@@ -1338,9 +1359,8 @@ describe("parse", () => {
     });
 
     it("should parse binary divide expression", () => {
-      setup('3.5/-2');
+      setup("3.5/-2");
       const file = parser.parse();
-
 
       assert.isTrue(file.expressions[0] instanceof Binop);
       const binop = file.expressions[0] as Binop;
@@ -1357,14 +1377,14 @@ describe("parse", () => {
     });
 
     it("should parse 3-length expression", () => {
-      setup(' 5 / 4 * 3');
+      setup(" 5 / 4 * 3");
 
       const file = parser.parse();
 
       assert.isTrue(file.expressions[0] instanceof Binop);
 
       const binOp0 = file.expressions[0] as Binop;
-      const { lhs: lhs0 ,rhs: rhs0, op: op0 } = binOp0;
+      const { lhs: lhs0, rhs: rhs0, op: op0 } = binOp0;
 
       assert.isTrue(lhs0 instanceof Binop);
       assert.equal(op0, BinaryOperator.MUL);
@@ -1372,30 +1392,27 @@ describe("parse", () => {
       assert.isTrue(rhs0 instanceof ASTNumber);
       assert.equal((rhs0 as ASTNumber).value, 3);
 
-
-
-      const { lhs: lhs1, rhs: rhs1, op: op1 } = (lhs0 as Binop);
-
+      const { lhs: lhs1, rhs: rhs1, op: op1 } = lhs0 as Binop;
 
       assert.isTrue(lhs1 instanceof ASTNumber);
       assert.equal(op1, BinaryOperator.DIV);
       assert.isTrue(rhs1 instanceof ASTNumber);
-    })
+    });
 
     it("should throw parser error for incomplete logical expression", () => {
-      setup('print 2 * ');
+      setup("print 2 * ");
       expectParserError();
-    })
+    });
 
     it("should throw parser error for incomplete chained logical expression", () => {
-      setup('print 2 / *');
+      setup("print 2 / *");
       expectParserError();
-    })
-  })
+    });
+  });
 
   describe("parseLogicalExpression", () => {
     it("should parse binary and expression", () => {
-      setup('true && 15');
+      setup("true && 15");
       const file = parser.parse();
 
       assert.isTrue(file.expressions[0] instanceof Binop);
@@ -1413,7 +1430,7 @@ describe("parse", () => {
     });
 
     it("should parse binary or expression", () => {
-      setup('false || 69');
+      setup("false || 69");
       const file = parser.parse();
 
       assert.isTrue(file.expressions[0] instanceof Binop);
@@ -1431,13 +1448,13 @@ describe("parse", () => {
     });
 
     it("should parse 3-length expression", () => {
-      setup('false || true && 0');
+      setup("false || true && 0");
 
       const file = parser.parse();
       assert.isTrue(file.expressions[0] instanceof Binop);
 
       const binOp0 = file.expressions[0] as Binop;
-      const { lhs: lhs0 ,rhs: rhs0, op: op0 } = binOp0;
+      const { lhs: lhs0, rhs: rhs0, op: op0 } = binOp0;
 
       assert.isTrue(lhs0 instanceof Binop);
       assert.equal(op0, BinaryOperator.AND);
@@ -1445,26 +1462,23 @@ describe("parse", () => {
       assert.isTrue(rhs0 instanceof ASTNumber);
       assert.equal((rhs0 as ASTNumber).value, 0);
 
-
-
-      const { lhs: lhs1, rhs: rhs1, op: op1 } = (lhs0 as Binop);
-
+      const { lhs: lhs1, rhs: rhs1, op: op1 } = lhs0 as Binop;
 
       assert.isTrue(lhs1 instanceof False);
       assert.equal(op1, BinaryOperator.OR);
       assert.isTrue(rhs1 instanceof True);
-    })
+    });
 
     it("should throw parser error for incomplete logical expression", () => {
-      setup('print false ||');
+      setup("print false ||");
       expectParserError();
-    })
+    });
 
     it("should throw parser error for incomplete chained logical expression", () => {
-      setup('print false && ||');
+      setup("print false && ||");
       expectParserError();
-    })
-  })
+    });
+  });
 
   describe("parseDefine", () => {
     it("should parse define with no ID but with body", () => {
@@ -1511,7 +1525,7 @@ describe("parse", () => {
       const arg0 = define.args[0] as Id;
 
       assert.deepEqual(arg0.id, "a");
-    })
+    });
 
     it("should parse define with multiple args", () => {
       setup("define koel(a,b,c,d) print test");
@@ -1530,52 +1544,52 @@ describe("parse", () => {
 
       assert.deepEqual(args.length, 4);
 
-      const ids = ['a', 'b', 'c', 'd'];
+      const ids = ["a", "b", "c", "d"];
 
       for (let i = 0; i < args.length; i++) {
         const id = args[i] as Id;
         assert.deepEqual(id.id, ids[i]);
       }
-    })
+    });
 
     it("should throw error for define without open paran", () => {
       setup("define koel print test");
       expectParserError();
-    })
+    });
 
     it("should throw error for define with unexpected character", () => {
       setup("define koel(a }) print test");
       expectParserError();
-    })
+    });
 
     it("should throw error for define with trailing comma in args list", () => {
       setup("define koel(a,) print test");
       expectParserError();
-    })
+    });
 
     it("should throw error for define without body", () => {
       setup("define koel(a,b,c)");
       expectParserError();
-    })
+    });
   });
 
   describe("parseTrue", () => {
     it("should parse true token as true", () => {
-      setup('print true');
+      setup("print true");
       const file = parser.parse();
 
       assert.isTrue((file.expressions[0] as Print).expression instanceof True);
-    })
-  })
+    });
+  });
 
   describe("parseFalse", () => {
     it("should parse false token as false", () => {
-      setup('print false');
+      setup("print false");
       const file = parser.parse();
 
       assert.isTrue((file.expressions[0] as Print).expression instanceof False);
     });
-  })
+  });
 
   describe("parseIf", () => {
     it("should parse full if function correctly", () => {
@@ -1624,24 +1638,24 @@ describe("parse", () => {
     });
 
     it("should throw error for if without consequence", () => {
-      setup('print if 5 + 3 == 8 then');
+      setup("print if 5 + 3 == 8 then");
       expectParserError();
-    })
+    });
 
     it("should throw error for if without then", () => {
-      setup('print if 5 + 3 == 8');
+      setup("print if 5 + 3 == 8");
       expectParserError();
-    })
+    });
 
     it("should throw error for if without predicate", () => {
-      setup('print if 5 + 3 == 8');
+      setup("print if 5 + 3 == 8");
       expectParserError();
     });
 
     it("should throw error for invalid if expression", () => {
-      setup('print if (');
+      setup("print if (");
       expectParserError();
-    })
+    });
   });
 
   describe("parseString", () => {
@@ -1713,7 +1727,7 @@ describe("parse", () => {
 
   describe("top-level cases", () => {
     it("should parse multiple expressions", () => {
-      setup("print 256 \n for a in b print a \n fn()")
+      setup("print 256 \n for a in b print a \n fn()");
 
       const file = parser.parse();
       assert.equal(file.expressions.length, 3);
@@ -1721,6 +1735,6 @@ describe("parse", () => {
       assert.isTrue(file.expressions[0] instanceof Print);
       assert.isTrue(file.expressions[1] instanceof For);
       assert.isTrue(file.expressions[2] instanceof Call);
-    })
-  })
+    });
+  });
 });

@@ -153,7 +153,10 @@ export class LoadFunctionTagValue implements Serializable, Writeable {
 
   public serialize(): any {
     return {
-      values: this.functionValues.map((functionValue: FunctionValue) => `${this.namespace}:${functionValue.name}`),
+      values: this.functionValues.map(
+        (functionValue: FunctionValue) =>
+          `${this.namespace}:${functionValue.name}`,
+      ),
     };
   }
 

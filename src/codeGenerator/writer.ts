@@ -31,20 +31,29 @@ function createPackMeta(namespace: string, archive: Archiver) {
 }
 
 function createLoadFunctionTag(namespace: string, archive: Archiver) {
-  const functionValues: FunctionValue[] = Array.from(STORE.values())
-    .filter((value: FunctionValue | AdvancementValue) => value instanceof FunctionValue && value.isLoadFunction()) as FunctionValue[];
+  const functionValues: FunctionValue[] = Array.from(STORE.values()).filter(
+    (value: FunctionValue | AdvancementValue) =>
+      value instanceof FunctionValue && value.isLoadFunction(),
+  ) as FunctionValue[];
 
   if (functionValues.length <= 0) return;
 
-  const loadFunctionTagValue: LoadFunctionTagValue = new LoadFunctionTagValue(namespace, functionValues);
+  const loadFunctionTagValue: LoadFunctionTagValue = new LoadFunctionTagValue(
+    namespace,
+    functionValues,
+  );
   const writer: Writer = loadFunctionTagValue.getWriter();
   writer.write(archive);
 }
 
-export async function writeStore(namespace: string, outputFile: string, archive?: Archiver) {
+export async function writeStore(
+  namespace: string,
+  outputFile: string,
+  archive?: Archiver,
+) {
   const writeables: Writeable[] = Array.from(STORE.values());
 
-  archive = archive || archiver("zip") as Archiver;
+  archive = archive || (archiver("zip") as Archiver);
   const output = fs.createWriteStream(outputFile);
 
   for (const writeable of writeables) {
@@ -70,7 +79,6 @@ export abstract class Writer {
   public abstract getFullFileName(): string;
 
   public abstract write(archive: Archiver): void;
-
 }
 
 export class FunctionValueWriter extends Writer {
@@ -90,7 +98,6 @@ export class FunctionValueWriter extends Writer {
     const serialized: any = this.functionValue.serialize();
     archive.append(serialized, { name: this.getFullFileName() });
   }
-
 }
 
 export class AdvancementValueWriter extends Writer {
@@ -108,7 +115,9 @@ export class AdvancementValueWriter extends Writer {
 
   public write(archive: Archiver): void {
     const serialized: any = this.advancementValue.serialize();
-    archive.append(JSON.stringify(serialized, null, 2), { name: this.getFullFileName() });
+    archive.append(JSON.stringify(serialized, null, 2), {
+      name: this.getFullFileName(),
+    });
   }
 }
 
@@ -127,6 +136,8 @@ export class LoadFunctionTagValueWriter extends Writer {
 
   public write(archive: Archiver): void {
     const serialized: any = this.loadFunctionTagValue.serialize();
-    archive.append(JSON.stringify(serialized, null, 2), { name: this.getFullFileName() });
+    archive.append(JSON.stringify(serialized, null, 2), {
+      name: this.getFullFileName(),
+    });
   }
 }
