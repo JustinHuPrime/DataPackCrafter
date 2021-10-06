@@ -41,9 +41,17 @@ describe("writer", () => {
   describe("writeStore", () => {
     it("should write store with load function tag", async () => {
       const namespace = "blah";
-      const functionValue: FunctionValue = FunctionValue.onLoad("function_value", ["test", "this"]);
-      const functionValue1: FunctionValue = FunctionValue.onLoad("function_value1", ["test", "this"]);
-      const triggers: Trigger[] = [new ConsumeItem(new ItemMatcher("minecraft:iron_ingot"))];
+      const functionValue: FunctionValue = FunctionValue.onLoad(
+        "function_value",
+        ["test", "this"],
+      );
+      const functionValue1: FunctionValue = FunctionValue.onLoad(
+        "function_value1",
+        ["test", "this"],
+      );
+      const triggers: Trigger[] = [
+        new ConsumeItem(new ItemMatcher("minecraft:iron_ingot")),
+      ];
       const advancementValue: AdvancementValue = new AdvancementValue(
         "testName",
         "this is a test advancement",
@@ -62,18 +70,42 @@ describe("writer", () => {
       await writeStore(namespace, "ok.zip", archive);
 
       assert.ok(append.calledWith(sinon.match.any, { name: "pack.mcmeta" }));
-      assert.ok(append.calledWith(sinon.match.any, { name: `data/${namespace}/advancements/testName.json` }));
-      assert.ok(append.calledWith(sinon.match.any, { name: `data/${namespace}/functions/function_value.mcfunction` }));
-      assert.ok(append.calledWith(sinon.match.any, { name: `data/${namespace}/functions/function_value1.mcfunction` }));
-      assert.ok(append.calledWith(sinon.match.any, { name: `data/minecraft/tags/functions/load.json` }));
+      assert.ok(
+        append.calledWith(sinon.match.any, {
+          name: `data/${namespace}/advancements/testName.json`,
+        }),
+      );
+      assert.ok(
+        append.calledWith(sinon.match.any, {
+          name: `data/${namespace}/functions/function_value.mcfunction`,
+        }),
+      );
+      assert.ok(
+        append.calledWith(sinon.match.any, {
+          name: `data/${namespace}/functions/function_value1.mcfunction`,
+        }),
+      );
+      assert.ok(
+        append.calledWith(sinon.match.any, {
+          name: `data/minecraft/tags/functions/load.json`,
+        }),
+      );
       assert.ok(createWriteStream.calledOnceWith("ok.zip"));
     });
 
     it("should write store without load function tag if none exist", async () => {
       const namespace = "blah";
-      const functionValue: FunctionValue = FunctionValue.regular("function_value", ["test", "this"]);
-      const functionValue1: FunctionValue = FunctionValue.regular("function_value1", ["test", "this"]);
-      const triggers: Trigger[] = [new ConsumeItem(new ItemMatcher("minecraft:iron_ingot"))];
+      const functionValue: FunctionValue = FunctionValue.regular(
+        "function_value",
+        ["test", "this"],
+      );
+      const functionValue1: FunctionValue = FunctionValue.regular(
+        "function_value1",
+        ["test", "this"],
+      );
+      const triggers: Trigger[] = [
+        new ConsumeItem(new ItemMatcher("minecraft:iron_ingot")),
+      ];
       const advancementValue: AdvancementValue = new AdvancementValue(
         "testName3",
         "this is a test advancement",
@@ -92,27 +124,48 @@ describe("writer", () => {
       await writeStore(namespace, "ok.zip", archive);
 
       assert.ok(append.calledWith(sinon.match.any, { name: "pack.mcmeta" }));
-      assert.ok(append.calledWith(sinon.match.any, { name: `data/${namespace}/advancements/testName3.json` }));
-      assert.ok(append.calledWith(sinon.match.any, { name: `data/${namespace}/functions/function_value.mcfunction` }));
-      assert.ok(append.calledWith(sinon.match.any, { name: `data/${namespace}/functions/function_value1.mcfunction` }));
+      assert.ok(
+        append.calledWith(sinon.match.any, {
+          name: `data/${namespace}/advancements/testName3.json`,
+        }),
+      );
+      assert.ok(
+        append.calledWith(sinon.match.any, {
+          name: `data/${namespace}/functions/function_value.mcfunction`,
+        }),
+      );
+      assert.ok(
+        append.calledWith(sinon.match.any, {
+          name: `data/${namespace}/functions/function_value1.mcfunction`,
+        }),
+      );
       assert.ok(createWriteStream.calledOnceWith("ok.zip"));
     });
   });
 
   describe("FunctionValueWriter", () => {
     it("should write minecraft function", () => {
-      const functionValue: FunctionValue = FunctionValue.regular("test_function", ["this", "is", "sparta"]);
+      const functionValue: FunctionValue = FunctionValue.regular(
+        "test_function",
+        ["this", "is", "sparta"],
+      );
       const writer: Writer = functionValue.getWriter("sparta");
 
       writer.write(archive);
 
-      assert.ok(append.calledOnceWith(sinon.match.any, { name: "data/sparta/functions/test_function.mcfunction" }));
+      assert.ok(
+        append.calledOnceWith(sinon.match.any, {
+          name: "data/sparta/functions/test_function.mcfunction",
+        }),
+      );
     });
   });
 
   describe("AdvancementValueWriter", () => {
     it("should write advancement", () => {
-      const triggers: Trigger[] = [new ConsumeItem(new ItemMatcher("minecraft:iron_ingot"))];
+      const triggers: Trigger[] = [
+        new ConsumeItem(new ItemMatcher("minecraft:iron_ingot")),
+      ];
       const advancementValue: AdvancementValue = new AdvancementValue(
         "testName",
         "this is a test advancement",
@@ -127,7 +180,11 @@ describe("writer", () => {
 
       writer.write(archive);
 
-      assert.ok(append.calledOnceWith(sinon.match.any, { name: "data/oh_man/advancements/testName.json" }));
+      assert.ok(
+        append.calledOnceWith(sinon.match.any, {
+          name: "data/oh_man/advancements/testName.json",
+        }),
+      );
     });
   });
 });

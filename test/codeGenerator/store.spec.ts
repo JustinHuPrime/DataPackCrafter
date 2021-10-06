@@ -2,20 +2,25 @@ const assert = require("assert");
 
 import {
   AdvancementValue,
-  ConsumeItem, FunctionValue,
+  ConsumeItem,
+  FunctionValue,
   InventoryChanged,
-  ItemMatcher, LoadFunctionTagValue, Raw,
-  TagMatcher, Tick,
+  ItemMatcher,
+  LoadFunctionTagValue,
+  Raw,
+  TagMatcher,
+  Tick,
   Trigger,
 } from "../../src/codeGenerator/store";
 
 describe("store", () => {
-
   describe("serialize", () => {
-
     describe("FunctionValue", () => {
       it("should serialize commands if commands exist", () => {
-        const functionValue: FunctionValue = FunctionValue.regular("function value", ["this", "is", "sparta"]);
+        const functionValue: FunctionValue = FunctionValue.regular(
+          "function value",
+          ["this", "is", "sparta"],
+        );
 
         const serialized: any = functionValue.serialize();
 
@@ -23,7 +28,10 @@ describe("store", () => {
       });
 
       it("should serialize commands if commands are empty", () => {
-        const functionValue: FunctionValue = FunctionValue.regular("function value", []);
+        const functionValue: FunctionValue = FunctionValue.regular(
+          "function value",
+          [],
+        );
 
         const serialized: any = functionValue.serialize();
 
@@ -33,7 +41,9 @@ describe("store", () => {
 
     describe("AdvancementValue", () => {
       it("should serialize all members if present", () => {
-        const triggers: Trigger[] = [new ConsumeItem(new ItemMatcher("minecraft:iron_ingot"))];
+        const triggers: Trigger[] = [
+          new ConsumeItem(new ItemMatcher("minecraft:iron_ingot")),
+        ];
         const advancementValue: AdvancementValue = new AdvancementValue(
           "testName",
           "this is a test advancement",
@@ -74,7 +84,9 @@ describe("store", () => {
       });
 
       it("should not serialize display if title or description are not present", () => {
-        const triggers: Trigger[] = [new ConsumeItem(new ItemMatcher("minecraft:iron_ingot"))];
+        const triggers: Trigger[] = [
+          new ConsumeItem(new ItemMatcher("minecraft:iron_ingot")),
+        ];
 
         const advancementValue: AdvancementValue = new AdvancementValue(
           "testName",
@@ -104,7 +116,9 @@ describe("store", () => {
       });
 
       it("should not serialize icon if item or nbt are not present", () => {
-        const triggers: Trigger[] = [new ConsumeItem(new ItemMatcher("minecraft:iron_ingot"))];
+        const triggers: Trigger[] = [
+          new ConsumeItem(new ItemMatcher("minecraft:iron_ingot")),
+        ];
 
         const advancementValue: AdvancementValue = new AdvancementValue(
           "testName",
@@ -167,10 +181,27 @@ describe("store", () => {
 
     describe("LoadFunctionTagValue", () => {
       it("should serialize all functionValues passed", () => {
-        const functionValue1: FunctionValue = FunctionValue.regular("f1", ["this", "is", "sparta"]);
-        const functionValue2: FunctionValue = FunctionValue.regular("f2", ["this", "is", "sparta"]);
-        const functionValue3: FunctionValue = FunctionValue.regular("f3", ["this", "is", "sparta"]);
-        const loadFunctionTagValue: LoadFunctionTagValue = new LoadFunctionTagValue("test", [functionValue1, functionValue2, functionValue3]);
+        const functionValue1: FunctionValue = FunctionValue.regular("f1", [
+          "this",
+          "is",
+          "sparta",
+        ]);
+        const functionValue2: FunctionValue = FunctionValue.regular("f2", [
+          "this",
+          "is",
+          "sparta",
+        ]);
+        const functionValue3: FunctionValue = FunctionValue.regular("f3", [
+          "this",
+          "is",
+          "sparta",
+        ]);
+        const loadFunctionTagValue: LoadFunctionTagValue =
+          new LoadFunctionTagValue("test", [
+            functionValue1,
+            functionValue2,
+            functionValue3,
+          ]);
 
         const serialized: any = loadFunctionTagValue.serialize();
 
@@ -180,7 +211,8 @@ describe("store", () => {
       });
 
       it("should serialize empty functionValues passed", () => {
-        const loadFunctionTagValue: LoadFunctionTagValue = new LoadFunctionTagValue("test", []);
+        const loadFunctionTagValue: LoadFunctionTagValue =
+          new LoadFunctionTagValue("test", []);
 
         const serialized: any = loadFunctionTagValue.serialize();
 
@@ -192,22 +224,24 @@ describe("store", () => {
 
     describe("Trigger", () => {
       it("should serialize InventoryChanged trigger", () => {
-        const inventoryChanged: InventoryChanged = new InventoryChanged(new TagMatcher("tag"));
+        const inventoryChanged: InventoryChanged = new InventoryChanged(
+          new TagMatcher("tag"),
+        );
 
         const serialized: any = inventoryChanged.serialize();
 
         assert.deepEqual(serialized, {
           trigger: "minecraft:inventory_changed",
           conditions: {
-            items: [
-              { items: ["tag"] },
-            ],
+            items: [{ items: ["tag"] }],
           },
         });
       });
 
       it("should serialize ConsumeItem trigger", () => {
-        const consumeItem: ConsumeItem = new ConsumeItem(new ItemMatcher("minecraft:cooked_chicken"));
+        const consumeItem: ConsumeItem = new ConsumeItem(
+          new ItemMatcher("minecraft:cooked_chicken"),
+        );
 
         const serialized: any = consumeItem.serialize();
 

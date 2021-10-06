@@ -1,7 +1,12 @@
 import { EvaluatorEnv } from "../codeGenerator/evaluator";
 import Span, { merge } from "./span";
 import Token from "./token";
-import { CommandVisitor, ExpressionVisitor, ItemSpecVisitor, TriggerVisitor } from "./visitor";
+import {
+  CommandVisitor,
+  ExpressionVisitor,
+  ItemSpecVisitor,
+  TriggerVisitor,
+} from "./visitor";
 
 export abstract class Ast {
   span: Span;

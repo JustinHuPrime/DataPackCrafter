@@ -58,22 +58,22 @@ export interface ExpressionVisitor {
 }
 
 export interface CommandVisitor {
-  visitGrant(astNode: Grant) : any;
-  visitRevoke(astNode: Revoke) : any;
-  visitExecute(astNode: Execute) : any;
-  visitRawCommand(astNode: RawCommand) : any;
+  visitGrant(astNode: Grant): any;
+  visitRevoke(astNode: Revoke): any;
+  visitExecute(astNode: Execute): any;
+  visitRawCommand(astNode: RawCommand): any;
 }
 
 export interface TriggerVisitor {
-  visitLoad(astNode: Load) : any;
-  visitTick(astNode: Tick) : any;
-  visitCombinedTrigger(astNode: CombinedTrigger) : any;
-  visitConsumeItem(astNode: ConsumeItem) : any;
-  visitInventoryChanged(astNode: InventoryChanged) : any;
-  visitRawTrigger(astNode: RawTrigger) : any;
+  visitLoad(astNode: Load): any;
+  visitTick(astNode: Tick): any;
+  visitCombinedTrigger(astNode: CombinedTrigger): any;
+  visitConsumeItem(astNode: ConsumeItem): any;
+  visitInventoryChanged(astNode: InventoryChanged): any;
+  visitRawTrigger(astNode: RawTrigger): any;
 }
 
 export interface ItemSpecVisitor {
-  visitItemMatcher(astNode: ItemMatcher) : any;
-  visitTagMatcher(astNode: TagMatcher) : any;
+  visitItemMatcher(astNode: ItemMatcher): any;
+  visitTagMatcher(astNode: TagMatcher): any;
 }
