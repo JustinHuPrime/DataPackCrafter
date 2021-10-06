@@ -21,3 +21,11 @@ We are currently working on the user study - part of our group is working on tha
 The user study was conducted using this google doc: https://docs.google.com/document/d/1-FkeVnwK4Y5bahaR93pCqiHJJU21xNFJCOsR8H3_BaM/edit?usp=sharing
 
 We found that the biggest confusion for our users was the on blocks which only allow very particular things within them (minecraft commands). We tried to come up with something that would work around this confusion, and we found that it would probably need to be a very large fundamental change to try and make this more clear or to allow for any expression in these blocks. The other thing we found was that the activity that we got our users to do had an intended solution of recursion and both users gravitated to doing it iteratively even though the iterative solution is more cumbersome. This might be due to coming to the conclusion that they should use recursion is somewhat uncommon. We will be having further discussions of the results and if there are any feasible changes at a later date.
+
+# Milestone 4
+
+At this point, most of the individual components for our DSL (lexer, parser, evaluator, and output generator) are complete. We plan to finish all individual components by Wednesday (Oct 6), and integrate them into a draft implementation by Friday (Oct 8). Next week, we will make further changes to our DSL, time permitting, based on the result of the final user study.
+
+[TODO: user study plans]
+
+
