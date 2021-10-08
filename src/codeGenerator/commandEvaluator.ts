@@ -7,10 +7,12 @@ import STORE, { AdvancementValue, FunctionValue } from "./store";
 export default class CommandEvaluator implements CommandVisitor {
   private evaluator: Evaluator;
   private env: EvaluatorEnv;
+  private namespace: string;
 
-  constructor(evaluator: Evaluator, env: EvaluatorEnv) {
+  constructor(evaluator: Evaluator, env: EvaluatorEnv, namespace: string) {
     this.evaluator = evaluator;
     this.env = env;
+    this.namespace = namespace;
   }
 
   parse(command: Command) {
@@ -52,7 +54,9 @@ export default class CommandEvaluator implements CommandVisitor {
       "grant command parameter",
     );
     this.validateAdvancement(advName, astNode);
-    return [`advancement grant @p only ${advName}`];
+    if (!advName.includes(":"))
+      return [`advancement grant @p only ${this.namespace}:${advName}`];
+    else return [`advancement grant @p only ${advName}`];
   }
   visitRevoke(astNode: Revoke): string[] {
     let advName = this.evaluator.evaluateExpectType(
@@ -62,7 +66,9 @@ export default class CommandEvaluator implements CommandVisitor {
       "revoke command parameter",
     );
     this.validateAdvancement(advName, astNode);
-    return [`advancement revoke @p only ${advName}`];
+    if (!advName.includes(":"))
+      return [`advancement revoke @p only ${this.namespace}.${advName}`];
+    else return [`advancement revoke @p only ${advName}`];
   }
   visitExecute(astNode: Execute): string[] {
     let fnName = this.evaluator.evaluateExpectType(
@@ -72,7 +78,8 @@ export default class CommandEvaluator implements CommandVisitor {
       "execute command parameter",
     );
     this.validateFunction(fnName, astNode);
-    return [`function ${fnName}`];
+    if (!fnName.includes(":")) return [`function ${this.namespace}.${fnName}`];
+    else return [`function ${fnName}`];
   }
 
   visitRawCommand(astNode: RawCommand): string[] {
