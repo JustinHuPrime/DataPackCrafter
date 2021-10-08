@@ -1,5 +1,6 @@
-import codeGenerate from "./codeGenerator/codeGenerator";
 import parseArgs, { ArgumentError } from "./args";
+import { Evaluator, EvaluatorEnv } from "./codeGenerator/evaluator";
+import { writeStore } from "./codeGenerator/writer";
 import Parser from "./parser/parser";
 
 try {
@@ -10,8 +11,15 @@ try {
 
   const [filename, options] = parseArgs(process.argv.slice(2));
 
-  const parser = new Parser(filename, options);
-  codeGenerate(parser.parse(), options);
+  const file = new Parser(filename, options).parse();
+
+  const env = new EvaluatorEnv({});
+  const evaluator = new Evaluator(file.datapackDecl.id.id);
+  file.expressions.forEach((expr) => {
+    evaluator.evaluate(expr, env);
+  });
+
+  writeStore(file.datapackDecl.id.id, options.outputFile);
 
   process.exitCode = 0;
 } catch (e) {
