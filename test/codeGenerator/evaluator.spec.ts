@@ -1335,12 +1335,12 @@ describe("evaluator - store integration", () => {
     let advancement = STORE.get(advName) as Store.AdvancementValue;
     // Grab the generated function name attached to the advancement
     let fnName = advancement.rewardFunction || "";
-    assert.equal(fnName, ".consumeitem0");
-    assert.isTrue(STORE.has(fnName));
+    assert.equal(fnName, "namespace:.consumeitem0");
+    assert.isTrue(STORE.has(fnName.split(":")[1] as string));
 
-    let fn = STORE.get(fnName) as Store.FunctionValue;
+    let fn = STORE.get(fnName.split(":")[1] as string) as Store.FunctionValue;
     assert.deepEqual(fn.commands, ["tell @a someone ate a golden apple"]);
-    assert.equal(fn.name, fnName);
+    assert.equal(fn.name, fnName.split(":")[1] as string);
     assert.isUndefined(fn.tag);
   });
 
@@ -1367,12 +1367,12 @@ describe("evaluator - store integration", () => {
 
     // Grab the generated function name attached to the advancement
     let fnName = advancement.rewardFunction || "";
-    assert.equal(fnName, ".inventorychanged0");
-    assert.isTrue(STORE.has(fnName));
-    let fn = STORE.get(fnName) as Store.FunctionValue;
+    assert.equal(fnName, "namespace:.inventorychanged0");
+    assert.isTrue(STORE.has(fnName.split(":")[1] as string));
+    let fn = STORE.get(fnName.split(":")[1] as string) as Store.FunctionValue;
 
     assert.deepEqual(fn.commands, ["say someone got an anvil"]);
-    assert.equal(fn.name, fnName);
+    assert.equal(fn.name, fnName.split(":")[1] as string);
     assert.isUndefined(fn.tag);
   });
 
@@ -1410,9 +1410,9 @@ describe("evaluator - store integration", () => {
     assert.equal(advancement.name, advName);
 
     // Grab the generated function name attached to the advancement
-    const fnName = advancement.rewardFunction || "";
-    assert.isTrue(STORE.has(fnName));
-    const fn = STORE.get(fnName) as Store.FunctionValue;
+    const fnName = advancement.rewardFunction as string;
+    assert.isTrue(STORE.has(fnName.split(":")[1] as string));
+    const fn = STORE.get(fnName.split(":")[1] as string) as Store.FunctionValue;
     assert.equal(fn.name, ".tick0");
     assert.isUndefined(fn.tag);
     assert.deepEqual(fn.commands, ["loot give players @a loot coal_ore"]);

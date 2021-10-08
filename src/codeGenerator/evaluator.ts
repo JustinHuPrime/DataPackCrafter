@@ -578,7 +578,7 @@ export class Evaluator implements ExpressionVisitor {
     // Read the advancement trigger and prepare a Minecraft function
     let fnValue: Store.FunctionValue;
     let fnName = this.genFunctionName(astNode.trigger.constructor.name);
-    let advName = ""; // FIXME: no advancement name to return for load and tick
+    let advName = ""; // FIXME: no advancement name to return for load
     if (astNode.trigger instanceof Load) {
       fnValue = Store.FunctionValue.onLoad(fnName, commands);
     } else {
@@ -606,7 +606,7 @@ export class Evaluator implements ExpressionVisitor {
       undefined,
       undefined,
       undefined,
-      fnName,
+      `${this.namespace}:${fnName}`,
       triggers,
     );
     this.updateStore(advName, advValue, astNode);
