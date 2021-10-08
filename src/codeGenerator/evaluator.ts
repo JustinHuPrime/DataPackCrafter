@@ -42,10 +42,10 @@ import {
 } from "./exceptions";
 import TriggerEvaluator from "./triggerEvaluator";
 import STORE, * as Store from "./store";
-let deepEqual = require("deep-equal");
+import deepEqual from "deep-equal";
 
 // Used to validate user defined advancement / function names
-export let VALID_MC_ID_REGEX = /^[0-9a-z_-]+[0-9a-z_.-]*$/;
+export const VALID_MC_ID_REGEX = /^[0-9a-z_-]+[0-9a-z_.-]*$/;
 
 /**
  * Represents internal data types known to the evaluator.
@@ -114,8 +114,17 @@ export class FunctionClosure {
 
 export class Evaluator implements ExpressionVisitor {
   // Counters used to generate Minecraft function and advancement names
-  fnCounter = 0;
-  advCounter = 0;
+  private fnCounter = 0;
+  private advCounter = 0;
+  private namespace: string;
+
+  /**
+   * construct an evaluator for some default namespace
+   * @param namespace default namespace (from datapackDecl)
+   */
+  constructor(namespace: string) {
+    this.namespace = namespace;
+  }
 
   /**
    * Evaluate a DSL expression.
@@ -556,7 +565,7 @@ export class Evaluator implements ExpressionVisitor {
 
   parseCommands(astCommands: Command[], env: EvaluatorEnv): string[] {
     let commands: string[] = [];
-    let commandEvaluator = new CommandEvaluator(this, env);
+    let commandEvaluator = new CommandEvaluator(this, env, this.namespace);
     for (let astCommand of astCommands) {
       commands = commands.concat(commandEvaluator.parse(astCommand));
     }

@@ -114,19 +114,19 @@ let factorialFunc: Define;
 
 describe("evaluator - core", () => {
   it("visitTrue", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let expr = new True(dummyToken("true"));
     assert.equal(evaluator.evaluate(expr), true);
   });
 
   it("visitFalse", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let expr = new False(dummyToken("false"));
     assert.equal(evaluator.evaluate(expr), false);
   });
 
   it("visitNumber", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let expr = new ASTNumber(dummyToken("3.141592653"));
     assert.equal(evaluator.evaluate(expr), 3.141592653);
     expr = new ASTNumber(dummyToken("50"));
@@ -134,7 +134,7 @@ describe("evaluator - core", () => {
   });
 
   it("visitBinop arithmetic", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let lhs = new ASTNumber(dummyToken("111"));
     let rhs = new ASTNumber(dummyToken("222"));
     let expr: Expression;
@@ -150,7 +150,7 @@ describe("evaluator - core", () => {
   });
 
   it("visitBinop add string", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let lhs = stringNode("abc");
     let rhs = stringNode("def");
     let expr: Expression;
@@ -160,7 +160,7 @@ describe("evaluator - core", () => {
   });
 
   it("visitBinop add lists", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let lhs = new List(
       dummyToken(),
       [numNode("22"), numNode("3371.000001")],
@@ -182,7 +182,7 @@ describe("evaluator - core", () => {
   });
 
   it("visitBinop modulo", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let lhs = new ASTNumber(dummyToken("15"));
     let rhs = new ASTNumber(dummyToken("4"));
     let expr = new Binop(lhs, BinaryOperator.MOD, rhs);
@@ -190,7 +190,7 @@ describe("evaluator - core", () => {
   });
 
   it("visitBinop comparisons on numbers", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let five = new ASTNumber(dummyToken("5"));
     let three = new ASTNumber(dummyToken("3"));
     let expr: Expression;
@@ -215,7 +215,7 @@ describe("evaluator - core", () => {
   });
 
   it("visitBinop comparisons on strings", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let expr: Expression;
 
     expr = new Binop(stringNode("a"), BinaryOperator.GT, stringNode("b"));
@@ -227,7 +227,7 @@ describe("evaluator - core", () => {
   });
 
   it("visitBinop equality simple types", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let expr: Expression;
 
     expr = new Binop(stringNode("foo"), BinaryOperator.EQ, stringNode("foo"));
@@ -252,7 +252,7 @@ describe("evaluator - core", () => {
   });
 
   it("visitBinop equality lists", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let lst1 = new List(dummyToken(), [], dummyToken());
     let lst2 = new List(
       dummyToken(),
@@ -278,7 +278,7 @@ describe("evaluator - core", () => {
   });
 
   it("visitBinop AND", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let nodeTrue = new True(dummyToken());
     let nodeFalse = new False(dummyToken());
     let expr: Expression;
@@ -294,7 +294,7 @@ describe("evaluator - core", () => {
   });
 
   it("visitBinop OR", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let nodeTrue = new True(dummyToken());
     let nodeFalse = new False(dummyToken());
     let expr: Expression;
@@ -390,7 +390,7 @@ describe("evaluator - core", () => {
 
   for (let errorDesc of Object.keys(binopErrors)) {
     it(`visitBinop error: ${errorDesc}`, function () {
-      let evaluator = new Evaluator();
+      let evaluator = new Evaluator("namespace");
       let binOp = binopErrors[errorDesc]![0];
       let lhs = binopErrors[errorDesc]![1];
       let rhs = binopErrors[errorDesc]![2];
@@ -399,7 +399,7 @@ describe("evaluator - core", () => {
   }
 
   it("visitIf false", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let pred = new False(dummyToken());
     let expr = new If(
       dummyToken("if"),
@@ -411,7 +411,7 @@ describe("evaluator - core", () => {
   });
 
   it("visitIf true", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let pred = new True(dummyToken());
     let expr = new If(
       dummyToken("if"),
@@ -423,7 +423,7 @@ describe("evaluator - core", () => {
   });
 
   it("visitIf predicate is evaluated", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let pred = new Binop(numNode("3"), BinaryOperator.GT, numNode("-3"));
     let expr = new If(
       dummyToken("if"),
@@ -435,7 +435,7 @@ describe("evaluator - core", () => {
   });
 
   it("visitIf only one branch is evaluated", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let pred = new True(dummyToken());
     let expr = new If(
       dummyToken("if"),
@@ -447,7 +447,7 @@ describe("evaluator - core", () => {
   });
 
   it("visitIf error: wrong type of predicate", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let expr = new If(
       dummyToken("if"),
       numNode("123456789"),
@@ -458,7 +458,7 @@ describe("evaluator - core", () => {
   });
 
   it("visitUnop", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let myNum = new ASTNumber(dummyToken("10"));
     let myBool = new True(dummyToken());
     assert.equal(
@@ -480,7 +480,7 @@ describe("evaluator - core", () => {
   });
 
   it("visitDefine", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let fnClosure = evaluator.evaluate(addXYFunc);
 
     // This only checks the return type and env update, as there is no function call
@@ -489,7 +489,7 @@ describe("evaluator - core", () => {
   });
 
   it("visitDefine error: duplicate variable names", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     // fun fact: if you do this in JS it will just take the right-most "x" as x.
     let define = new Define(
       dummyToken(),
@@ -501,7 +501,7 @@ describe("evaluator - core", () => {
   });
 
   it("visitLet / visitId simple", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let letNode;
     let mathNode = new Binop(numNode("3"), BinaryOperator.MUL, numNode("5"));
 
@@ -524,7 +524,7 @@ describe("evaluator - core", () => {
   });
 
   it("visitLet / visitId multiple args", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let letNode;
     // x * y
     let mathNode = new Binop(idNode("x"), BinaryOperator.MUL, idNode("y"));
@@ -571,13 +571,13 @@ describe("evaluator - core", () => {
   };
   for (let letErrorDesc of Object.keys(letErrors)) {
     it(`visitLet error: ${letErrorDesc}`, function () {
-      let evaluator = new Evaluator();
+      let evaluator = new Evaluator("namespace");
       assert.throws(() => evaluator.evaluate(letErrors[letErrorDesc]!));
     });
   }
 
   it("visitBegin", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let beginNode = new Begin(
       dummyToken("{"),
       [
@@ -590,14 +590,14 @@ describe("evaluator - core", () => {
   });
 
   it("visitCall anonymous function", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let func = new Define(dummyToken(), null, [], numNode("4")); // totally not getRandomNumber()
     let prog = new Call(func, [], dummyToken());
     assert.equal(evaluator.evaluate(prog), 4);
   });
 
   it("visitCall named function", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let prog = new Begin(
       dummyToken(),
       [
@@ -614,7 +614,7 @@ describe("evaluator - core", () => {
   });
 
   it("visitCall recursion (factorial)", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let prog: Expression;
 
     prog = new Begin(
@@ -683,38 +683,38 @@ describe("evaluator - core", () => {
   };
   for (let errorDesc of Object.keys(callErrors)) {
     it(`visitCall error: ${errorDesc}`, function () {
-      let evaluator = new Evaluator();
+      let evaluator = new Evaluator("namespace");
       assert.throws(() => evaluator.evaluate(callErrors[errorDesc]!));
     });
   }
 
   it("visitString empty", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let expr = new ASTString(dummyToken(), [], dummyToken());
     assert.equal(evaluator.evaluate(expr), "");
   });
 
   it("visitString simple", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let expr = new ASTString(dummyToken(), ["hello world"], dummyToken());
     assert.equal(evaluator.evaluate(expr), "hello world");
   });
 
   it("visitString concat multiple strings", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let expr = new ASTString(dummyToken(), ["Straw", "berry"], dummyToken());
     assert.equal(evaluator.evaluate(expr), "Strawberry");
   });
 
   it("visitString nested string expr", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let inner = new ASTString(dummyToken(), ["B"], dummyToken());
     let expr = new ASTString(dummyToken(), ["A", inner, "C"], dummyToken());
     assert.equal(evaluator.evaluate(expr), "ABC");
   });
 
   it("visitString nested non-string exprs", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let bool = new False(dummyToken());
     let num = numNode("12345");
     let expr = new ASTString(
@@ -726,7 +726,7 @@ describe("evaluator - core", () => {
   });
 
   it("visitList", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let expr;
 
     expr = new List(dummyToken(), [], dummyToken());
@@ -741,7 +741,7 @@ describe("evaluator - core", () => {
   });
 
   it("visitIndex on list", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let list = new List(
       dummyToken(),
       [stringNode("a"), stringNode("b"), stringNode("c")],
@@ -758,7 +758,7 @@ describe("evaluator - core", () => {
   });
 
   it("visitIndex on string", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let list = stringNode("Abracadabra");
     let indexCall: Expression;
     indexCall = new Index(list, numNode("0"), dummyToken());
@@ -768,28 +768,28 @@ describe("evaluator - core", () => {
   });
 
   it("visitIndex error: bad target type", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let target = numNode("5678");
     let indexCall = new Index(target, numNode("0"), dummyToken());
     assert.throw(() => evaluator.evaluate(indexCall));
   });
 
   it("visitIndex error: index out of range", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let target = stringNode("Abracadabra");
     let indexCall = new Index(target, numNode("25"), dummyToken());
     assert.throw(() => evaluator.evaluate(indexCall));
   });
 
   it("visitIndex error: index is wrong type", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let target = stringNode("Abracadabra");
     let indexCall = new Index(target, target, dummyToken());
     assert.throw(() => evaluator.evaluate(indexCall));
   });
 
   it("visitSlice on list", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let list = new List(
       dummyToken(),
       [1, 2, 3, 4, 5].map((x) => numNode(x.toString())),
@@ -822,7 +822,7 @@ describe("evaluator - core", () => {
   });
 
   it("visitSlice on string", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let str = stringNode("foo bar baz");
 
     let slice: Expression;
@@ -840,7 +840,7 @@ describe("evaluator - core", () => {
   });
 
   it("visitSlice valid but empty", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let list = new List(
       dummyToken(),
       [1, 2, 3, 4, 5].map((x) => numNode(x.toString())),
@@ -861,7 +861,7 @@ describe("evaluator - core", () => {
   });
 
   it("visitSlice error: wrong start type", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let list = new List(
       dummyToken(),
       [1, 2, 3, 4, 5].map((x) => numNode(x.toString())),
@@ -873,7 +873,7 @@ describe("evaluator - core", () => {
   });
 
   it("visitSlice error: wrong end type", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let list = new List(
       dummyToken(),
       [1, 2, 3, 4, 5].map((x) => numNode(x.toString())),
@@ -885,7 +885,7 @@ describe("evaluator - core", () => {
   });
 
   it("visitSlice error: wrong target type", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let slice = new Slice(
       new True(dummyToken()),
       numNode("1"),
@@ -896,14 +896,14 @@ describe("evaluator - core", () => {
   });
 
   it("visitFor empty list", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let list = new List(dummyToken(), [], dummyToken());
     let forExpr = new For(dummyToken(), idNode("x"), list, idNode("x"));
     assert.deepEqual(evaluator.evaluate(forExpr), []);
   });
 
   it("visitFor return elements as is", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let list = new List(
       dummyToken(),
       [numNode("3"), numNode("5")],
@@ -914,7 +914,7 @@ describe("evaluator - core", () => {
   });
 
   it("visitFor iterate over string", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let forExpr = new For(
       dummyToken(),
       idNode("x"),
@@ -932,7 +932,7 @@ describe("evaluator - core", () => {
   });
 
   it("visitFor add 1 to elements", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let list = new List(
       dummyToken(),
       [numNode("3"), numNode("5")],
@@ -948,7 +948,7 @@ describe("evaluator - core", () => {
   });
 
   it("visitFor nested for expressions", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let list1 = new List(
       dummyToken(),
       [numNode("10"), numNode("100")],
@@ -977,7 +977,7 @@ describe("evaluator - core", () => {
   });
 
   it("visitFor error: unbound variable", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let list = new List(
       dummyToken(),
       [numNode("3"), numNode("5")],
@@ -993,13 +993,13 @@ describe("evaluator - core", () => {
   });
 
   it("visitFor error: wrong type of target", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let forExpr = new For(dummyToken(), idNode("x"), numNode("0"), idNode("x"));
     assert.throw(() => evaluator.evaluate(forExpr));
   });
 
   it("visitPrint", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     // FIXME: check the stdout
     assert.equal(
       evaluator.evaluate(stringNode("visitPrint test")),
@@ -1014,7 +1014,7 @@ describe("evaluator - store integration", () => {
   });
 
   it("visitAdvancement generated name", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let expr = new Advancement(dummyToken(), null, [], dummyToken());
     let name = evaluator.evaluate(expr);
     assert.isTrue(STORE.has(name));
@@ -1026,7 +1026,7 @@ describe("evaluator - store integration", () => {
   });
 
   it("visitAdvancement provided name", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let expr = new Advancement(
       dummyToken(),
       stringNode("foo"),
@@ -1039,7 +1039,7 @@ describe("evaluator - store integration", () => {
   });
 
   it("visitAdvancement some fields provided", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let title = "Congratulations, you've won!";
     let desc =
       "You are the 100,000th visitor to this website. Click [here] to claim your prize";
@@ -1063,7 +1063,7 @@ describe("evaluator - store integration", () => {
   });
 
   it("visitAdvancement all fields provided", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let name = "netherite_block";
     let title = "Hardcore Miner";
     let desc = "Obtain a Block of Netherite";
@@ -1092,14 +1092,14 @@ describe("evaluator - store integration", () => {
   });
 
   it("visitAdvancement error: wrong type for name", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let expr = new Advancement(dummyToken(), numNode("410"), [], dummyToken());
     assert.throws(() => evaluator.evaluate(expr));
     assert.equal(STORE.size, 0, "Store should be empty");
   });
 
   it("visitAdvancement error: wrong type for field", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let expr = new Advancement(
       dummyToken(),
       null,
@@ -1114,7 +1114,7 @@ describe("evaluator - store integration", () => {
   });
 
   it("visitAdvancement error: name conflict", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let expr = new Advancement(
       dummyToken(),
       stringNode("kaboom"),
@@ -1126,7 +1126,7 @@ describe("evaluator - store integration", () => {
   });
 
   it("parseTrigger consumeItem / ItemMatcher", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let trigger = new ConsumeItem(
       dummyToken(),
       new ItemMatcher(dummyToken(), stringNode("carrot")),
@@ -1139,7 +1139,7 @@ describe("evaluator - store integration", () => {
   });
 
   it("parseTrigger InventoryChanged / TagMatcher", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let trigger = new InventoryChanged(
       dummyToken(),
       new TagMatcher(dummyToken(), stringNode("TEST")),
@@ -1152,7 +1152,7 @@ describe("evaluator - store integration", () => {
   });
 
   it("parseTrigger CombinedTrigger", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let trigger1 = new InventoryChanged(
       dummyToken(),
       new TagMatcher(dummyToken(), stringNode("TEST")),
@@ -1173,7 +1173,7 @@ describe("evaluator - store integration", () => {
   });
 
   it("parseTrigger error: Load in CombinedTrigger", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let trigger1 = new Load(dummyToken());
     let trigger2 = new ConsumeItem(
       dummyToken(),
@@ -1187,7 +1187,7 @@ describe("evaluator - store integration", () => {
   });
 
   it("parseTrigger error: Tick in CombinedTrigger", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let trigger1 = new Tick(dummyToken());
     let trigger2 = new ConsumeItem(
       dummyToken(),
@@ -1204,7 +1204,7 @@ describe("evaluator - store integration", () => {
   });
 
   it("parseTrigger error: bad type of trigger value", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let trigger = new InventoryChanged(
       dummyToken(),
       new TagMatcher(dummyToken(), new True(dummyToken())),
@@ -1216,7 +1216,7 @@ describe("evaluator - store integration", () => {
   });
 
   it("parseCommands Grant/Revoke/Execute external", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let commands = [
       new Grant(dummyToken(), stringNode("minecraft:nether/brew_potion")),
       new Revoke(dummyToken(), stringNode("minecraft:adventure/trade")),
@@ -1232,7 +1232,7 @@ describe("evaluator - store integration", () => {
   });
 
   it("parseCommands error: wrong param type for typed commands", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let commands: Command[];
     let emptyEnv = new EvaluatorEnv({});
 
@@ -1245,7 +1245,7 @@ describe("evaluator - store integration", () => {
   });
 
   it("parseCommands raw commands as string", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let commands = [
       new RawCommand(stringNode("tell @a foo")),
       new RawCommand(stringNode("tell @a bar")),
@@ -1258,7 +1258,7 @@ describe("evaluator - store integration", () => {
     ]);
   });
   it("parseCommands raw commands as list", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let commands = [
       new RawCommand(
         new List(
@@ -1277,7 +1277,7 @@ describe("evaluator - store integration", () => {
   });
 
   it("parseCommands error: wrong param type for raw commands", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let commands: Command[];
     let emptyEnv = new EvaluatorEnv({});
 
@@ -1297,7 +1297,7 @@ describe("evaluator - store integration", () => {
   });
 
   it("parseCommands error: Grant/Revoke non-existent advancement", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let emptyEnv = new EvaluatorEnv({});
     let commands: Command[];
 
@@ -1308,14 +1308,14 @@ describe("evaluator - store integration", () => {
   });
 
   it("parseCommands error: Execute non-existent function", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let emptyEnv = new EvaluatorEnv({});
     let commands = [new Execute(dummyToken(), stringNode("helloworld"))];
     assert.throws(() => evaluator.parseCommands(commands, emptyEnv));
   });
 
   it("visitOn ConsumeItem / ItemMatcher", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let expr = new On(
       dummyToken(),
       new ConsumeItem(
@@ -1345,7 +1345,7 @@ describe("evaluator - store integration", () => {
   });
 
   it("visitOn InventoryChanged / TagMatcher", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let expr = new On(
       dummyToken(),
       new InventoryChanged(
@@ -1377,7 +1377,7 @@ describe("evaluator - store integration", () => {
   });
 
   it("visitOn load", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let expr = new On(
       dummyToken(),
       new Load(dummyToken()),
@@ -1393,7 +1393,7 @@ describe("evaluator - store integration", () => {
   });
 
   it("visitOn tick", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let expr = new On(
       dummyToken(),
       new Tick(dummyToken()),
@@ -1419,7 +1419,7 @@ describe("evaluator - store integration", () => {
   });
 
   it("visitOn multiple on blocks", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let expr1 = new On(
       dummyToken(),
       new ConsumeItem(
@@ -1457,7 +1457,7 @@ describe("evaluator - store integration", () => {
   });
 
   it("visitFunction random name", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let expr = new MCFunction(
       dummyToken(),
       null,
@@ -1475,7 +1475,7 @@ describe("evaluator - store integration", () => {
   });
 
   it("visitFunction set name", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let expr = new MCFunction(
       dummyToken(),
       stringNode("revoky"),
@@ -1493,7 +1493,7 @@ describe("evaluator - store integration", () => {
   });
 
   it("visitFunction error: bad name", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let expr: Expression;
     expr = new MCFunction(
       dummyToken(),
@@ -1537,7 +1537,7 @@ describe("evaluator - store integration", () => {
   });
 
   it("visitFunction error: bad type of name", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let expr = new MCFunction(
       dummyToken(),
       numNode("5"),
@@ -1548,7 +1548,7 @@ describe("evaluator - store integration", () => {
   });
 
   it("visitFunction error: type error in body", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let expr = new MCFunction(
       dummyToken(),
       null,
@@ -1559,7 +1559,7 @@ describe("evaluator - store integration", () => {
   });
 
   it("visitFunction Grant/Revoke internal advancement", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let commands = [
       new Grant(dummyToken(), stringNode("my_adv")),
       new Revoke(dummyToken(), stringNode("my_adv")),
@@ -1581,7 +1581,7 @@ describe("evaluator - store integration", () => {
   });
 
   it("visitFunction error: Revoke non-existent advancement", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let commands = [new Revoke(dummyToken(), stringNode("bar"))];
     let adv = new Advancement(
       dummyToken(),
@@ -1600,7 +1600,7 @@ describe("evaluator - store integration", () => {
   });
 
   it("visitOn error: Grant non-existent advancement", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let commands = [new Grant(dummyToken(), stringNode("foo"))];
     let adv = new Advancement(
       dummyToken(),
@@ -1619,7 +1619,7 @@ describe("evaluator - store integration", () => {
   });
 
   it("visitFunction Execute internal function", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let fn1 = new MCFunction(
       dummyToken(),
       stringNode("helloworld"),
@@ -1641,7 +1641,7 @@ describe("evaluator - store integration", () => {
   });
 
   it("visitFunction error: Execute non-existent function", function () {
-    let evaluator = new Evaluator();
+    let evaluator = new Evaluator("namespace");
     let commands = [new Execute(dummyToken(), stringNode("blahblah"))];
     let fn = new MCFunction(dummyToken(), null, commands, dummyToken());
     assert.throws(() => evaluator.evaluate(fn), DSLReferenceError);

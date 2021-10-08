@@ -14,8 +14,7 @@ try {
   const file = new Parser(filename, options).parse();
 
   const env = new EvaluatorEnv({});
-  const evaluator = new Evaluator();
-
+  const evaluator = new Evaluator(file.datapackDecl.id.id);
   file.expressions.forEach((expr) => {
     evaluator.evaluate(expr, env);
   });
