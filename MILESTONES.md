@@ -26,6 +26,5 @@ We found that the biggest confusion for our users was the on blocks which only a
 
 At this point, most of the individual components for our DSL (lexer, parser, evaluator, and output generator) are complete. We plan to finish all individual components by Wednesday (Oct 6), and integrate them into a draft implementation by Friday (Oct 8). Next week, we will make further changes to our DSL, time permitting, based on the result of the final user study.
 
-[TODO: user study plans]
-
+We are planning to change up the user study slightly so that we aren't relying on people defaulting to recursion for solving the problem. We have at least one participant scheduled for next week all lined up.
 
