@@ -1666,7 +1666,6 @@ describe("parse", () => {
       const str: ASTString = file.expressions[0] as ASTString;
 
       const { components } = str;
-      console.log(components);
 
       let builtString = "";
 
