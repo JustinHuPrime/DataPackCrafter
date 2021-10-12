@@ -13,7 +13,7 @@ try {
 
   const [filename, options] = parseArgs(process.argv.slice(2));
 
-  const file = new Parser(filename, options).parse();
+  const file = new Parser(filename).parse();
 
   const env = new EvaluatorEnv({});
   const evaluator = new Evaluator(file.datapackDecl.id.id);
@@ -23,6 +23,7 @@ try {
 
   writeStore(file.datapackDecl.id.id, options.outputFile);
 
+  console.log(`Datapack compiled successfully! Output file: ${options.outputFile}`);
   process.exitCode = 0;
 } catch (e) {
   if (e instanceof DSLEvaluationError) {
