@@ -1,5 +1,4 @@
 import Parser, { ParserError } from "../../src/parser/parser";
-import Options from "../../src/options";
 import {
   ASTNumber,
   ASTString,
@@ -47,14 +46,13 @@ const fs = require("fs");
 
 describe("parse", () => {
   let parser: Parser;
-  const dummyOptions: Options = { outputFile: "test.out" };
 
   const setup = (program: string, datapack?: string) => {
     const response = datapack
       ? `${datapack} \n ${program}`
       : `datapack test \n ${program}`;
     sinon.stub(fs, "readFileSync").returns(response);
-    parser = new Parser("", dummyOptions);
+    parser = new Parser("");
     sinon.restore();
   };
 
@@ -1659,6 +1657,28 @@ describe("parse", () => {
   });
 
   describe("parseString", () => {
+    it('should parse strings with more than 1 " in them correctly', () => {
+      const tellraw = '"tellraw @s \\"Gained health from killing a mob\\""';
+      setup(tellraw);
+      const file = parser.parse();
+
+      assert.isTrue(file.expressions[0] instanceof ASTString);
+      const str: ASTString = file.expressions[0] as ASTString;
+
+      const { components } = str;
+
+      let builtString = "";
+
+      for (const c of components) {
+        builtString += c;
+      }
+
+      assert.equal(
+        tellraw.substring(1, tellraw.length - 1).replace(/\\/g, ""),
+        builtString,
+      );
+    });
+
     it("should parse expression string correctly", () => {
       setup('print "test{ 2 }"');
 

@@ -110,11 +110,15 @@ export default class Lexer {
       );
 
     const matchStringEscape = this.file.match(/^(\\\\|\\"|\\{|\\})/);
-    if (matchStringEscape)
-      return this.lexToken(
-        (matchStringEscape[0] as String)[1] as string,
+    if (matchStringEscape) {
+      const retval = this.lexToken(
+        matchStringEscape[0] as string,
         TokenType.STRING_CHAR,
       );
+
+      retval.content = retval.content[retval.content.length - 1] as string;
+      return retval;
+    }
 
     const matchPunctuation = this.file.match(/^(["{}])/);
 
