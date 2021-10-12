@@ -63,7 +63,10 @@ export default class Parser {
     const { line, character } = start;
 
     throw new ParserError(
-      `${this.filename}: ${line}:${character}: unexpected token '${content}`,
+      this.filename,
+      `unexpected token '${content}`,
+      line,
+      character,
     );
   }
 
@@ -897,4 +900,23 @@ export default class Parser {
   }
 }
 
-export class ParserError extends Error {}
+export class ParserError extends Error {
+  filename: string;
+  override message: string;
+  line: number | null; // Line where the error hit
+  character: number | null; // Character position of error in the above line
+
+  constructor(
+    filename: string,
+    message: string,
+    line: number | null,
+    character: number | null,
+  ) {
+    super(message);
+    this.name = "ParserError";
+    this.filename = filename;
+    this.message = message;
+    this.line = line;
+    this.character = character;
+  }
+}
