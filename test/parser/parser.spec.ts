@@ -1,5 +1,4 @@
 import Parser, { ParserError } from "../../src/parser/parser";
-import Options from "../../src/options";
 import {
   ASTNumber,
   ASTString,
@@ -47,14 +46,13 @@ const fs = require("fs");
 
 describe("parse", () => {
   let parser: Parser;
-  const dummyOptions: Options = { outputFile: "test.out" };
 
   const setup = (program: string, datapack?: string) => {
     const response = datapack
       ? `${datapack} \n ${program}`
       : `datapack test \n ${program}`;
     sinon.stub(fs, "readFileSync").returns(response);
-    parser = new Parser("", dummyOptions);
+    parser = new Parser("");
     sinon.restore();
   };
 

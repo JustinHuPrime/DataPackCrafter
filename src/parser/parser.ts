@@ -45,18 +45,15 @@ import {
   UnaryOperator,
   Unop,
 } from "../ast/ast";
-import Options from "../options";
 import Token, { TokenType } from "../ast/token";
 import Lexer from "./lexer";
 
 export default class Parser {
   private filename: string;
   private lexer: Lexer;
-  options: Options;
 
-  constructor(filename: string, options: Options) {
+  constructor(filename: string) {
     this.filename = filename;
-    this.options = options;
     this.lexer = new Lexer(filename);
   }
 
