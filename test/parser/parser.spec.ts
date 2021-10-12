@@ -1657,6 +1657,26 @@ describe("parse", () => {
   });
 
   describe("parseString", () => {
+    it("should parse strings with more than 1 \" in them correctly", () => {
+      const tellraw = "\"tellraw @s \\\"Gained health from killing a mob\\\"\""
+      setup(tellraw);
+      const file = parser.parse();
+
+      assert.isTrue(file.expressions[0] instanceof ASTString);
+      const str: ASTString = file.expressions[0] as ASTString;
+
+      const { components } = str;
+      console.log(components);
+
+      let builtString = "";
+
+      for (const c of components) {
+        builtString += c;
+      }
+
+      assert.equal(tellraw.substring(1, tellraw.length - 1).replace(/\\/g, ''), builtString);
+    })
+
     it("should parse expression string correctly", () => {
       setup('print "test{ 2 }"');
 

@@ -23,7 +23,6 @@ try {
 
   writeStore(file.datapackDecl.id.id, options.outputFile);
 
-  console.log(`Datapack compiled successfully! Output file: ${options.outputFile}`);
   process.exitCode = 0;
 } catch (e) {
   if (e instanceof DSLEvaluationError) {

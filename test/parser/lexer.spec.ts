@@ -31,7 +31,7 @@ describe("lexer", () => {
     });
 
     it("should lex special strings as string", () => {
-      const strings = ["\\\\", '\\"', "\\{", "\\}"];
+      const strings = ['\\"', "\\{", "\\}", "\\\\"];
 
       for (const s of strings) {
         setup(s);
@@ -40,7 +40,7 @@ describe("lexer", () => {
           lexer.lexString(),
           new Token(
             TokenType.STRING_CHAR,
-            new Span(new Location(1, 1), new Location(1, s.length)),
+            new Span(new Location(1, 1), new Location(1, s.length + 1)),
             s[1] as string,
           ),
         );
