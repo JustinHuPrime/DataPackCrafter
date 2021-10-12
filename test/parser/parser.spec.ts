@@ -1657,8 +1657,8 @@ describe("parse", () => {
   });
 
   describe("parseString", () => {
-    it("should parse strings with more than 1 \" in them correctly", () => {
-      const tellraw = "\"tellraw @s \\\"Gained health from killing a mob\\\"\""
+    it('should parse strings with more than 1 " in them correctly', () => {
+      const tellraw = '"tellraw @s \\"Gained health from killing a mob\\""';
       setup(tellraw);
       const file = parser.parse();
 
@@ -1673,8 +1673,11 @@ describe("parse", () => {
         builtString += c;
       }
 
-      assert.equal(tellraw.substring(1, tellraw.length - 1).replace(/\\/g, ''), builtString);
-    })
+      assert.equal(
+        tellraw.substring(1, tellraw.length - 1).replace(/\\/g, ""),
+        builtString,
+      );
+    });
 
     it("should parse expression string correctly", () => {
       setup('print "test{ 2 }"');
