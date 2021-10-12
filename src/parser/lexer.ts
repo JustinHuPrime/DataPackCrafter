@@ -1,6 +1,7 @@
 import Token, { KEYWORDS, TokenType } from "../ast/token";
 import * as fs from "fs";
 import Span, { Location } from "../ast/span";
+import { ParserError } from "./parser";
 
 export default class Lexer {
   file: string;
@@ -10,7 +11,11 @@ export default class Lexer {
 
   constructor(filename: string) {
     this.filename = filename;
-    this.file = fs.readFileSync(filename, "utf8");
+    try {
+      this.file = fs.readFileSync(filename, "utf8");
+    } catch (e) {
+      throw new ParserError(`${this.filename}: could not open file`);
+    }
     this.line = 1;
     this.character = 1;
   }
@@ -84,7 +89,7 @@ export default class Lexer {
       );
 
     throw new LexerError(
-      `${this.filename}: ${this.line}:${this.character}: error: invalid character '${this.file[0]}`,
+      `${this.filename}: ${this.line}:${this.character}: error: invalid character '${this.file[0]}'`,
     );
   }
 
@@ -117,7 +122,7 @@ export default class Lexer {
       return this.lexToken(matchPunctuation[0] as string, TokenType.LITERAL);
 
     throw new LexerError(
-      `${this.filename}: ${this.line}:${this.character}: error: invalid character '${this.file[0]}`,
+      `${this.filename}: ${this.line}:${this.character}: error: invalid character '${this.file[0]}'`,
     );
   }
 }

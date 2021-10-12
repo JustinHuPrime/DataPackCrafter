@@ -1,7 +1,9 @@
 import parseArgs, { ArgumentError } from "./args";
 import { Evaluator, EvaluatorEnv } from "./codeGenerator/evaluator";
+import { DSLEvaluationError } from "./codeGenerator/exceptions";
 import { writeStore } from "./codeGenerator/writer";
-import Parser from "./parser/parser";
+import { LexerError } from "./parser/lexer";
+import Parser, { ParserError } from "./parser/parser";
 
 try {
   if (process.argv.length <= 2)
@@ -24,8 +26,10 @@ try {
   console.log(`Datapack compiled successfully! Output file: ${options.outputFile}`);
   process.exitCode = 0;
 } catch (e) {
-  if (e instanceof ArgumentError) {
+  if (e instanceof DSLEvaluationError) {
     console.error(`DataPackCrafter: error: ${e.message}`);
+  } else if (e instanceof ParserError || e instanceof LexerError) {
+    console.error(`${e.message}`);
   } else {
     console.error(
       `DataPackCrafter: internal error: unrecognized exception ${e}`,
