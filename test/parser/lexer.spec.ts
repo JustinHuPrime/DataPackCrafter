@@ -1,6 +1,7 @@
-import Lexer, { LexerError } from "../../src/parser/lexer";
+import Lexer from "../../src/parser/lexer";
 import Token, { KEYWORDS, TokenType } from "../../src/ast/token";
 import Span, { Location } from "../../src/ast/span";
+import { ParserError } from "../../src/parser/parser";
 
 const assert = require("assert");
 const fs = require("fs");
@@ -313,7 +314,7 @@ describe("lexer", () => {
         () => {
           lexer.lexRegular();
         },
-        LexerError,
+        ParserError,
         "file.txt: 1:1: error: invalid character $",
       );
     });

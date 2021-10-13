@@ -14,7 +14,7 @@ export default class Lexer {
     try {
       this.file = fs.readFileSync(filename, "utf8");
     } catch (e) {
-      throw new ParserError(`${this.filename}: could not open file`);
+      throw new ParserError(this.filename, "could not open file", null, null);
     }
     this.line = 1;
     this.character = 1;
@@ -88,8 +88,11 @@ export default class Lexer {
         TokenType.LITERAL,
       );
 
-    throw new LexerError(
-      `${this.filename}: ${this.line}:${this.character}: error: invalid character '${this.file[0]}'`,
+    throw new ParserError(
+      this.filename,
+      `invalid character '${this.file[0]}'`,
+      this.line,
+      this.character,
     );
   }
 
@@ -125,10 +128,11 @@ export default class Lexer {
     if (matchPunctuation)
       return this.lexToken(matchPunctuation[0] as string, TokenType.LITERAL);
 
-    throw new LexerError(
-      `${this.filename}: ${this.line}:${this.character}: error: invalid character '${this.file[0]}'`,
+    throw new ParserError(
+      this.filename,
+      `invalid character '${this.file[0]}'`,
+      this.line,
+      this.character,
     );
   }
 }
-
-export class LexerError extends Error {}

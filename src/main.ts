@@ -2,7 +2,6 @@ import parseArgs, { ArgumentError } from "./args";
 import { Evaluator, EvaluatorEnv } from "./codeGenerator/evaluator";
 import { DSLEvaluationError } from "./codeGenerator/exceptions";
 import { writeStore } from "./codeGenerator/writer";
-import { LexerError } from "./parser/lexer";
 import Parser, { ParserError } from "./parser/parser";
 
 try {
@@ -26,9 +25,21 @@ try {
   process.exitCode = 0;
 } catch (e) {
   if (e instanceof DSLEvaluationError) {
-    console.error(`DataPackCrafter: error: ${e.message}`);
-  } else if (e instanceof ParserError || e instanceof LexerError) {
-    console.error(`${e.message}`);
+    const filename = process.argv[2];
+    if (e.astNode != null) {
+      const { line, character } = e.astNode.span.start;
+      console.error(`${filename}:${line}:${character} ${e.name}: ${e.message}`);
+    } else {
+      console.error(`${filename}:${e.name}: ${e.message}`);
+    }
+  } else if (e instanceof ParserError) {
+    if (e.line !== null && e.character !== null) {
+      console.error(
+        `${e.filename}:${e.line}:${e.character}: ${e.name}: ${e.message}`,
+      );
+    } else {
+      console.error(`${e.filename}: ${e.name}: ${e.message}`);
+    }
   } else {
     console.error(
       `DataPackCrafter: internal error: unrecognized exception ${e}`,

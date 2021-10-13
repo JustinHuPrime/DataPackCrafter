@@ -56,6 +56,26 @@ export async function writeStore(
   archive = archive || (archiver("zip") as Archiver);
   const output = fs.createWriteStream(outputFile);
 
+  archive.on("warning", function (err: any) {
+    if (err.code === "ENOENT") {
+      console.warn(err);
+    } else {
+      // throw error
+      throw err;
+    }
+  });
+  archive.on("error", function (err: any) {
+    throw err;
+  });
+
+  output.on("close", function () {
+    console.log(`Wrote ${archive!.pointer()} bytes to ${outputFile}`);
+  });
+
+  output.on("error", function (err: any) {
+    throw err;
+  });
+
   for (const writeable of writeables) {
     const writer: Writer = writeable.getWriter(namespace);
     writer.write(archive);

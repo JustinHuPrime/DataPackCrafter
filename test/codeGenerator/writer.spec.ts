@@ -28,7 +28,11 @@ describe("writer", () => {
     append = sinon.stub(archive, "append").returns({});
     pipe = sinon.stub(archive, "pipe").returns({});
     finalize = sinon.stub(archive, "finalize").returns({});
-    createWriteStream = sinon.stub(fs, "createWriteStream").returns({});
+    createWriteStream = sinon.stub(fs, "createWriteStream").returns({
+      on: () => {
+        return;
+      },
+    });
   });
 
   afterEach(() => {
