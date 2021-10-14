@@ -25,10 +25,12 @@ export default class Lexer {
       this.character += 1;
       this.file = this.file.substr(1);
       this.removeWhiteSpace();
-    } else if (this.file.startsWith("\n")) {
+    } else if (this.file.startsWith("\n") || this.file.startsWith("\r\n")) {
+      const isCrlf = this.file.startsWith("\r\n"); // portability
+
       this.line += 1;
       this.character = 1;
-      this.file = this.file.substr(1);
+      this.file = (isCrlf) ? this.file.substr(2) : this.file.substr(1);
       this.removeWhiteSpace();
     } else if (this.file.startsWith("#")) {
       this.line += 1;
