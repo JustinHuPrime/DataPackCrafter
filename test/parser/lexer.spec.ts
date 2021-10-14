@@ -143,6 +143,18 @@ describe("lexer", () => {
       );
     });
 
+    it("should lex with CRLF", () => {
+      setup("\r\n\r\nhello");
+      assert.deepEqual(
+        lexer.lexRegular(),
+        new Token(
+          TokenType.ID,
+          new Span(new Location(3, 1), new Location(3, 6)),
+          "hello",
+        ),
+      );
+    })
+
     it("should lex with newline", () => {
       setup("\n\nhello");
       assert.deepEqual(
