@@ -28,3 +28,8 @@ At this point, most of the individual components for our DSL (lexer, parser, eva
 
 We are planning to change up the user study slightly so that we aren't relying on people defaulting to recursion for solving the problem. We have at least one participant scheduled for next week all lined up.
 
+# Milestone 5
+
+This week, our goal is to fix up remaining bugs and write up more user-focused documentation for our language - the latter will outline language features (roughly sorted by type) with examples. Our final user study is scheduled for Thursday, Oct 14, and we will try to incorporate this feedback into our final implementation. We will work on the presentation video over the weekend.
+
+[TODO: user study feedback and what improvements we plan to make as a result]
