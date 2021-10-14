@@ -1,6 +1,6 @@
 datapack lifesteal
 
-on (player_killed_entity) {
+on ("minecraft:player_killed_entity") {
   "effect give @s regeneration 5"
   "tellraw @s \"Gained health from killing a mob\""
 }

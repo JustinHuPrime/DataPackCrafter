@@ -1,0 +1,9 @@
+datapack for_loop_bad_type
+
+define make_advancement(item) {
+  advancement "has_{item}"
+}
+
+for (item in 12345) {
+  make_advancement(item)
+}

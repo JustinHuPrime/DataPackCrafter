@@ -1,0 +1,5 @@
+datapack on_block_bad_type
+
+on (consume_item{item == "chicken"}) {
+  12345
+}

@@ -1,0 +1,5 @@
+datapack unknown_var
+
+on (consume_item{item == "chicken"}) {
+  foo()
+}
