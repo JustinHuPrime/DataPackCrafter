@@ -25,7 +25,7 @@ export default class Lexer {
       this.character += 1;
       this.file = this.file.substr(1);
       this.removeWhiteSpace();
-    } else if (this.file.startsWith("\n")) {
+    } else if (this.file.startsWith("\n") || this.file.startsWith("\r\n")) {
       this.line += 1;
       this.character = 1;
       this.file = this.file.substr(1);
