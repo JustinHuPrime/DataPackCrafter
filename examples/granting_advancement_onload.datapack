@@ -7,6 +7,6 @@ advancement ("test_advancement") {
   parent="minecraft:story/root"
 }
 
-on (tick) {
+on (load) {
   grant "test_advancement"
 }
