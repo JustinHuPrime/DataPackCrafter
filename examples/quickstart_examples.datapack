@@ -1,0 +1,18 @@
+datapack example
+
+print 2 + 2
+print "Hi " + "there"
+print (5*2) == 10
+print 1*2 > 3*4
+
+let x = 2+2, y = 3 {
+    print x+1  # 5
+    let myList = ["hello", "world", 1, 2, y, x, x+1] {
+        print myList[0]
+        print myList[2:6]
+    }
+}
+
+let x = 410 {
+    print "CPSC {x}" # -> "CPSC 410"
+}

@@ -1,5 +1,7 @@
 # Datapack Crafter Semantics
 
+**This is a lower-level semantics document that we drafted during our language design - [quickstart.md](quickstart.md) is a more approachable introduction**
+
 A datapack consists of an input file. The file has a datapack declaration - this sets the namespace for the namespaced ids associated with the current datapack. The file may also have zero or more expressions.
 
 An expression evaluates to a value, and may, as a side effect, modify the global store. The global store is a mapping between the namespaced id of a advancement, function, or when block, and the contents of that advancement, function, or when block. Additionally, there exists a lexically-scoped environment used to look up identifiers, which may be modified by certain expressions.

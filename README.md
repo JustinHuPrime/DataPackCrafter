@@ -19,3 +19,6 @@ npm start -- path/to/your/datapack
 
 By default, the output datapack will be written to `pack.zip`. You can specify an alternative output path by adding `-o <output_path>` to the command line.
 
+## Using the language
+
+See [`docs/quickstart.md`](`docs/quickstart.md`) for a quick start guide.
