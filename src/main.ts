@@ -24,6 +24,7 @@ try {
 
   process.exitCode = 0;
 } catch (e) {
+  process.exitCode = 1;
   if (e instanceof DSLEvaluationError) {
     const filename = process.argv[2];
     if (e.astNode != null) {

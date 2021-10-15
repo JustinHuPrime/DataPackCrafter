@@ -33,6 +33,7 @@ import {
 import CommandEvaluator from "./commandEvaluator";
 import { ExpressionVisitor } from "../ast/visitor";
 import {
+  DSLEvaluationError,
   DSLIndexError,
   DSLMathError,
   DSLNameConflictError,
@@ -666,6 +667,14 @@ export class Evaluator implements ExpressionVisitor {
           "advancement parent",
         );
       }
+    }
+    if (title && description && !iconItem) {
+      // Minecraft 1.17.1 throws [Server thread/ERROR]: Parsing error loading custom advancement abc:xyz: Missing icon, expected to find a JsonObject
+      // if this is not the case
+      throw new DSLEvaluationError(
+        astNode,
+        "Displayed advancements must specify iconItem (Minecraft restriction)",
+      );
     }
     let advancementValue = new Store.AdvancementValue(
       name,

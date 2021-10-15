@@ -1,6 +1,10 @@
 datapack granting_advancement_onload
 
-advancement "test_advancement" {}
+advancement ("test_advancement") {
+  title="Hello world!"
+  description="Test advancement"
+  icon="apple"
+}
 
 on (load) {
   grant "test_advancement"
