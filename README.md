@@ -21,4 +21,4 @@ By default, the output datapack will be written to `pack.zip`. You can specify a
 
 ## Using the language
 
-See [`docs/quickstart.md`](`docs/quickstart.md`) for a quick start guide.
+See [`docs/quickstart.md`](docs/quickstart.md) for a quick start guide.
