@@ -1,11 +1,12 @@
-datapack granting_advancement_onload
+datapack granting_advancement
 
 advancement ("test_advancement") {
   title="Hello world!"
   description="Test advancement"
   icon="apple"
+  parent="minecraft:story/root"
 }
 
-on (load) {
+on (tick) {
   grant "test_advancement"
 }

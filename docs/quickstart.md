@@ -123,7 +123,15 @@ on ("minecraft:player_killed_entity") {
 
 ### Custom advancements
 
-TODO
+DataPackCrafter allows specifying custom advancements which can be granted or revoked. These may be internal (invisible) advancements, or those that have a display in the game. A bare, invisible advancement defines no fields:
+
+```
+datapack existence_of_advancement
+
+advancement ("some_advancement") {}
+```
+
+A displayed advancement on the other hand must include the `title`, `description`, and `icon` fields (see below). They can optionally include a `parent` advancement too, for display in the advancement tree.
 
 ### Command expressions
 
@@ -136,7 +144,12 @@ Example: **granting_advancement_onload.datapack**
 ```
 datapack granting_advancement_onload
 
-advancement "test_advancement" {}
+advancement ("test_advancement") {
+  title="Hello world!"
+  description="Test advancement"
+  icon="apple"
+  parent="minecraft:story/root"
+}
 
 on (load) {
   grant "test_advancement"
@@ -145,4 +158,16 @@ on (load) {
 
 On the other hand, raw commands are specified using a bare string or list of strings. This means you can generate multiple commands using something like `for` expressions:
 
-TODO: for expressions to commands
+Example: **starter_kit.datapack**
+
+```
+datapack starter_kit
+
+# On load is not actually a reliable way to do this - this is just an example
+on (load) {
+  for tool in ["stone_sword", "stone_pickaxe", "stone_shovel", "stone_axe"] {
+    "give @p {tool}"
+  }
+}
+
+```

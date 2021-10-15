@@ -4,6 +4,7 @@ advancement ("test_advancement") {
   title="Hello world!"
   description="Test advancement"
   icon="apple"
+  parent="minecraft:story/root"
 }
 
 on (tick) {
