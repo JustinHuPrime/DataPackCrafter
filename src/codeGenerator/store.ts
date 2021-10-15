@@ -102,7 +102,7 @@ export class AdvancementValue implements Serializable, Writeable {
     return { parent: this.parent };
   }
 
-  private serializeCriteria(): any {
+  private serializeCriteriaAndRequirements(): any {
     if (!this.triggers || this.triggers.length <= 0) {
       return {
         criteria: {
@@ -114,11 +114,20 @@ export class AdvancementValue implements Serializable, Writeable {
     }
 
     let serialized: any = {};
+    let requirements: string[] = [];
+    let result: { [key: string]: any } = { criteria: serialized };
+
     for (let i = 0; i < this.triggers.length; i++) {
-      serialized[`trigger_${i}`] = this.triggers[i]?.serialize();
+      const criteriaName = `trigger_${i}`;
+      serialized[criteriaName] = this.triggers[i]?.serialize();
+      requirements.push(criteriaName);
     }
 
-    return { criteria: serialized };
+    if (requirements.length > 1) {
+      result["requirements"] = [requirements]
+    }
+
+    return result;
   }
 
   private serializeRewards(): any {
@@ -133,7 +142,7 @@ export class AdvancementValue implements Serializable, Writeable {
     return {
       ...this.serializeDisplay(),
       ...this.serializeParent(),
-      ...this.serializeCriteria(),
+      ...this.serializeCriteriaAndRequirements(),
       ...this.serializeRewards(),
     };
   }

@@ -179,6 +179,49 @@ describe("store", () => {
       });
     });
 
+    it("should not serialize display if title or description are not present", () => {
+      const triggers: Trigger[] = [
+        new ConsumeItem(new ItemMatcher("minecraft:iron_ingot")),
+        new ConsumeItem(new ItemMatcher("minecraft:gold_ingot"))
+      ];
+
+      const advancementValue: AdvancementValue = new AdvancementValue(
+        "testName",
+        "this is a test advancement",
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        triggers,
+      );
+
+      const serialized: any = advancementValue.serialize();
+
+      assert.deepEqual(serialized, {
+        criteria: {
+          trigger_0: {
+            trigger: "minecraft:consume_item",
+            conditions: {
+              item: {
+                items: ["minecraft:iron_ingot"],
+              },
+            },
+          },
+          trigger_1: {
+            trigger: "minecraft:consume_item",
+            conditions: {
+              item: {
+                items: ["minecraft:gold_ingot"],
+              },
+            },
+          },
+        },
+        requirements: [["trigger_0", "trigger_1"]]
+      });
+    });
+
+
     describe("LoadFunctionTagValue", () => {
       it("should serialize all functionValues passed", () => {
         const functionValue1: FunctionValue = FunctionValue.regular("f1", [
