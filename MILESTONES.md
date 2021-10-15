@@ -32,4 +32,8 @@ We are planning to change up the user study slightly so that we aren't relying o
 
 This week, our goal is to fix up remaining bugs and write up more user-focused documentation for our language - the latter will outline language features (roughly sorted by type) with examples. Our final user study is scheduled for Thursday, Oct 14, and we will try to incorporate this feedback into our final implementation. We will work on the presentation video over the weekend.
 
-[TODO: user study feedback and what improvements we plan to make as a result]
+User study update: The final user study went well; the task we gave the user was creating a data pack that gave you 10 extra food of the same type whenever you ate an apple, steak, carrot, or cooked chicken. Although the idea was to abstract this using a `for` loop, the user did this using 4 separate `on` triggers (Minecraft advancement / event triggers), which works the same but is a bit less compact.
+
+There was still some lingering confusion on the separation between DSL event triggers and Minecraft commands: for example, we can't ask _inside_ the trigger (i.e. in Minecraft's runtime) which item was actually eaten and do something different each time. This would've required translating core constructs like `if` statements to Minecraft commands, which we did not have time to dive deep into. Instead, we need to add one trigger for each consumed item and a _consistent_ action for each one.
+
+Despite this design limitation, we did try to make our language more flexible with regards to what can go inside event triggers. For instance, the language now accepts feeding a list of string commands to `on` blocks instead of a single raw command string or checked command (grant/revoke/execute). This means that you can now do things like generate multiple commands on the fly using `for` expressions or recursive calls.
