@@ -17,7 +17,7 @@ print "Hello world"
 
 ## Types and basic operations
 
-Our language supports the following types: numbers (a single type like in JavaScript), booleans, and (mixed-type) lists.
+Our language supports the following types: strings, numbers (a single type like in JavaScript), booleans, and (mixed-type) lists.
 
 The standard operators for arithmetic (`+`, `-`, `*`, `/`, `%`), equality (`==`, `!=`), and comparison (`>`, `>=`, `<=`, `<`) are provided with type checks. Of these, `+` allows adding numbers as well as concatenating strings and lists, and comparisons are defined for both numbers and strings.
 
@@ -32,7 +32,7 @@ print 1*2 > 3*4    # -> false
 
 ## Variables, lists, and string interpolations
 
-You can define variables with `let` blocks, which each create a new scope:
+You can define variables with `let` blocks, which create new scopes with the variable(s) added:
 
 ```
 let x = 2+2, y = 3 {
@@ -44,7 +44,7 @@ let x = 2+2, y = 3 {
 }
 ```
 
-Lists can be indexed (non-negative indices only) with `lst[idx]` or sliced:
+Lists can be indexed (non-negative indices only) with `lst[idx]` as well as sliced:
 
 - `lst[startIdx:]` returns the list from `startIdx` onwards
 - `lst[:endIdx]` returns all elements up to (but not including) `endIdx`
@@ -78,7 +78,7 @@ print factorial(5)        # -> 120
 print factorial("splat")  # -> Type error
 ```
 
-Notice that because this is a functional language, there are no explicit return statements - the value produced is what the function call evaluates to.
+Notice that because this is a functional language, there are no explicit return statements - the values produced by the function are what the function calls evaluate to.
 
 For expressions are also supported: these map some code over each element in a list, and returns a new list of all the produced results.
 
@@ -156,7 +156,7 @@ on (load) {
 }
 ```
 
-On the other hand, raw commands are specified using a bare string or list of strings. This means you can generate multiple commands using something like `for` expressions:
+On the other hand, raw commands are specified using a bare string or list of strings. This means you can also generate multiple commands using something like `for` expressions:
 
 Example: **starter_kit.datapack**
 
