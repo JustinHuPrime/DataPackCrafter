@@ -1043,12 +1043,14 @@ describe("evaluator - store integration", () => {
     let title = "Congratulations, you've won!";
     let desc =
       "You are the 100,000th visitor to this website. Click [here] to claim your prize";
+    let iconItem = "emerald"
     let expr = new Advancement(
       dummyToken(),
       null,
       [
         new Title(dummyToken(), stringNode(title)),
         new Description(dummyToken(), stringNode(desc)),
+        new Icon(dummyToken(), stringNode(iconItem))
       ],
       dummyToken(),
     );
@@ -1058,7 +1060,7 @@ describe("evaluator - store integration", () => {
     assert.equal(advancement.name, name);
     assert.equal(advancement.title, title);
     assert.equal(advancement.description, desc);
-    assert.isUndefined(advancement.iconItem);
+    assert.equal(advancement.iconItem, iconItem);
     assert.isUndefined(advancement.parent);
   });
 
@@ -1096,6 +1098,22 @@ describe("evaluator - store integration", () => {
     let expr = new Advancement(dummyToken(), numNode("410"), [], dummyToken());
     assert.throws(() => evaluator.evaluate(expr));
     assert.equal(STORE.size, 0, "Store should be empty");
+  });
+
+
+  it("visitAdvancement error: display advancement without icon", function () {
+    let evaluator = new Evaluator("namespace");
+    let expr = new Advancement(
+      dummyToken(),
+      null,
+      [
+        new Title(dummyToken(), stringNode("foo")),
+        new Description(dummyToken(), stringNode("foobar"))
+      ],
+      dummyToken(),
+    );
+
+    assert.throws(() => evaluator.evaluate(expr));
   });
 
   it("visitAdvancement error: wrong type for field", function () {
