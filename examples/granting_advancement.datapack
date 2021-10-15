@@ -1,6 +1,9 @@
 datapack granting_advancement
 
-advancement "test_advancement"
+advancement ("test_advancement") {
+  title="Welcome!"
+  description="Test advancement / welcome to the server"
+}
 
 on (tick) {
   grant "test_advancement"

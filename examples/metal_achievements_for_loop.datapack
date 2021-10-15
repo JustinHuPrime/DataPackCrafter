@@ -1,12 +1,14 @@
 datapack metal_achievements
 
 define make_and_grant_metal_advancement(metal) {
-  advancement "has_{metal}"
+  advancement ("has_{metal}") {
+     title="has_{metal}"
+  }
   on (inventory_changed{item == metal}) {
     grant "has_{metal}"
   }
 }
 
-for (metal in ["gold_ingot", "iron_ingot", "copper_ingot"]) {
+for metal in ["gold_ingot", "iron_ingot", "copper_ingot"] {
   make_and_grant_metal_advancement(metal)
 }
