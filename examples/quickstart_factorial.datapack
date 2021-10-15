@@ -1,0 +1,13 @@
+datapack example_factorial
+
+define factorial(num) {
+    if (num <= 0) then {
+        1
+    } else {
+        factorial (num - 1) * num
+    }
+}
+
+print factorial(3)  # -> 6
+print factorial(5)  # -> 120
+print factorial("splat")  # -> Type Error

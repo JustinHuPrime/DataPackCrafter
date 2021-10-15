@@ -1,0 +1,8 @@
+datapack starter_kit
+
+# On load is not actually a reliable way to do this - this is just an example
+on (load) {
+  for tool in ["stone_sword", "stone_pickaxe", "stone_shovel", "stone_axe"] {
+    "give @p {tool}"
+  }
+}

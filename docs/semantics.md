@@ -1,5 +1,7 @@
 # Datapack Crafter Semantics
 
+**This is a lower-level semantics document that we drafted during our language design - [quickstart.md](quickstart.md) is a more approachable introduction**
+
 A datapack consists of an input file. The file has a datapack declaration - this sets the namespace for the namespaced ids associated with the current datapack. The file may also have zero or more expressions.
 
 An expression evaluates to a value, and may, as a side effect, modify the global store. The global store is a mapping between the namespaced id of a advancement, function, or when block, and the contents of that advancement, function, or when block. Additionally, there exists a lexically-scoped environment used to look up identifiers, which may be modified by certain expressions.
@@ -8,7 +10,7 @@ At the end of evaluation, the contents of the global store are produced as a Min
 
 ## Define Expressions
 
-A define expression defines a (possibly anonymous) DSL-level function, taking a finite number of arguments. The body of the function is evaluated using standard lexical scoping and closure rules. Additionally, when a function is defined, it's enclosing scope is mutated to include a reference to the function (to allow mutual recursion). This produces the function defined by the expression.
+A define expression defines a (possibly anonymous) DSL-level function, taking a finite number of arguments. The body of the function is evaluated using standard lexical scoping and closure rules. Additionally, when a function is defined, it's enclosing scope is mutated to include a reference to the function (to allow mutual recursion). This produces the function closure defined by the expression.
 
 ## Let Expressions
 
