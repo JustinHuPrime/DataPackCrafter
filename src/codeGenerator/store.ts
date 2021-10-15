@@ -124,7 +124,7 @@ export class AdvancementValue implements Serializable, Writeable {
     }
 
     if (requirements.length > 1) {
-      result["requirements"] = [requirements]
+      result["requirements"] = [requirements];
     }
 
     return result;

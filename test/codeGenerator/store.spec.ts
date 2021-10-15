@@ -182,7 +182,7 @@ describe("store", () => {
     it("should not serialize display if title or description are not present", () => {
       const triggers: Trigger[] = [
         new ConsumeItem(new ItemMatcher("minecraft:iron_ingot")),
-        new ConsumeItem(new ItemMatcher("minecraft:gold_ingot"))
+        new ConsumeItem(new ItemMatcher("minecraft:gold_ingot")),
       ];
 
       const advancementValue: AdvancementValue = new AdvancementValue(
@@ -217,10 +217,9 @@ describe("store", () => {
             },
           },
         },
-        requirements: [["trigger_0", "trigger_1"]]
+        requirements: [["trigger_0", "trigger_1"]],
       });
     });
-
 
     describe("LoadFunctionTagValue", () => {
       it("should serialize all functionValues passed", () => {

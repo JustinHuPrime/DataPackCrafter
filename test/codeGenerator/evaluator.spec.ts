@@ -1043,14 +1043,14 @@ describe("evaluator - store integration", () => {
     let title = "Congratulations, you've won!";
     let desc =
       "You are the 100,000th visitor to this website. Click [here] to claim your prize";
-    let iconItem = "emerald"
+    let iconItem = "emerald";
     let expr = new Advancement(
       dummyToken(),
       null,
       [
         new Title(dummyToken(), stringNode(title)),
         new Description(dummyToken(), stringNode(desc)),
-        new Icon(dummyToken(), stringNode(iconItem))
+        new Icon(dummyToken(), stringNode(iconItem)),
       ],
       dummyToken(),
     );
@@ -1100,7 +1100,6 @@ describe("evaluator - store integration", () => {
     assert.equal(STORE.size, 0, "Store should be empty");
   });
 
-
   it("visitAdvancement error: display advancement without icon", function () {
     let evaluator = new Evaluator("namespace");
     let expr = new Advancement(
@@ -1108,7 +1107,7 @@ describe("evaluator - store integration", () => {
       null,
       [
         new Title(dummyToken(), stringNode("foo")),
-        new Description(dummyToken(), stringNode("foobar"))
+        new Description(dummyToken(), stringNode("foobar")),
       ],
       dummyToken(),
     );
@@ -1357,7 +1356,10 @@ describe("evaluator - store integration", () => {
     assert.isTrue(STORE.has(fnName.split(":")[1] as string));
 
     let fn = STORE.get(fnName.split(":")[1] as string) as Store.FunctionValue;
-    assert.deepEqual(fn.commands, ["tell @a someone ate a golden apple"]);
+    assert.deepEqual(fn.commands, [
+      "advancement revoke @s from namespace:.adv.consumeitem0",
+      "tell @a someone ate a golden apple",
+    ]);
     assert.equal(fn.name, fnName.split(":")[1] as string);
     assert.isUndefined(fn.tag);
   });
@@ -1389,7 +1391,10 @@ describe("evaluator - store integration", () => {
     assert.isTrue(STORE.has(fnName.split(":")[1] as string));
     let fn = STORE.get(fnName.split(":")[1] as string) as Store.FunctionValue;
 
-    assert.deepEqual(fn.commands, ["say someone got an anvil"]);
+    assert.deepEqual(fn.commands, [
+      "advancement revoke @s from namespace:.adv.inventorychanged0",
+      "say someone got an anvil",
+    ]);
     assert.equal(fn.name, fnName.split(":")[1] as string);
     assert.isUndefined(fn.tag);
   });
@@ -1433,7 +1438,10 @@ describe("evaluator - store integration", () => {
     const fn = STORE.get(fnName.split(":")[1] as string) as Store.FunctionValue;
     assert.equal(fn.name, ".tick0");
     assert.isUndefined(fn.tag);
-    assert.deepEqual(fn.commands, ["loot give players @a loot coal_ore"]);
+    assert.deepEqual(fn.commands, [
+      "advancement revoke @s from namespace:.adv.tick0",
+      "loot give players @a loot coal_ore",
+    ]);
   });
 
   it("visitOn multiple on blocks", function () {

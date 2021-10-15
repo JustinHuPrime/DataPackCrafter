@@ -583,13 +583,19 @@ export class Evaluator implements ExpressionVisitor {
     if (astNode.trigger instanceof Load) {
       fnValue = Store.FunctionValue.onLoad(fnName, commands);
     } else {
-      fnValue = Store.FunctionValue.regular(fnName, commands);
-
       // For things that aren't load, generate an advancement too
       advName = this.storeAdvancementFromTrigger(advName, fnName, astNode, env);
+
+      this.addRevokeCommand(commands, advName);
+      fnValue = Store.FunctionValue.regular(fnName, commands);
     }
     this.updateStore(fnName, fnValue, astNode);
     return advName;
+  }
+
+  private addRevokeCommand(commands: string[], advancementName: string) {
+    const revokeCommand = `advancement revoke @s from ${this.namespace}:${advancementName}`;
+    commands.unshift(revokeCommand);
   }
 
   private storeAdvancementFromTrigger(
