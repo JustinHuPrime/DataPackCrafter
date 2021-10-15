@@ -48,7 +48,7 @@ Lists can be indexed (non-negative indices only) with `lst[idx]` or sliced:
 - `lst[:endIdx]` returns all elements up to (but not including) `endIdx`
 - `lst[startIdx:endIdx]` returns all elements between `startIdx` and `endIdx` (not including the latter)
 
-String interpolation is also supported using the syntax `"abcd{some_code}`:
+String interpolation is also supported using the syntax `"abcd{some_code}"`:
 
 ```
 let x = 410 {
@@ -76,6 +76,61 @@ print factorial(5)        # -> 120
 print factorial("splat")  # -> Type error
 ```
 
+TODO: for loops
+
 ## Interacting with Minecraft
 
+Currently, DataPackCrafter supports creating custom [advancements](https://minecraft.fandom.com/wiki/Advancement/JSON_format#File_format), Minecraft [functions](https://minecraft.fandom.com/wiki/Function_(Java_Edition)), and listening to game events using [built-in advancement triggers](https://minecraft.fandom.com/wiki/Advancement/JSON_format#List_of_triggers). For advancement triggers, we support the `item` and `tag` constraints for `consume_item` and `inventory_changed` (typechecked triggers) - everything else is passed to Minecraft verbatim (as a raw trigger) and does not yet allow for specifying further conditions. We additionally support `load` as a trigger, which is implemented by listening to a [function tag](https://minecraft.fandom.com/wiki/Tag#Function_tags)
+
+### Advancement triggers
+
+Advancement triggers are defined using the `on` expression, which has a [command expression](#Command_expressions) as the contents. Typechecked triggers can also be OR'ed together to e.g. allow for matching multiple items:
+
+Example: **chickens_float.datapack**
+
+```
+datapack chickens_float
+
+on (consume_item{item == "chicken"} || consume_item{item == "cooked_chicken"}) {
+  "effect give @s slow_falling 10"
+}
+```
+
+Raw triggers on the other hand, are specified as a raw string (they should include the `minecraft:` namespace prefix too)
+
+Example: **lifesteal.datapack**
+
+```
+datapack lifesteal
+
+on ("minecraft:player_killed_entity") {
+  "effect give @s regeneration 5"
+  "tellraw @s \"Gained health from killing a mob\""
+}
+```
+
+### Custom advancements
+
 TODO
+
+### Command expressions
+
+DataPackCrafter command expressions translate to Minecraft commands. Currently, DataPackCrafter implements three checked commands (`grant`, `revoke`, `execute`) which aim to make certain simple tasks easier, while also allowing you to pass raw commands to Minecraft.
+
+`grant`, `revoke`, and `execute` are specified as bare subcommands. `grant` and `revoke` grant and revoke Minecraft advancements, and thus expect an advancement name. Unless the name includes a `:`, DataPackCrafter will check that the advancement actually exists in the datapack. References to advancements defined in the base game or another data pack are done using explicit [namespaced]((https://minecraft.fandom.com/wiki/Resource_location#Namespaces)) references instead (e.g. `minecraft:arbalistic`). `execute` runs a Minecraft [functions](https://minecraft.fandom.com/wiki/Function_(Java_Edition)) and behaves similarly, expecting a function name instead.
+
+Example: **granting_advancement_onload.datapack**
+
+```
+datapack granting_advancement_onload
+
+advancement "test_advancement" {}
+
+on (load) {
+  grant "test_advancement"
+}
+```
+
+On the other hand, raw commands are specified using a bare string or list of strings. This means you can generate multiple commands using for instance, `for` expressions:
+
+TODO: for expressions to commands
