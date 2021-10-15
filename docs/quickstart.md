@@ -92,11 +92,11 @@ print for x in [1,2,3] { x*10 }  # prints [10, 20, 30] all at once
 
 ## Interacting with Minecraft
 
-Currently, DataPackCrafter supports creating custom [advancements](https://minecraft.fandom.com/wiki/Advancement/JSON_format#File_format), Minecraft [functions](https://minecraft.fandom.com/wiki/Function_(Java_Edition)), and listening to game events using [built-in advancement triggers](https://minecraft.fandom.com/wiki/Advancement/JSON_format#List_of_triggers). For advancement triggers, we support the `item` and `tag` constraints for `consume_item` and `inventory_changed` (typechecked triggers) - everything else is passed to Minecraft verbatim (as a raw trigger) and does not yet allow for specifying further conditions. We additionally support `load` as a trigger, which is implemented by listening to a [function tag](https://minecraft.fandom.com/wiki/Tag#Function_tags)
+Currently, DataPackCrafter supports creating custom [advancements](https://minecraft.fandom.com/wiki/Advancement/JSON_format#File_format), Minecraft [functions](https://minecraft.fandom.com/wiki/Function_(Java_Edition)), and listening to game events using [built-in advancement triggers](https://minecraft.fandom.com/wiki/Advancement/JSON_format#List_of_triggers). For advancement triggers, we support the `item` and `tag` constraints for `consume_item` and `inventory_changed` (typechecked triggers) - everything else is passed to Minecraft verbatim (as a raw trigger) and does not yet allow for specifying further conditions. We additionally support `load` as a trigger, which is implemented by listening to a [function tag](https://minecraft.fandom.com/wiki/Tag#Function_tags).
 
 ### Advancement triggers
 
-Advancement triggers are defined using the `on` expression, which has a [command expression](#Command_expressions) as the contents. Typechecked triggers can also be OR'ed together to e.g. allow for matching multiple items:
+Advancement triggers are defined using the `on` expression, which has a [command expression](#command-expressions) as the contents. Typechecked triggers can also be OR'ed together to e.g. allow for matching multiple items:
 
 Example: **chickens_float.datapack**
 
@@ -137,7 +137,7 @@ A displayed advancement on the other hand must include the `title`, `description
 
 DataPackCrafter command expressions translate to Minecraft commands. Currently, DataPackCrafter implements three checked commands (`grant`, `revoke`, `execute`) which aim to make certain simple tasks easier, while also allowing you to pass raw commands to Minecraft.
 
-`grant`, `revoke`, and `execute` are specified as bare subcommands. `grant` and `revoke` grant and revoke Minecraft advancements, and thus expect an advancement name. Unless the name includes a `:`, DataPackCrafter will check that the advancement actually exists in the datapack. References to advancements defined in the base game or another data pack are done using explicit [namespaced]((https://minecraft.fandom.com/wiki/Resource_location#Namespaces)) references instead (e.g. `minecraft:arbalistic`). `execute` runs a Minecraft [functions](https://minecraft.fandom.com/wiki/Function_(Java_Edition)) and behaves similarly, expecting a function name instead.
+`grant`, `revoke`, and `execute` are specified as bare subcommands. `grant` and `revoke` grant and revoke Minecraft advancements, and thus expect an advancement name. Unless the name includes a `:`, DataPackCrafter will check that the advancement actually exists in the current datapack. References to advancements defined in the base game or another data pack are done using explicit [namespaced]((https://minecraft.fandom.com/wiki/Resource_location#Namespaces)) references instead (e.g. `minecraft:adventure/arbalistic`). `execute` runs Minecraft [functions](https://minecraft.fandom.com/wiki/Function_(Java_Edition)) and behaves similarly, expecting a function name instead.
 
 Example: **granting_advancement_onload.datapack**
 
