@@ -1,8 +1,9 @@
 datapack granting_advancement
 
 advancement ("test_advancement") {
-  title="Welcome!"
-  description="Test advancement / welcome to the server"
+  title="Hello world!"
+  description="Test advancement"
+  icon="apple"
 }
 
 on (tick) {

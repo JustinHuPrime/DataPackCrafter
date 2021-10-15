@@ -83,7 +83,8 @@ export class AdvancementValue implements Serializable, Writeable {
     serialized.title = this.title;
     serialized.description = this.description;
 
-    if (this.iconItem && this.iconNbt) {
+    if (this.iconItem) {
+      // NBT is optional
       serialized.icon = {
         item: this.iconItem,
         nbt: this.iconNbt,
