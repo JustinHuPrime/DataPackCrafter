@@ -2,7 +2,7 @@ datapack replace_all_inv
 
 # Number -> String
 define replaceSlot(slot) {
-    "item replace @s inventory.{slot} with apple 1"
+    "item replace entity @s inventory.{slot} with apple 1"
 }
 
 # Number -> (list String)

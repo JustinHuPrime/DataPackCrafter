@@ -10,4 +10,4 @@ define factorial(num) {
 
 print factorial(3)  # -> 6
 print factorial(5)  # -> 120
-print factorial("splat")  # -> Type Error
+#print factorial("splat")  # -> Type Error
