@@ -2,7 +2,9 @@
 
 **DataPackCrafter** is a domain-specific language (DSL) that generates [data packs](https://minecraft.fandom.com/wiki/Data_pack) for Minecraft (Java Edition). For those unfamiliar with the concept, data packs are a lightweight, JSON-based method of customizing the game without having to change the game's source code. In practice though, the data pack format is designed for machine-readability and not necessarily the most convenient to write, as all the necessary code is split between many files.
 
-## File structure
+## General structure
+
+DataPackCrafter implements a [functional language](https://en.wikipedia.org/wiki/Functional_programming) with interaction with Minecraft implemented using side effects. All code expressions evaluate to a value - [semantics.md](semantics.md) explains further what is produced in specific cases (e.g. `on` blocks evaluate to the name of the generated internal advancement trigger)
 
 Data packs in our language start with an ID declaration, and are followed by any number of expressions.
 
@@ -76,7 +78,17 @@ print factorial(5)        # -> 120
 print factorial("splat")  # -> Type error
 ```
 
-TODO: for loops
+Notice that because this is a functional language, there are no explicit return statements - the value produced is what the function call evaluates to.
+
+For expressions are also supported: these map some code over each element in a list, and returns a new list of all the produced results.
+
+```
+for x in [1,2,3] {
+    print x*10  # prints 10, 20, then 30
+}
+
+print for x in [1,2,3] { x*10 }  # prints [10, 20, 30] all at once
+```
 
 ## Interacting with Minecraft
 
@@ -131,6 +143,6 @@ on (load) {
 }
 ```
 
-On the other hand, raw commands are specified using a bare string or list of strings. This means you can generate multiple commands using for instance, `for` expressions:
+On the other hand, raw commands are specified using a bare string or list of strings. This means you can generate multiple commands using something like `for` expressions:
 
 TODO: for expressions to commands
