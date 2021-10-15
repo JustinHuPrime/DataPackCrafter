@@ -30,7 +30,7 @@ export default class Lexer {
 
       this.line += 1;
       this.character = 1;
-      this.file = (isCrlf) ? this.file.substr(2) : this.file.substr(1);
+      this.file = isCrlf ? this.file.substr(2) : this.file.substr(1);
       this.removeWhiteSpace();
     } else if (this.file.startsWith("#")) {
       this.line += 1;

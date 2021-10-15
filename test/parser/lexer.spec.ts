@@ -153,7 +153,7 @@ describe("lexer", () => {
           "hello",
         ),
       );
-    })
+    });
 
     it("should lex with newline", () => {
       setup("\n\nhello");
