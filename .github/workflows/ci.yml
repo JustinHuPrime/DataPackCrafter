@@ -6,7 +6,7 @@ jobs:
   build:
     name: "CI Build"
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v2
 
@@ -18,19 +18,37 @@ jobs:
       run: |
         npm install
         npm run build
-  
+
   test:
     name: "CI Test"
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v2
-    
+
     - uses: actions/setup-node@v1
       with:
         node-version: 14.x
-    
+
     - name: Test
       run: |
         npm install
         npm run test
+
+  verify_examples:
+    name: "CI verify examples"
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - uses: actions/setup-node@v1
+      with:
+        node-version: 14.x
+
+    - name: Build
+      run: |
+        npm install
+        npm run build
+        ./check-examples.sh
+
